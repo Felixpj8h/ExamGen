@@ -1,3 +1,67 @@
+# ExamGen
+
+AI-assisted exam practice app. The React frontend remains a Create React App project, and the current backend work lives in `backend/pdfExtractor`.
+
+## Backend PDF and Question Extraction
+
+Install backend dependencies:
+
+```bash
+cd backend/pdfExtractor
+python -m pip install -r requirements.txt
+```
+
+Extract text from a text-based PDF:
+
+```bash
+python -m exam_parser.cli path/to/exam.pdf --out extracted.json
+```
+
+Convert extracted PDF JSON into structured question JSON:
+
+```bash
+python -m exam_parser.cli_extract_questions extracted.json --out questions.json
+```
+
+Optional model settings:
+
+```bash
+python -m exam_parser.cli_extract_questions extracted.json --out questions.json --model gemini-3.1-flash-lite-preview --temperature 0 --max-output-tokens 8192
+```
+
+Expected AI extraction output:
+
+```json
+{
+  "source_file": "exam.pdf",
+  "exam_title": "Oppgaver for group sessions uke 6",
+  "course_code": "MNF130",
+  "language": "mixed",
+  "questions": [
+    {
+      "id": "1",
+      "question_number": "1",
+      "question_text": "Let P(x) be the statement \"The word x contains the letter a\".",
+      "page_start": 1,
+      "page_end": 1,
+      "points": null,
+      "topic": "predicate logic",
+      "subquestions": [
+        {
+          "id": "1a",
+          "label": "a",
+          "text": "P(orange).",
+          "points": null
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}
+```
+
+This backend step only extracts questions from already text-based PDF extraction JSON. It does not solve questions, grade answers, or perform OCR.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

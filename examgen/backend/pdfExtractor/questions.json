@@ -1,0 +1,301 @@
+{
+  "source_file": "Task1.pdf",
+  "exam_title": "Oppgaver for group sessions uke 6 (02.02-06.02)",
+  "course_code": "MNF130",
+  "language": "en",
+  "questions": [
+    {
+      "id": "q1",
+      "question_number": "1",
+      "question_text": "Let P(x) be the statement “The word x contains the letter a”. What are these truth values?",
+      "page_start": 1,
+      "page_end": 1,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q1a",
+          "label": "a",
+          "text": "P(orange).",
+          "points": null
+        },
+        {
+          "id": "q1b",
+          "label": "b",
+          "text": "P(lemon).",
+          "points": null
+        },
+        {
+          "id": "q1c",
+          "label": "c",
+          "text": "P(true).",
+          "points": null
+        },
+        {
+          "id": "q1d",
+          "label": "d",
+          "text": "P(false).",
+          "points": null
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "question_number": "2",
+      "question_text": "Translate these statements into English, where C(x) is “x is a comedian” and F(x) is “x is funny” and the domain consists of all people.",
+      "page_start": 1,
+      "page_end": 1,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q2a",
+          "label": "a",
+          "text": "∀x(C(x) →F(x)).",
+          "points": null
+        },
+        {
+          "id": "q2b",
+          "label": "b",
+          "text": "∀x(C(x) ∧F(x)).",
+          "points": null
+        },
+        {
+          "id": "q2c",
+          "label": "c",
+          "text": "∃x(C(x) →F(x)).",
+          "points": null
+        },
+        {
+          "id": "q2d",
+          "label": "d",
+          "text": "∃x(C(x) ∧F(x)).",
+          "points": null
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "question_number": "3",
+      "question_text": "Let P(x) be the statement “x can speak Russian” and let Q(x) be the statement “x knows the computer language C++”. Express each of these sentences in terms of P(x), Q(x), quantifiers, and logical connectives. The domain for quantifiers consists of all students at your school.",
+      "page_start": 1,
+      "page_end": 1,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q3a",
+          "label": "a",
+          "text": "There is a student at your school who can speak Russian and who knows C++.",
+          "points": null
+        },
+        {
+          "id": "q3b",
+          "label": "b",
+          "text": "There is a student at your school who can speak Russian but who doesn’t know C++.",
+          "points": null
+        },
+        {
+          "id": "q3c",
+          "label": "c",
+          "text": "Every student at your school either can speak Russian or knows C++.",
+          "points": null
+        },
+        {
+          "id": "q3d",
+          "label": "d",
+          "text": "No student at your school can speak Russian or knows C++.",
+          "points": null
+        }
+      ]
+    },
+    {
+      "id": "q4",
+      "question_number": "4",
+      "question_text": "Determine the truth value of each of these statements if the domain for all variables consists of all integers.",
+      "page_start": 1,
+      "page_end": 2,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q4a",
+          "label": "a",
+          "text": "∀n(n² ≥0).",
+          "points": null
+        },
+        {
+          "id": "q4b",
+          "label": "b",
+          "text": "∃n(n² = 2).",
+          "points": null
+        },
+        {
+          "id": "q4c",
+          "label": "c",
+          "text": "∀n(n² ≥n).",
+          "points": null
+        },
+        {
+          "id": "q4d",
+          "label": "d",
+          "text": "∃n(n² < 0).",
+          "points": null
+        }
+      ]
+    },
+    {
+      "id": "q5",
+      "question_number": "5",
+      "question_text": "Express the negation of each of these statements in terms of quantifiers without using the negation symbol.",
+      "page_start": 2,
+      "page_end": 2,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q5a",
+          "label": "a",
+          "text": "∀x(x > 1).",
+          "points": null
+        },
+        {
+          "id": "q5b",
+          "label": "b",
+          "text": "∀x(x ≤2).",
+          "points": null
+        },
+        {
+          "id": "q5c",
+          "label": "c",
+          "text": "∃x(x ≥4).",
+          "points": null
+        },
+        {
+          "id": "q5d",
+          "label": "d",
+          "text": "∃x(x < 0).",
+          "points": null
+        },
+        {
+          "id": "q5e",
+          "label": "e",
+          "text": "∀x((x < −1) ∨(x > 2)).",
+          "points": null
+        },
+        {
+          "id": "q5f",
+          "label": "f",
+          "text": "∃x((x < 4) ∨(x > 7)).",
+          "points": null
+        }
+      ]
+    },
+    {
+      "id": "q6",
+      "question_number": "6",
+      "question_text": "Translate these specifications into English, where F(p) is “Printer p is out of service”, B(p) is “Printer p is busy”, L(j) is “Print job j is lost” and Q(j) is “Print job j is queued”.",
+      "page_start": 2,
+      "page_end": 2,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q6a",
+          "label": "a",
+          "text": "∃p(F(p) ∧B(p)) →∃jL(j).",
+          "points": null
+        },
+        {
+          "id": "q6b",
+          "label": "b",
+          "text": "∀pB(p) →∃jQ(j).",
+          "points": null
+        },
+        {
+          "id": "q6c",
+          "label": "c",
+          "text": "∃j(Q(j) ∧L(j)) →∃pF(p).",
+          "points": null
+        },
+        {
+          "id": "q6d",
+          "label": "d",
+          "text": "(∀pB(p) ∧∀jQ(j)) →∃jL(j).",
+          "points": null
+        }
+      ]
+    },
+    {
+      "id": "q7",
+      "question_number": "7",
+      "question_text": "As mentioned in the text, the notation ∃!xP(x) denotes “There exists a unique x such that P(x) is true”. If the domain consists of all integers, what are the truth values of these statements?",
+      "page_start": 2,
+      "page_end": 2,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q7a",
+          "label": "a",
+          "text": "∃!x(x > 1).",
+          "points": null
+        },
+        {
+          "id": "q7b",
+          "label": "b",
+          "text": "∃!x(x² = 1).",
+          "points": null
+        },
+        {
+          "id": "q7c",
+          "label": "c",
+          "text": "∃!x(x + 3 = 2x).",
+          "points": null
+        },
+        {
+          "id": "q7d",
+          "label": "d",
+          "text": "∃!x(x = x + 1).",
+          "points": null
+        }
+      ]
+    },
+    {
+      "id": "q8",
+      "question_number": "8",
+      "question_text": "Let P(x), Q(x) and R(x) be the statements “x is a professor”, “x is ignorant” and “x is vain”, respectively. Express each of these statements using quantifiers, logical connectives, and P(x), Q(x) and R(x), where the domain consists of all people.",
+      "page_start": 2,
+      "page_end": 2,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q8a",
+          "label": "a",
+          "text": "No professors are ignorant.",
+          "points": null
+        },
+        {
+          "id": "q8b",
+          "label": "b",
+          "text": "All ignorant people are vain.",
+          "points": null
+        },
+        {
+          "id": "q8c",
+          "label": "c",
+          "text": "No professors are vain.",
+          "points": null
+        },
+        {
+          "id": "q8_followup",
+          "label": "followup",
+          "text": "Does (c) follow from (a) and (b)?",
+          "points": null
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}
