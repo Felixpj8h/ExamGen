@@ -1,0 +1,506 @@
+{
+  "exam": {
+    "title": "MNF130 - Oppgaver uke 6: Questions with correct answers",
+    "course_code": "MNF130",
+    "source_file": "Task2.pdf"
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "question_number": "1",
+      "question_text": "Let P(x) be the statement “The word x contains the letter a”. What are these truth values?",
+      "page_start": 1,
+      "page_end": 1,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q1a",
+          "label": "a",
+          "text": "P(orange).",
+          "points": null,
+          "solution": {
+            "answer": "True. The word “orange” contains the letter a.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q1b",
+          "label": "b",
+          "text": "P(lemon).",
+          "points": null,
+          "solution": {
+            "answer": "False. The word “lemon” does not contain the letter a.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q1c",
+          "label": "c",
+          "text": "P(true).",
+          "points": null,
+          "solution": {
+            "answer": "False. The word “true” does not contain the letter a.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q1d",
+          "label": "d",
+          "text": "P(false).",
+          "points": null,
+          "solution": {
+            "answer": "True. The word “false” contains the letter a.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "question_number": "2",
+      "question_text": "Translate these statements into English, where C(x) is “x is a comedian” and F(x) is “x is funny” and the domain consists of all people.",
+      "page_start": 1,
+      "page_end": 1,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q2a",
+          "label": "a",
+          "text": "∀x(C(x) → F(x)).",
+          "points": null,
+          "solution": {
+            "answer": "Every comedian is funny.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q2b",
+          "label": "b",
+          "text": "∀x(C(x) ∧ F(x)).",
+          "points": null,
+          "solution": {
+            "answer": "Every person is a comedian and is funny.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q2c",
+          "label": "c",
+          "text": "∃x(C(x) → F(x)).",
+          "points": null,
+          "solution": {
+            "answer": "There is at least one person such that if that person is a comedian, then that person is funny.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q2d",
+          "label": "d",
+          "text": "∃x(C(x) ∧ F(x)).",
+          "points": null,
+          "solution": {
+            "answer": "There is at least one person who is both a comedian and funny.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "question_number": "3",
+      "question_text": "Let P(x) be the statement “x can speak Russian” and let Q(x) be the statement “x knows the computer language C++”. Express each sentence in terms of P(x), Q(x), quantifiers, and logical connectives. The domain consists of all students at your school.",
+      "page_start": 1,
+      "page_end": 1,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q3a",
+          "label": "a",
+          "text": "There is a student at your school who can speak Russian and who knows C++.",
+          "points": null,
+          "solution": {
+            "answer": "∃x(P(x) ∧ Q(x)).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q3b",
+          "label": "b",
+          "text": "There is a student at your school who can speak Russian but who doesn’t know C++.",
+          "points": null,
+          "solution": {
+            "answer": "∃x(P(x) ∧ ¬Q(x)).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q3c",
+          "label": "c",
+          "text": "Every student at your school either can speak Russian or knows C++.",
+          "points": null,
+          "solution": {
+            "answer": "∀x(P(x) ∨ Q(x)).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q3d",
+          "label": "d",
+          "text": "No student at your school can speak Russian or knows C++.",
+          "points": null,
+          "solution": {
+            "answer": "∀x(¬P(x) ∧ ¬Q(x)). Equivalently: ¬∃x(P(x) ∨ Q(x)).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q4",
+      "question_number": "4",
+      "question_text": "Determine the truth value of each of these statements if the domain for all variables consists of all integers.",
+      "page_start": 2,
+      "page_end": 2,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q4a",
+          "label": "a",
+          "text": "∀n(n² ≥ 0).",
+          "points": null,
+          "solution": {
+            "answer": "True. The square of every integer is nonnegative.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q4b",
+          "label": "b",
+          "text": "∃n(n² = 2).",
+          "points": null,
+          "solution": {
+            "answer": "False. No integer has square equal to 2.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q4c",
+          "label": "c",
+          "text": "∀n(n² ≥ n).",
+          "points": null,
+          "solution": {
+            "answer": "True. For every integer n, n² − n = n(n − 1) is nonnegative.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q4d",
+          "label": "d",
+          "text": "∃n(n² < 0).",
+          "points": null,
+          "solution": {
+            "answer": "False. An integer square cannot be negative.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q5",
+      "question_number": "5",
+      "question_text": "Express the negation of each of these statements in terms of quantifiers without using the negation symbol.",
+      "page_start": 2,
+      "page_end": 2,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q5a",
+          "label": "a",
+          "text": "∀x(x > 1).",
+          "points": null,
+          "solution": {
+            "answer": "∃x(x ≤ 1).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q5b",
+          "label": "b",
+          "text": "∀x(x ≤ 2).",
+          "points": null,
+          "solution": {
+            "answer": "∃x(x > 2).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q5c",
+          "label": "c",
+          "text": "∃x(x ≥ 4).",
+          "points": null,
+          "solution": {
+            "answer": "∀x(x < 4).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q5d",
+          "label": "d",
+          "text": "∃x(x < 0).",
+          "points": null,
+          "solution": {
+            "answer": "∀x(x ≥ 0).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q5e",
+          "label": "e",
+          "text": "∀x((x < −1) ∨ (x > 2)).",
+          "points": null,
+          "solution": {
+            "answer": "∃x((x ≥ −1) ∧ (x ≤ 2)).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q5f",
+          "label": "f",
+          "text": "∃x((x < 4) ∨ (x > 7)).",
+          "points": null,
+          "solution": {
+            "answer": "∀x((x ≥ 4) ∧ (x ≤ 7)).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q6",
+      "question_number": "6",
+      "question_text": "Translate these specifications into English, where F(p) is “Printer p is out of service”, B(p) is “Printer p is busy”, L(j) is “Print job j is lost” and Q(j) is “Print job j is queued”.",
+      "page_start": 2,
+      "page_end": 2,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q6a",
+          "label": "a",
+          "text": "∃p(F(p) ∧ B(p)) → ∃jL(j).",
+          "points": null,
+          "solution": {
+            "answer": "If there is a printer that is out of service and busy, then there is a print job that is lost.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q6b",
+          "label": "b",
+          "text": "∀pB(p) → ∃jQ(j).",
+          "points": null,
+          "solution": {
+            "answer": "If every printer is busy, then there is a print job that is queued.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q6c",
+          "label": "c",
+          "text": "∃j(Q(j) ∧ L(j)) → ∃pF(p).",
+          "points": null,
+          "solution": {
+            "answer": "If there is a print job that is both queued and lost, then there is a printer that is out of service.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q6d",
+          "label": "d",
+          "text": "(∀pB(p) ∧ ∀jQ(j)) → ∃jL(j).",
+          "points": null,
+          "solution": {
+            "answer": "If every printer is busy and every print job is queued, then there is a print job that is lost.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q7",
+      "question_number": "7",
+      "question_text": "As mentioned in the text, the notation ∃!xP(x) denotes “There exists a unique x such that P(x) is true”. If the domain consists of all integers, what are the truth values of these statements?",
+      "page_start": 3,
+      "page_end": 3,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q7a",
+          "label": "a",
+          "text": "∃!x(x > 1).",
+          "points": null,
+          "solution": {
+            "answer": "False. There are many integers greater than 1.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q7b",
+          "label": "b",
+          "text": "∃!x(x² = 1).",
+          "points": null,
+          "solution": {
+            "answer": "False. Both x = 1 and x = −1 satisfy x² = 1.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q7c",
+          "label": "c",
+          "text": "∃!x(x + 3 = 2x).",
+          "points": null,
+          "solution": {
+            "answer": "True. Solving x + 3 = 2x gives the unique integer x = 3.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q7d",
+          "label": "d",
+          "text": "∃!x(x = x + 1).",
+          "points": null,
+          "solution": {
+            "answer": "False. No integer satisfies x = x + 1.",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q8",
+      "question_number": "8",
+      "question_text": "Let P(x), Q(x) and R(x) be the statements “x is a professor”, “x is ignorant” and “x is vain”, respectively. Express each of these statements using quantifiers, logical connectives, and P(x), Q(x) and R(x), where the domain consists of all people.",
+      "page_start": 3,
+      "page_end": 3,
+      "points": null,
+      "topic": "Predicate Logic",
+      "subquestions": [
+        {
+          "id": "q8a",
+          "label": "a",
+          "text": "No professors are ignorant.",
+          "points": null,
+          "solution": {
+            "answer": "∀x(P(x) → ¬Q(x)). Equivalently: ¬∃x(P(x) ∧ Q(x)).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q8b",
+          "label": "b",
+          "text": "All ignorant people are vain.",
+          "points": null,
+          "solution": {
+            "answer": "∀x(Q(x) → R(x)).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q8c",
+          "label": "c",
+          "text": "No professors are vain.",
+          "points": null,
+          "solution": {
+            "answer": "∀x(P(x) → ¬R(x)).",
+            "explanation": null,
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        },
+        {
+          "id": "q8_followup",
+          "label": "followup",
+          "text": "Does (c) follow from (a) and (b)?",
+          "points": null,
+          "solution": {
+            "answer": "No.",
+            "explanation": "From (a), professors are not ignorant. From (b), ignorant people are vain. This does not imply that professors are not vain; a professor could be vain without being ignorant.",
+            "grading_points": [],
+            "source": "same_pdf"
+          }
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

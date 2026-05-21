@@ -1,6 +1,6 @@
 {
-  "source_file": "Task1.pdf",
-  "exam_title": "Oppgaver for group sessions uke 6 (02.02-06.02)",
+  "source_file": "Task2.pdf",
+  "exam_title": "MNF130 - Oppgaver uke 6: Questions with correct answers",
   "course_code": "MNF130",
   "language": "en",
   "questions": [
@@ -51,25 +51,25 @@
         {
           "id": "q2a",
           "label": "a",
-          "text": "∀x(C(x) →F(x)).",
+          "text": "∀x(C(x) → F(x)).",
           "points": null
         },
         {
           "id": "q2b",
           "label": "b",
-          "text": "∀x(C(x) ∧F(x)).",
+          "text": "∀x(C(x) ∧ F(x)).",
           "points": null
         },
         {
           "id": "q2c",
           "label": "c",
-          "text": "∃x(C(x) →F(x)).",
+          "text": "∃x(C(x) → F(x)).",
           "points": null
         },
         {
           "id": "q2d",
           "label": "d",
-          "text": "∃x(C(x) ∧F(x)).",
+          "text": "∃x(C(x) ∧ F(x)).",
           "points": null
         }
       ]
@@ -77,7 +77,7 @@
     {
       "id": "q3",
       "question_number": "3",
-      "question_text": "Let P(x) be the statement “x can speak Russian” and let Q(x) be the statement “x knows the computer language C++”. Express each of these sentences in terms of P(x), Q(x), quantifiers, and logical connectives. The domain for quantifiers consists of all students at your school.",
+      "question_text": "Let P(x) be the statement “x can speak Russian” and let Q(x) be the statement “x knows the computer language C++”. Express each sentence in terms of P(x), Q(x), quantifiers, and logical connectives. The domain consists of all students at your school.",
       "page_start": 1,
       "page_end": 1,
       "points": null,
@@ -113,7 +113,7 @@
       "id": "q4",
       "question_number": "4",
       "question_text": "Determine the truth value of each of these statements if the domain for all variables consists of all integers.",
-      "page_start": 1,
+      "page_start": 2,
       "page_end": 2,
       "points": null,
       "topic": "Predicate Logic",
@@ -121,7 +121,7 @@
         {
           "id": "q4a",
           "label": "a",
-          "text": "∀n(n² ≥0).",
+          "text": "∀n(n² ≥ 0).",
           "points": null
         },
         {
@@ -133,7 +133,7 @@
         {
           "id": "q4c",
           "label": "c",
-          "text": "∀n(n² ≥n).",
+          "text": "∀n(n² ≥ n).",
           "points": null
         },
         {
@@ -162,13 +162,13 @@
         {
           "id": "q5b",
           "label": "b",
-          "text": "∀x(x ≤2).",
+          "text": "∀x(x ≤ 2).",
           "points": null
         },
         {
           "id": "q5c",
           "label": "c",
-          "text": "∃x(x ≥4).",
+          "text": "∃x(x ≥ 4).",
           "points": null
         },
         {
@@ -180,13 +180,13 @@
         {
           "id": "q5e",
           "label": "e",
-          "text": "∀x((x < −1) ∨(x > 2)).",
+          "text": "∀x((x < −1) ∨ (x > 2)).",
           "points": null
         },
         {
           "id": "q5f",
           "label": "f",
-          "text": "∃x((x < 4) ∨(x > 7)).",
+          "text": "∃x((x < 4) ∨ (x > 7)).",
           "points": null
         }
       ]
@@ -203,25 +203,25 @@
         {
           "id": "q6a",
           "label": "a",
-          "text": "∃p(F(p) ∧B(p)) →∃jL(j).",
+          "text": "∃p(F(p) ∧ B(p)) → ∃jL(j).",
           "points": null
         },
         {
           "id": "q6b",
           "label": "b",
-          "text": "∀pB(p) →∃jQ(j).",
+          "text": "∀pB(p) → ∃jQ(j).",
           "points": null
         },
         {
           "id": "q6c",
           "label": "c",
-          "text": "∃j(Q(j) ∧L(j)) →∃pF(p).",
+          "text": "∃j(Q(j) ∧ L(j)) → ∃pF(p).",
           "points": null
         },
         {
           "id": "q6d",
           "label": "d",
-          "text": "(∀pB(p) ∧∀jQ(j)) →∃jL(j).",
+          "text": "(∀pB(p) ∧ ∀jQ(j)) → ∃jL(j).",
           "points": null
         }
       ]
@@ -230,8 +230,8 @@
       "id": "q7",
       "question_number": "7",
       "question_text": "As mentioned in the text, the notation ∃!xP(x) denotes “There exists a unique x such that P(x) is true”. If the domain consists of all integers, what are the truth values of these statements?",
-      "page_start": 2,
-      "page_end": 2,
+      "page_start": 3,
+      "page_end": 3,
       "points": null,
       "topic": "Predicate Logic",
       "subquestions": [
@@ -265,8 +265,8 @@
       "id": "q8",
       "question_number": "8",
       "question_text": "Let P(x), Q(x) and R(x) be the statements “x is a professor”, “x is ignorant” and “x is vain”, respectively. Express each of these statements using quantifiers, logical connectives, and P(x), Q(x) and R(x), where the domain consists of all people.",
-      "page_start": 2,
-      "page_end": 2,
+      "page_start": 3,
+      "page_end": 3,
       "points": null,
       "topic": "Predicate Logic",
       "subquestions": [

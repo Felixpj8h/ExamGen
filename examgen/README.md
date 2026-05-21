@@ -2,7 +2,7 @@
 
 AI-assisted exam practice app. The React frontend remains a Create React App project, and the current backend work lives in `backend/pdfExtractor`.
 
-## Backend PDF and Question Extraction
+## Backend PDF, Question, And Solution Extraction
 
 Install backend dependencies:
 
@@ -17,10 +17,47 @@ Extract text from a text-based PDF:
 python -m exam_parser.cli path/to/exam.pdf --out extracted.json
 ```
 
+Run the whole backend pipeline with one command:
+
+```bash
+python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/
+```
+
+With a separate solution PDF:
+
+```bash
+python -m exam_parser.cli_pipeline path/to/exam.pdf --solutions path/to/solutions.pdf --out-dir output/
+```
+
 Convert extracted PDF JSON into structured question JSON:
 
 ```bash
 python -m exam_parser.cli_extract_questions extracted.json --out questions.json
+```
+
+Classify whether an extracted document contains questions, solutions, or both:
+
+```bash
+python -m exam_parser.cli_classify_document extracted.json --out classification.json
+```
+
+Extract official solutions from a separate solution PDF extraction:
+
+```bash
+python -m exam_parser.cli path/to/solutions.pdf --out extracted_solutions.json
+python -m exam_parser.cli_extract_solutions extracted_solutions.json --questions questions.json --out solutions.json
+```
+
+Build an exam bundle with solutions merged into subquestions:
+
+```bash
+python -m exam_parser.cli_build_bundle questions.json --solutions solutions.json --out exam_bundle.json
+```
+
+Process a combined PDF in one command:
+
+```bash
+python -m exam_parser.cli_pipeline path/to/exam_with_solutions.pdf --out-dir output/
 ```
 
 Optional model settings:
@@ -60,7 +97,7 @@ Expected AI extraction output:
 }
 ```
 
-This backend step only extracts questions from already text-based PDF extraction JSON. It does not solve questions, grade answers, or perform OCR.
+Supported backend modes are exam only, exam PDF plus separate solution PDF, and combined PDFs where official answers are present in the extracted text. This backend step does not grade answers, generate missing solutions, or perform OCR.
 
 # Getting Started with Create React App
 
