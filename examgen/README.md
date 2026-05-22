@@ -29,6 +29,14 @@ With a separate solution PDF:
 python -m exam_parser.cli_pipeline path/to/exam.pdf --solutions path/to/solutions.pdf --out-dir output/
 ```
 
+If no official answers or løsningsforslag are found, you can opt in to AI-generated practice answers:
+
+```bash
+python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/ --generate-missing-solutions
+```
+
+Generated answers are marked as `ai_generated` and include a warning that they are not an official answer key.
+
 Convert extracted PDF JSON into structured question JSON:
 
 ```bash

@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from exam_parser.ai_solution_extractor import SolutionExtractionError
 from exam_parser.cli_pipeline import main as pipeline_main
 
 
@@ -98,6 +99,40 @@ def test_pipeline_exam_only_writes_questions_and_bundle(
     assert bundle["exam"]["title"] == "Sample"
 
 
+def test_pipeline_exam_only_can_generate_ai_marked_solutions(
+    tmp_path: Path, monkeypatch
+) -> None:
+    out_dir = tmp_path / "out"
+    monkeypatch.setattr("exam_parser.cli_pipeline.extract_pdf", lambda path: sample_extraction())
+    monkeypatch.setattr(
+        "exam_parser.cli_pipeline.extract_questions_with_gemini",
+        lambda extraction_result, **kwargs: sample_questions(),
+    )
+
+    def fake_extract_solutions(extraction_result, **kwargs):
+        assert kwargs["source_type"] == "ai_generated"
+        generated = sample_solutions()
+        generated["source_type"] = "ai_generated"
+        generated["warnings"] = ["AI-generated solutions; not official answer key."]
+        generated["solutions"][0]["subsolutions"][0]["source"] = "ai_generated"
+        return generated
+
+    monkeypatch.setattr(
+        "exam_parser.cli_pipeline.extract_solutions_with_gemini",
+        fake_extract_solutions,
+    )
+
+    exit_code = pipeline_main(
+        ["exam.pdf", "--out-dir", str(out_dir), "--generate-missing-solutions"]
+    )
+
+    assert exit_code == 0
+    solutions = json.loads((out_dir / "solutions.json").read_text(encoding="utf-8"))
+    assert solutions["source_type"] == "ai_generated"
+    assert solutions["solutions"][0]["subsolutions"][0]["source"] == "ai_generated"
+    assert "AI-generated solutions; not official answer key." in solutions["warnings"]
+
+
 def test_pipeline_with_separate_solution_pdf_writes_solutions_and_bundle(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -182,3 +217,42 @@ def test_pipeline_combined_interleaved_answers_uses_full_text_ai_path(
     assert exit_code == 0
     assert (out_dir / "questions.json").exists()
     assert (out_dir / "solutions.json").exists()
+
+
+def test_pipeline_combined_falls_back_to_ai_generated_when_requested(
+    tmp_path: Path, monkeypatch
+) -> None:
+    out_dir = tmp_path / "out"
+    combined_text = "Questions\n1. P(orange).\nAnswers\nNo reliable answer key found."
+    extraction = sample_extraction_with_text(combined_text)
+    calls: list[str] = []
+
+    monkeypatch.setattr("exam_parser.cli_pipeline.extract_pdf", lambda path: extraction)
+    monkeypatch.setattr(
+        "exam_parser.cli_pipeline.extract_questions_with_gemini",
+        lambda extraction_result, **kwargs: sample_questions(),
+    )
+
+    def fake_extract_solutions(extraction_result, **kwargs):
+        calls.append(kwargs["source_type"])
+        if kwargs["source_type"] == "same_pdf":
+            raise SolutionExtractionError("No solutions were extracted.")
+        generated = sample_solutions()
+        generated["source_type"] = "ai_generated"
+        generated["warnings"] = ["AI-generated solutions; not official answer key."]
+        generated["solutions"][0]["subsolutions"][0]["source"] = "ai_generated"
+        return generated
+
+    monkeypatch.setattr(
+        "exam_parser.cli_pipeline.extract_solutions_with_gemini",
+        fake_extract_solutions,
+    )
+
+    exit_code = pipeline_main(
+        ["exam.pdf", "--out-dir", str(out_dir), "--generate-missing-solutions"]
+    )
+
+    assert exit_code == 0
+    assert calls == ["same_pdf", "ai_generated"]
+    solutions = json.loads((out_dir / "solutions.json").read_text(encoding="utf-8"))
+    assert solutions["source_type"] == "ai_generated"

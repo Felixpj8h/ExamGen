@@ -3,6 +3,7 @@ import pytest
 from exam_parser.ai_solution_extractor import (
     SolutionExtractionError,
     build_solution_extraction_prompt,
+    post_process_solutions,
     validate_solution_extraction_result,
 )
 
@@ -83,3 +84,50 @@ def test_solution_validation_rejects_content_free_solutions() -> None:
 
     with pytest.raises(SolutionExtractionError):
         validate_solution_extraction_result(result)
+
+
+def test_ai_generated_prompt_marks_solutions_as_ai_generated() -> None:
+    prompt = build_solution_extraction_prompt(
+        {"file_name": "exam.pdf", "pages": []},
+        {"questions": [{"id": "q1", "question_number": "1", "subquestions": []}]},
+        source_type="ai_generated",
+    )
+
+    assert 'Set source_type to "ai_generated".' in prompt
+    assert 'Set each subsolution source to "ai_generated".' in prompt
+    assert "not official solutions" in prompt
+
+
+def test_post_process_ai_generated_solutions_adds_warning_and_sources() -> None:
+    result = {
+        "source_file": "exam.pdf",
+        "source_type": "same_pdf",
+        "exam_title": None,
+        "course_code": None,
+        "solutions": [
+            {
+                "question_id": "q1",
+                "question_number": "1",
+                "solution_text": None,
+                "subsolutions": [
+                    {
+                        "question_id": "q1a",
+                        "label": "a",
+                        "answer": "True",
+                        "explanation": "Generated explanation.",
+                        "grading_points": [],
+                        "points": None,
+                        "source": "same_pdf",
+                    }
+                ],
+                "warnings": [],
+            }
+        ],
+        "warnings": [],
+    }
+
+    processed = post_process_solutions(result, source_type="ai_generated")
+
+    assert processed["source_type"] == "ai_generated"
+    assert "AI-generated solutions; not official answer key." in processed["warnings"]
+    assert processed["solutions"][0]["subsolutions"][0]["source"] == "ai_generated"

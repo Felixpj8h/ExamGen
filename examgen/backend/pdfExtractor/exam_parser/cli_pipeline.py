@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from exam_parser.ai_question_extractor import DEFAULT_MODEL_NAME, extract_questions_with_gemini
-from exam_parser.ai_solution_extractor import extract_solutions_with_gemini
+from exam_parser.ai_solution_extractor import SolutionExtractionError, extract_solutions_with_gemini
 from exam_parser.document_classifier import classify_extracted_document
 from exam_parser.exam_bundle import build_exam_bundle
 from exam_parser.pdf_extractor import PDFExtractionError, extract_pdf
@@ -32,6 +32,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model", default=DEFAULT_MODEL_NAME, help="Gemini model name.")
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--max-output-tokens", type=int, default=8192)
+    parser.add_argument(
+        "--generate-missing-solutions",
+        action="store_true",
+        help="Generate AI-marked practice solutions when no official answers/løsningsforslag are found.",
+    )
     parser.add_argument("--indent", type=int, default=2, help="JSON indentation level.")
     return parser
 
@@ -118,9 +123,13 @@ def _run_single_pdf_pipeline(
             max_output_tokens=args.max_output_tokens,
         )
         _write_json(out_dir / "questions.json", questions, args.indent)
-        bundle = build_exam_bundle(questions)
+        solutions = None
+        if args.generate_missing_solutions:
+            solutions = _generate_ai_solutions(args, exam_extraction, questions)
+            _write_json(out_dir / "solutions.json", solutions, args.indent)
+        bundle = build_exam_bundle(questions, solutions)
         _write_json(out_dir / "exam_bundle.json", bundle, args.indent)
-        _print_success(out_dir, with_solutions=False)
+        _print_success(out_dir, with_solutions=solutions is not None)
         return 0
 
     if document_type == "questions_and_solutions":
@@ -131,14 +140,19 @@ def _run_single_pdf_pipeline(
             max_output_tokens=args.max_output_tokens,
         )
         _write_json(out_dir / "questions.json", questions, args.indent)
-        solutions = extract_solutions_with_gemini(
-            exam_extraction,
-            questions_result=questions,
-            model_name=args.model,
-            temperature=args.temperature,
-            max_output_tokens=args.max_output_tokens,
-            source_type="same_pdf",
-        )
+        try:
+            solutions = extract_solutions_with_gemini(
+                exam_extraction,
+                questions_result=questions,
+                model_name=args.model,
+                temperature=args.temperature,
+                max_output_tokens=args.max_output_tokens,
+                source_type="same_pdf",
+            )
+        except SolutionExtractionError:
+            if not args.generate_missing_solutions:
+                raise
+            solutions = _generate_ai_solutions(args, exam_extraction, questions)
         _write_json(out_dir / "solutions.json", solutions, args.indent)
         bundle = build_exam_bundle(questions, solutions)
         _write_json(out_dir / "exam_bundle.json", bundle, args.indent)
@@ -147,6 +161,21 @@ def _run_single_pdf_pipeline(
 
     print(f"Unsupported or unclear document type: {document_type}. See classification.json.", file=sys.stderr)
     return 2
+
+
+def _generate_ai_solutions(
+    args: argparse.Namespace,
+    exam_extraction: dict[str, Any],
+    questions: dict[str, Any],
+) -> dict[str, Any]:
+    return extract_solutions_with_gemini(
+        exam_extraction,
+        questions_result=questions,
+        model_name=args.model,
+        temperature=args.temperature,
+        max_output_tokens=args.max_output_tokens,
+        source_type="ai_generated",
+    )
 
 
 def _write_json(path: Path, data: dict[str, Any], indent: int) -> None:

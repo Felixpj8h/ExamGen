@@ -105,10 +105,17 @@ def build_solution_extraction_prompt(
     """Build the Gemini prompt for official solution extraction."""
     source_file = str(extraction_result_or_solution_section.get("file_name") or "")
     solution_text = _solution_text(extraction_result_or_solution_section)
-    if not solution_text:
+    if not solution_text and source_type != "ai_generated":
         raise SolutionExtractionError("Input contains no solution text to parse.")
 
     questions_json = json.dumps(questions_result or {}, ensure_ascii=False, indent=2)
+    if source_type == "ai_generated":
+        return _build_ai_generated_solution_prompt(
+            source_file=source_file,
+            source_text=solution_text,
+            questions_json=questions_json,
+        )
+
     return f"""You are extracting structured official solutions from text.
 
 Rules:
@@ -141,6 +148,41 @@ Solution source file: {source_file}
 
 Solution text:
 {solution_text}
+"""
+
+
+def _build_ai_generated_solution_prompt(
+    *,
+    source_file: str,
+    source_text: str,
+    questions_json: str,
+) -> str:
+    return f"""You are generating structured practice solutions for exam questions.
+
+Rules:
+- Generate solutions only for the provided questions JSON.
+- Do not add questions that are not present in the provided questions JSON.
+- Match solutions to the provided questions by question_id, question_number, and subquestion label.
+- Use the exact question IDs and subquestion IDs from the provided questions JSON.
+- Put concise final answers in answer.
+- Put reasoning or explanation in explanation.
+- Put grading_points as a short list of what a correct answer should include.
+- Use null for points unless explicit points are already present in the provided question data.
+- Add a warning that these are AI-generated solutions and not official solutions.
+- Return JSON only matching the schema.
+- Set source_type to "ai_generated".
+- Set each subsolution source to "ai_generated".
+
+JSON schema:
+{json.dumps(SOLUTION_EXTRACTION_SCHEMA, ensure_ascii=False, indent=2)}
+
+Provided questions JSON:
+{questions_json}
+
+Source file: {source_file}
+
+Extracted PDF text for context only:
+{source_text}
 """
 
 
@@ -189,6 +231,10 @@ def post_process_solutions(result: dict[str, Any], *, source_type: str) -> dict[
     """Normalize source fields and warning containers in solutions JSON."""
     result["source_type"] = source_type
     result.setdefault("warnings", [])
+    if source_type == "ai_generated":
+        warning = "AI-generated solutions; not official answer key."
+        if warning not in result["warnings"]:
+            result["warnings"].append(warning)
     source = _subsolution_source(source_type)
     for solution in result.get("solutions", []):
         if not isinstance(solution, dict):

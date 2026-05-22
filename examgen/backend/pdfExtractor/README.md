@@ -60,7 +60,14 @@ Exam PDF with a separate solution PDF:
 python -m exam_parser.cli_pipeline path/to/exam.pdf --solutions path/to/solutions.pdf --out-dir output/
 ```
 
+Exam PDF without official answers, with AI-generated practice answers:
+
+```bash
+python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/ --generate-missing-solutions
+```
+
 The pipeline writes intermediate files such as `extracted_exam.json`, `classification.json`, `questions.json`, `solutions.json` when available, and `exam_bundle.json`.
+AI-generated answers are marked with `source_type: "ai_generated"`, each subsolution uses `source: "ai_generated"`, and `solutions.json` includes the warning `AI-generated solutions; not official answer key.`
 
 ## Run AI Question Extraction
 
@@ -276,4 +283,4 @@ The PDF extraction step does not use AI or OCR. Scanned image PDFs will usually 
 
 The AI extraction step depends on the quality of the existing extracted text. It preserves extracted math as-is for now, so OCR or notation repair should be separate later pipeline steps.
 
-Solution support works best when official answers are clearly present in the extracted text. If the AI pass cannot confidently identify solution content, the pipeline returns an error instead of writing an empty or content-free `solutions.json`. AI-generated solutions are not implemented yet.
+Solution support works best when official answers are clearly present in the extracted text. If the AI pass cannot confidently identify solution content, the pipeline returns an error instead of writing an empty or content-free `solutions.json`, unless `--generate-missing-solutions` is set. Generated solutions are for practice and are explicitly marked as AI-generated, not official answers.
