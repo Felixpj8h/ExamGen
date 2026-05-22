@@ -69,6 +69,27 @@ python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/ --generate
 The pipeline writes intermediate files such as `extracted_exam.json`, `classification.json`, `questions.json`, `solutions.json` when available, and `exam_bundle.json`.
 AI-generated answers are marked with `source_type: "ai_generated"`, each subsolution uses `source: "ai_generated"`, and `solutions.json` includes the warning `AI-generated solutions; not official answer key.`
 
+## Frontend Contract
+
+Use `exam_bundle.json` as the single frontend input. It contains exam metadata, questions, subquestions, attached solutions when available, and warnings. The frontend should treat `solution.source` as the authority for display labels:
+
+- `official_solution_pdf`: official solution from a separate solution PDF
+- `same_pdf`: official answer found in the same PDF
+- `ai_generated`: AI-generated practice answer, not an official answer key
+
+Future FastAPI code should call the stable backend wrapper instead of shelling out to the CLI:
+
+```python
+from exam_parser.pipeline import PipelineOptions, run_exam_pipeline
+
+result = run_exam_pipeline(
+    "path/to/exam.pdf",
+    out_dir="output",
+    options=PipelineOptions(generate_missing_solutions=True),
+)
+exam_bundle_path = result["artifacts"]["exam_bundle.json"]
+```
+
 ## Run AI Question Extraction
 
 ```bash

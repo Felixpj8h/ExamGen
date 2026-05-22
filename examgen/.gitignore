@@ -10,6 +10,16 @@
 __pycache__/
 *.py[cod]
 
+# generated backend artifacts
+/backend/pdfExtractor/output/
+/backend/pdfExtractor/extracted.json
+/backend/pdfExtractor/extracted_*.json
+/backend/pdfExtractor/questions.json
+/backend/pdfExtractor/solutions.json
+/backend/pdfExtractor/classification.json
+/backend/pdfExtractor/exam_bundle.json
+/backend/pdfExtractor/Task2.pdf
+
 # production
 /build
 

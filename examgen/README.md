@@ -37,6 +37,18 @@ python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/ --generate
 
 Generated answers are marked as `ai_generated` and include a warning that they are not an official answer key.
 
+The frontend contract is `exam_bundle.json`. Future backend/API code can call:
+
+```python
+from exam_parser.pipeline import PipelineOptions, run_exam_pipeline
+
+result = run_exam_pipeline(
+    "path/to/exam.pdf",
+    out_dir="output",
+    options=PipelineOptions(generate_missing_solutions=True),
+)
+```
+
 Convert extracted PDF JSON into structured question JSON:
 
 ```bash
