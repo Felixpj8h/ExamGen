@@ -28,6 +28,8 @@ class PipelineOptions:
     temperature: float = 0.0
     max_output_tokens: int = 8192
     generate_missing_solutions: bool = False
+    mirror_bundle_to_public: bool = True
+    public_bundle_path: str | Path | None = None
     indent: int = 2
 
 
@@ -198,3 +200,34 @@ def _write_artifact(
     path = out_dir / file_name
     path.write_text(json.dumps(data, ensure_ascii=False, indent=options.indent) + "\n", encoding="utf-8")
     artifacts[file_name] = str(path)
+    if file_name == "exam_bundle.json" and options.mirror_bundle_to_public:
+        _write_public_exam_bundle(out_dir, data, options, artifacts)
+
+
+def _write_public_exam_bundle(
+    out_dir: Path,
+    data: dict[str, Any],
+    options: PipelineOptions,
+    artifacts: dict[str, str],
+) -> None:
+    public_bundle_path = _resolve_public_bundle_path(out_dir, options.public_bundle_path)
+    if public_bundle_path is None:
+        return
+    public_bundle_path.parent.mkdir(parents=True, exist_ok=True)
+    public_bundle_path.write_text(
+        json.dumps(data, ensure_ascii=False, indent=options.indent) + "\n",
+        encoding="utf-8",
+    )
+    artifacts["public/sample-exam-bundle.json"] = str(public_bundle_path)
+
+
+def _resolve_public_bundle_path(out_dir: Path, configured_path: str | Path | None) -> Path | None:
+    if configured_path is not None:
+        return Path(configured_path)
+
+    for parent in [out_dir.resolve(), *out_dir.resolve().parents]:
+        candidate = parent / "public"
+        if candidate.is_dir() and (candidate / "index.html").is_file():
+            return candidate / "sample-exam-bundle.json"
+
+    return None

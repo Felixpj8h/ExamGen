@@ -99,6 +99,47 @@ def test_pipeline_exam_only_writes_questions_and_bundle(
     assert bundle["exam"]["title"] == "Sample"
 
 
+def test_pipeline_mirrors_exam_bundle_to_frontend_public(
+    tmp_path: Path, monkeypatch
+) -> None:
+    project_dir = tmp_path / "project"
+    out_dir = project_dir / "backend" / "pdfExtractor" / "output"
+    public_dir = project_dir / "public"
+    public_dir.mkdir(parents=True)
+    (public_dir / "index.html").write_text("<div id=\"root\"></div>", encoding="utf-8")
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path: sample_extraction())
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_questions_with_gemini",
+        lambda extraction_result, **kwargs: sample_questions(),
+    )
+
+    exit_code = pipeline_main(["exam.pdf", "--out-dir", str(out_dir)])
+
+    assert exit_code == 0
+    public_bundle = json.loads((public_dir / "sample-exam-bundle.json").read_text(encoding="utf-8"))
+    assert public_bundle["exam"]["title"] == "Sample"
+
+
+def test_pipeline_can_skip_public_bundle_mirror(
+    tmp_path: Path, monkeypatch
+) -> None:
+    project_dir = tmp_path / "project"
+    out_dir = project_dir / "backend" / "pdfExtractor" / "output"
+    public_dir = project_dir / "public"
+    public_dir.mkdir(parents=True)
+    (public_dir / "index.html").write_text("<div id=\"root\"></div>", encoding="utf-8")
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path: sample_extraction())
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_questions_with_gemini",
+        lambda extraction_result, **kwargs: sample_questions(),
+    )
+
+    exit_code = pipeline_main(["exam.pdf", "--out-dir", str(out_dir), "--no-public-bundle"])
+
+    assert exit_code == 0
+    assert not (public_dir / "sample-exam-bundle.json").exists()
+
+
 def test_pipeline_exam_only_can_generate_ai_marked_solutions(
     tmp_path: Path, monkeypatch
 ) -> None:

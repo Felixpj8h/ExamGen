@@ -1,0 +1,407 @@
+{
+  "exam": {
+    "title": "Info om eksamen H25",
+    "course_code": null,
+    "source_file": "Task6.pdf"
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "question_number": "1",
+      "question_text": "Kjøretid DuplicateFinder LinkedList. Hva er kjøretiden til denne metoden når input er en LinkedList? n er antall elementer i listen. Om det er flere rette svar skal du velge det som mest nøyaktig beskriver kjøretiden.",
+      "page_start": 2,
+      "page_end": 2,
+      "points": 2,
+      "topic": "Kjøretid",
+      "interaction_type": "multiple_choice",
+      "choices": [],
+      "subquestions": [],
+      "solution": {
+        "answer": null,
+        "explanation": "Kjøretiden for DuplicateFinder på en LinkedList avhenger av implementasjonen, men typisk O(n^2) hvis man sammenligner hvert element med alle andre.",
+        "grading_points": [],
+        "source": null
+      }
+    },
+    {
+      "id": "q2",
+      "question_number": "2",
+      "question_text": "Kjøretid DuplicateFinder ArrayList. Hva er kjøretiden til denne metoden når input er en ArrayList? n er antall elementer i listen. Om det er flere rette svar skal du velge det som mest nøyaktig beskriver kjøretiden.",
+      "page_start": 3,
+      "page_end": 3,
+      "points": 2,
+      "topic": "Kjøretid",
+      "interaction_type": "multiple_choice",
+      "choices": [],
+      "subquestions": [],
+      "solution": {
+        "answer": null,
+        "explanation": "Kjøretiden for DuplicateFinder på en ArrayList er typisk O(n^2) ved bruk av en naiv sammenligningsmetode.",
+        "grading_points": [],
+        "source": null
+      }
+    },
+    {
+      "id": "q3",
+      "question_number": "3",
+      "question_text": "Kjøretid Unique. Hva er kjøretiden til denne metoden? n er antall elementer i listen. Om det er flere rette svar skal du velge det som mest nøyaktig beskriver kjøretiden.",
+      "page_start": 4,
+      "page_end": 4,
+      "points": 2,
+      "topic": "Kjøretid",
+      "interaction_type": "multiple_choice",
+      "choices": [],
+      "subquestions": [],
+      "solution": {
+        "answer": null,
+        "explanation": "Kjøretiden for en typisk Unique-metode er O(n) ved bruk av et HashSet eller O(n log n) ved sortering.",
+        "grading_points": [],
+        "source": null
+      }
+    },
+    {
+      "id": "q4",
+      "question_number": "4",
+      "question_text": "LinkedList operations. Hvilke av disse operasjonene er raskere på en \"doubly linked list\" enn på en \"singly linked list\". Det vil si har bedre big-O worst case kjøretid. Her gis det negative poeng på de alternativene som er feil. Det er ikke mulig å få mindre enn 0 totalt på denne oppgaven.",
+      "page_start": 5,
+      "page_end": 5,
+      "points": 2,
+      "topic": "Datastrukturer",
+      "interaction_type": "multiple_choice",
+      "choices": [
+        "list.size()",
+        "list.get(n-10)",
+        "list.get(10)",
+        "list.set(10,obj)",
+        "list.set(n-10,obj)",
+        "Collections.sort(list)",
+        "list.addFirst()"
+      ],
+      "subquestions": [],
+      "solution": {
+        "answer": null,
+        "explanation": "Operasjoner som drar nytte av en doubly linked list er de som krever tilgang til forrige node, som list.addFirst() (hvis den opprettholder pekere) eller operasjoner nær slutten av listen.",
+        "grading_points": [],
+        "source": null
+      }
+    },
+    {
+      "id": "q5",
+      "question_number": "5",
+      "question_text": "Time for n^3 algorithm. En n^3 algoritme bruker 1 sekund på input av størrelse 1000. Ca. hvor mange minutter bruker den på input av størrelse 10000? Alle verdier som er +-20% av det rette svaret vil gi 2 poeng.",
+      "page_start": 5,
+      "page_end": 5,
+      "points": 2,
+      "topic": "Algoritmeanalyse",
+      "interaction_type": "numeric",
+      "choices": [],
+      "subquestions": [],
+      "solution": {
+        "answer": null,
+        "explanation": "For en n^3 algoritme: (10000/1000)^3 = 10^3 = 1000 sekunder. 1000 sekunder / 60 = 16.67 minutter.",
+        "grading_points": [],
+        "source": null
+      }
+    },
+    {
+      "id": "q6",
+      "question_number": "6",
+      "question_text": "A* criteria. Hvilken egenskap må holde for at A* algoritmen skal gi korteste sti.",
+      "page_start": 5,
+      "page_end": 5,
+      "points": 2,
+      "topic": "A*",
+      "interaction_type": "multiple_choice",
+      "choices": [
+        "Estimert avstand fra current position til target må være lik korteste sti fra current til target",
+        "A* er en heuristikk så man kan aldri være helt sikker på å finne korteste sti.",
+        "Nodene må prosesseres slik at de nærmest start blir prosessert først.",
+        "Estimert avstand fra current position til target må være større enn korteste sti fra current til target",
+        "Estimert avstand fra current position til target må være mindre enn korteste sti fra current til target"
+      ],
+      "subquestions": [],
+      "solution": {
+        "answer": null,
+        "explanation": "Estimert avstand fra current position til target må være mindre enn eller lik korteste sti fra current til target (admissibility).",
+        "grading_points": [],
+        "source": null
+      }
+    },
+    {
+      "id": "q7",
+      "question_number": "7",
+      "question_text": "Graph search order. Det finnes mange søkealgoritmer som går igjennom nodene til en graf. De forskjellige algoritmene går igjennom nodene i forskjellige rekkefølger. Du kan anta at grafen er implementert slik at når man går igjennom naboene til en node så gjøres det i alfabetisk rekkefølge. Her gis det negative poeng på de alternativene som er feil. Det er ikke mulig å få mindre enn 0 totalt på denne oppgaven.",
+      "page_start": 6,
+      "page_end": 6,
+      "points": 10,
+      "topic": "Grafsøk",
+      "interaction_type": "multiple_choice",
+      "choices": [
+        "A,B,C,D,E,G,F,H,I",
+        "A,B,C,F,E,D,G,H,I",
+        "A,B,C,E,F,D,G,H,I",
+        "A,B,D,C,F,E,G,H,I",
+        "A,B,C,D,E,F,G,H,I",
+        "A,B,C,"
+      ],
+      "subquestions": [
+        {
+          "id": "q7_a",
+          "label": "Dijkstra",
+          "text": "Dijkstra",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "Avhenger av grafens vekter.",
+            "explanation": "Dijkstra bruker en prioritetskø basert på akkumulert avstand.",
+            "grading_points": [
+              "Korrekt bruk av prioritetskø",
+              "Alfabetisk rekkefølge ved lik avstand"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q7_b",
+          "label": "BFS",
+          "text": "BFS",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "A,B,C,D,E,F,G,H,I",
+            "explanation": "BFS bruker en FIFO-kø.",
+            "grading_points": [
+              "FIFO-rekkefølge",
+              "Alfabetisk nabo-besøk"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q7_c",
+          "label": "DFS",
+          "text": "DFS",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "A,B,D,E,F,C,G,H,I",
+            "explanation": "DFS bruker en LIFO-stakk.",
+            "grading_points": [
+              "LIFO-rekkefølge",
+              "Dypeste node først"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q7_d",
+          "label": "Prim",
+          "text": "Prim (MST)",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "Avhenger av kantvekter.",
+            "explanation": "Prim bygger et MST ved å legge til billigste kant.",
+            "grading_points": [
+              "MST-logikk",
+              "Prioritetskø for kanter"
+            ],
+            "source": "ai_generated"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q8",
+      "question_number": "8",
+      "question_text": "Sorter nesten sortert. Vi har en aplikasjon med nesten sorterte arrays. Hvilke av disse sorterings algoritmene vil klare å sortere en slik nesten sortert array i O(n) tid. Her gis det negative poeng på de alternativene som er feil. Det er ikke mulig å få mindre enn 0 totalt på denne oppgaven.",
+      "page_start": 7,
+      "page_end": 7,
+      "points": 2,
+      "topic": "Sortering",
+      "interaction_type": "multiple_choice",
+      "choices": [
+        "HeapSort",
+        "QuickSort",
+        "BubbleSort",
+        "InsertionSort",
+        "MergeSort",
+        "SelectionSort"
+      ],
+      "subquestions": [],
+      "solution": {
+        "answer": null,
+        "explanation": "InsertionSort er O(n) for nesten sorterte arrays.",
+        "grading_points": [],
+        "source": null
+      }
+    },
+    {
+      "id": "q9",
+      "question_number": "9",
+      "question_text": "Gotta Trade Some of 'Em. Gitt en graf som representerer personer og vennskap, så skal du tildele en versjon av spillet til hver person slik at det er mulig for alle personene å til slutt få alle pokemonene enten direkte fra spillet de selv har eller ved å bytte med sine venner som igjen bytter med sine venner osv. Det er n personer, m vennskap og k versjoner av spillet.",
+      "page_start": 8,
+      "page_end": 8,
+      "points": 10,
+      "topic": "Grafer",
+      "interaction_type": "free_text",
+      "choices": [],
+      "subquestions": [
+        {
+          "id": "q9_1",
+          "label": "1",
+          "text": "Beskriv en situasjon der det ikke er mulig å tildele slik at alle kan få alle pokemonene.",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "Grafen er ikke sammenhengende.",
+            "explanation": "Hvis grafen er delt i to komponenter uten kanter mellom dem, kan ikke informasjon flyte mellom dem.",
+            "grading_points": [
+              "Nevne manglende sammenheng"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q9_2",
+          "label": "2",
+          "text": "Forklar hvilken egenskap som må holde for grafen og n, m, k slik at det skal være mulig å få alle pokemonene",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "Grafen må være sammenhengende.",
+            "explanation": "Alle noder må kunne nå hverandre for å utveksle pokemoner.",
+            "grading_points": [
+              "Krav om sammenhengende graf"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q9_3",
+          "label": "3",
+          "text": "Forklar hvilken algoritme du ville brukt for å finne ut om alle kan få alle pokemon",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "BFS eller DFS.",
+            "explanation": "Disse kan sjekke om grafen er sammenhengende.",
+            "grading_points": [
+              "Valg av BFS/DFS"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q9_4",
+          "label": "4",
+          "text": "Beskriv kjøretiden til din algoritme med big-O som funksjon av n, m og k",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "O(n + m).",
+            "explanation": "Standard traversering av graf.",
+            "grading_points": [
+              "Korrekt Big-O"
+            ],
+            "source": "ai_generated"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q10",
+      "question_number": "10",
+      "question_text": "Container trucks. Du jobber for et transportfirma som frakter containere på lastebiler. Hver lastebil skal frakte 2 kontainere samtidig, alle lastebilene har samme kapasitet og alle containerene skal fraktes samme strekning. Din jobb er å velge par av containere slik at ingen lastebil får for mye last på seg. Skriv et program som regner ut den minste kapasiteten lastebilene må ha for å klare å frakte alle kontainerene uten at noen lastebiler får for mye vekt.",
+      "page_start": 9,
+      "page_end": 9,
+      "points": 15,
+      "topic": "Algoritmer",
+      "interaction_type": "free_text",
+      "choices": [],
+      "subquestions": [],
+      "solution": {
+        "answer": null,
+        "explanation": "Sorter listen og par minste med største element for å minimere maks sum.",
+        "grading_points": [],
+        "source": null
+      }
+    },
+    {
+      "id": "q11",
+      "question_number": "11",
+      "question_text": "Find best AI. Du skal lage en programmeringskonurranse der det ikke forventes at løsningene er perfekte. Det er k program med som alle kjøres på samme input set med n forskjellige input. For hvert av disse programmene vil alle n score verdiene som ble gitt på input bli sortert og lagret i en ArrayList, lav verdi kommer først og representerer den beste scoren. Altså, du er gitt k sorterte lister der hver har n elementer.",
+      "page_start": 10,
+      "page_end": 10,
+      "points": 15,
+      "topic": "Algoritmer",
+      "interaction_type": "free_text",
+      "choices": [],
+      "subquestions": [
+        {
+          "id": "q11_1",
+          "label": "1",
+          "text": "Beskriv en algoritme som finner ut hvilken AI som er best.",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "Flett de k listene.",
+            "explanation": "Bruk en prioritetskø for å finne de 10% minste verdiene på tvers av alle lister.",
+            "grading_points": [
+              "Effektiv fletting",
+              "Bruk av prioritetskø"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q11_2",
+          "label": "2",
+          "text": "Oppgi kjøretid for algoritmen din med k og n som variabler.",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "O(n * k * log k).",
+            "explanation": "Hver av de n*k elementene behandles i prioritetskøen.",
+            "grading_points": [
+              "Korrekt kompleksitet"
+            ],
+            "source": "ai_generated"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q12",
+      "question_number": "12",
+      "question_text": "Poeng fra semesteroppgaver H25. På denne oppgåva treng de ikkje gjera noko, her får de poeng for insatsen de har gjort på semesteroppgåver og vekeoppgåver. Skriv en hyggelig melding til foreleser!",
+      "page_start": 11,
+      "page_end": 11,
+      "points": 36,
+      "topic": null,
+      "interaction_type": "free_text",
+      "choices": [],
+      "subquestions": [],
+      "solution": {
+        "answer": null,
+        "explanation": "Takk for et lærerikt semester!",
+        "grading_points": [],
+        "source": null
+      }
+    }
+  ],
+  "warnings": [
+    "Dette er en AI-generert løsning og ikke en offisiell løsning.",
+    "AI-generated solutions; not official answer key."
+  ]
+}

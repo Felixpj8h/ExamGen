@@ -23,6 +23,8 @@ Run the whole backend pipeline with one command:
 python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/
 ```
 
+When the pipeline can find the React `public/` folder above `--out-dir`, it also writes a frontend-readable copy to `public/sample-exam-bundle.json`. The React app loads that file, so rerunning the pipeline is enough to test a new exam bundle in the frontend.
+
 With a separate solution PDF:
 
 ```bash
@@ -36,6 +38,12 @@ python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/ --generate
 ```
 
 Generated answers are marked as `ai_generated` and include a warning that they are not an official answer key.
+
+To skip updating the frontend sample file:
+
+```bash
+python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/ --no-public-bundle
+```
 
 The frontend contract is `exam_bundle.json`. Future backend/API code can call:
 

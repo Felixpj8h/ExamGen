@@ -33,6 +33,18 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Generate AI-marked practice solutions when no official answers/løsningsforslag are found.",
     )
+    parser.add_argument(
+        "--public-bundle-path",
+        help=(
+            "Optional path for a frontend-readable copy of exam_bundle.json. "
+            "Defaults to public/sample-exam-bundle.json when a public/ folder is found above --out-dir."
+        ),
+    )
+    parser.add_argument(
+        "--no-public-bundle",
+        action="store_true",
+        help="Do not mirror exam_bundle.json into the frontend public/ folder.",
+    )
     parser.add_argument("--indent", type=int, default=2, help="JSON indentation level.")
     return parser
 
@@ -51,6 +63,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 temperature=args.temperature,
                 max_output_tokens=args.max_output_tokens,
                 generate_missing_solutions=args.generate_missing_solutions,
+                mirror_bundle_to_public=not args.no_public_bundle,
+                public_bundle_path=args.public_bundle_path,
                 indent=args.indent,
             ),
         )
