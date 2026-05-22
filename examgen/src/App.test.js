@@ -47,6 +47,14 @@ test('renders exam practice workspace from the exam bundle', async () => {
               topic: 'logical errors',
               interaction_type: 'free_text',
               choices: [],
+              images: [
+                {
+                  id: 'page_2_img_1',
+                  src: '/sample-assets/exam/page_2_img_1.png',
+                  alt: 'Image from page 2',
+                  page_number: 2,
+                },
+              ],
               subquestions: [],
               solution: {
                 answer: null,
@@ -68,6 +76,7 @@ test('renders exam practice workspace from the exam bundle', async () => {
 
   fireEvent.click(screen.getByRole('button', { name: /question 2/i }));
   expect(screen.getByText('Answer')).toBeInTheDocument();
+  expect(screen.getByRole('img', { name: /image from page 2/i })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: /reveal solution/i }));
   expect(screen.getByText(/existential instantiation is used incorrectly/i)).toBeInTheDocument();
 });

@@ -208,6 +208,43 @@ def test_post_process_preserves_explicit_multiple_choice_metadata() -> None:
     assert processed["questions"][0]["subquestions"][0]["choices"] == ["A", "B", "C", "D"]
 
 
+def test_post_process_recovers_missing_raw_multiple_choice_options() -> None:
+    extraction = sample_extraction()
+    extraction["pages"][0]["raw_text"] = (
+        'c) Hva er verdien til uttrykket length $ "Hello" ++ "World"?\n'
+        "Velg ett alternativ\n"
+        "10\n"
+        '"HelloWorld"\n'
+        "5\n"
+        '"HWeolrllod"\n'
+        "[('H','W'),('e','o'),('l','r'),('l','l'),('o','d')]\n"
+        "2/15\n"
+    )
+    result = sample_questions()
+    result["questions"][0]["subquestions"][0] = {
+        "id": "q1c",
+        "label": "c",
+        "text": 'Hva er verdien til uttrykket length $ "Hello" ++ "World"?',
+        "points": None,
+        "interaction_type": "multiple_choice",
+        "choices": [
+            '"HelloWorld"',
+            '"HWeolrllod"',
+            "[('H','W'),('e','o'),('l','r'),('l','l'),('o','d')]",
+        ],
+    }
+
+    processed = post_process_questions(result, extraction_result=extraction)
+
+    assert processed["questions"][0]["subquestions"][0]["choices"] == [
+        "10",
+        '"HelloWorld"',
+        "5",
+        '"HWeolrllod"',
+        "[('H','W'),('e','o'),('l','r'),('l','l'),('o','d')]",
+    ]
+
+
 def test_infer_interaction_type_defaults_to_free_text_when_uncertain() -> None:
     assert infer_interaction_type("Discuss the concept briefly.") == "free_text"
 

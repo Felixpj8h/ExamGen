@@ -164,6 +164,57 @@ def test_existing_question_fields_are_preserved() -> None:
     assert q1["page_start"] == 1
 
 
+def test_question_images_attach_by_page_range() -> None:
+    extraction_result = {
+        "pages": [
+            {
+                "page_number": 1,
+                "images": [
+                    {
+                        "id": "page_1_img_1",
+                        "src": "/sample-assets/exam/page_1_img_1.png",
+                        "path": "assets/exam/page_1_img_1.png",
+                        "page_number": 1,
+                        "bbox": [10, 20, 100, 120],
+                        "width": 180,
+                        "height": 200,
+                    }
+                ],
+            },
+            {
+                "page_number": 3,
+                "images": [
+                    {
+                        "id": "page_3_img_1",
+                        "src": "/sample-assets/exam/page_3_img_1.png",
+                        "path": "assets/exam/page_3_img_1.png",
+                        "page_number": 3,
+                        "bbox": [10, 20, 100, 120],
+                        "width": 180,
+                        "height": 200,
+                    }
+                ],
+            },
+        ]
+    }
+
+    bundle = build_exam_bundle(questions(), solutions(), extraction_result=extraction_result)
+
+    assert bundle["questions"][0]["images"] == [
+        {
+            "id": "page_1_img_1",
+            "src": "/sample-assets/exam/page_1_img_1.png",
+            "path": "assets/exam/page_1_img_1.png",
+            "page_number": 1,
+            "bbox": [10, 20, 100, 120],
+            "width": 180,
+            "height": 200,
+            "alt": "Image from page 1",
+        }
+    ]
+    assert bundle["questions"][1]["images"] == []
+
+
 def test_parent_solution_with_matched_subsolutions_does_not_create_parent_unmatched_warning() -> None:
     solution_result = solutions()
     solution_result["solutions"][0]["solution_text"] = "Answers for question 1."
@@ -177,3 +228,20 @@ def test_all_matching_subsolutions_produce_empty_warnings() -> None:
     bundle = build_exam_bundle(questions(), solutions())
 
     assert bundle["warnings"] == []
+
+
+def test_multiple_choice_choices_include_solution_answer_when_ai_missed_it() -> None:
+    question_result = questions()
+    subquestion = question_result["questions"][0]["subquestions"][0]
+    subquestion["interaction_type"] = "multiple_choice"
+    subquestion["choices"] = ['"HelloWorld"', '"HWeolrllod"']
+    solution_result = solutions()
+    solution_result["solutions"][0]["subsolutions"][0]["answer"] = "10"
+
+    bundle = build_exam_bundle(question_result, solution_result)
+
+    assert bundle["questions"][0]["subquestions"][0]["choices"] == [
+        "10",
+        '"HelloWorld"',
+        '"HWeolrllod"',
+    ]

@@ -24,6 +24,7 @@ python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/
 ```
 
 When the pipeline can find the React `public/` folder above `--out-dir`, it also writes a frontend-readable copy to `public/sample-exam-bundle.json`. The React app loads that file, so rerunning the pipeline is enough to test a new exam bundle in the frontend.
+Embedded raster images are saved under `output/assets/`, attached to questions by page range, and mirrored to `public/sample-assets/` for local frontend preview.
 
 With a separate solution PDF:
 

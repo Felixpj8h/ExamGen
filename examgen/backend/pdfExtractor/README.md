@@ -70,6 +70,7 @@ python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/ --generate
 
 The pipeline writes intermediate files such as `extracted_exam.json`, `classification.json`, `questions.json`, `solutions.json` when available, and `exam_bundle.json`.
 AI-generated answers are marked with `source_type: "ai_generated"`, each subsolution uses `source: "ai_generated"`, and `solutions.json` includes the warning `AI-generated solutions; not official answer key.`
+Embedded raster images are extracted as rendered crops under `output/assets/` and attached to questions by `page_start`/`page_end`. When the frontend sample bundle is mirrored, those assets are also copied to `public/sample-assets/`.
 
 Use `--no-public-bundle` if you want to write only backend artifacts without updating the frontend sample file. Use `--public-bundle-path path/to/sample-exam-bundle.json` to choose a specific frontend copy path.
 

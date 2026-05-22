@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -50,7 +51,12 @@ def run_exam_pipeline(
     output_dir.mkdir(parents=True, exist_ok=True)
     artifacts: dict[str, str] = {}
 
-    exam_extraction = extract_pdf(exam_pdf)
+    exam_extraction = extract_pdf(
+        exam_pdf,
+        image_output_dir=output_dir / "assets" / "exam",
+        image_path_prefix="assets/exam",
+        image_url_prefix="/sample-assets/exam",
+    )
     _write_artifact(output_dir, "extracted_exam.json", exam_extraction, resolved_options, artifacts)
 
     if solutions_pdf:
@@ -97,7 +103,12 @@ def _run_separate_solution_pipeline(
     )
     _write_artifact(out_dir, "questions.json", questions, options, artifacts)
 
-    solution_extraction = extract_pdf(solutions_pdf)
+    solution_extraction = extract_pdf(
+        solutions_pdf,
+        image_output_dir=out_dir / "assets" / "solutions",
+        image_path_prefix="assets/solutions",
+        image_url_prefix="/sample-assets/solutions",
+    )
     _write_artifact(out_dir, "extracted_solutions.json", solution_extraction, options, artifacts)
     solution_classification = classify_extracted_document(solution_extraction)
     _write_artifact(out_dir, "solution_classification.json", solution_classification, options, artifacts)
@@ -112,7 +123,7 @@ def _run_separate_solution_pipeline(
     )
     _write_artifact(out_dir, "solutions.json", solutions, options, artifacts)
 
-    bundle = build_exam_bundle(questions, solutions)
+    bundle = build_exam_bundle(questions, solutions, extraction_result=exam_extraction)
     _write_artifact(out_dir, "exam_bundle.json", bundle, options, artifacts)
 
 
@@ -139,7 +150,7 @@ def _run_single_pdf_pipeline(
         if options.generate_missing_solutions:
             solutions = _generate_ai_solutions(options, exam_extraction, questions)
             _write_artifact(out_dir, "solutions.json", solutions, options, artifacts)
-        bundle = build_exam_bundle(questions, solutions)
+        bundle = build_exam_bundle(questions, solutions, extraction_result=exam_extraction)
         _write_artifact(out_dir, "exam_bundle.json", bundle, options, artifacts)
         return
 
@@ -165,7 +176,7 @@ def _run_single_pdf_pipeline(
                 raise
             solutions = _generate_ai_solutions(options, exam_extraction, questions)
         _write_artifact(out_dir, "solutions.json", solutions, options, artifacts)
-        bundle = build_exam_bundle(questions, solutions)
+        bundle = build_exam_bundle(questions, solutions, extraction_result=exam_extraction)
         _write_artifact(out_dir, "exam_bundle.json", bundle, options, artifacts)
         return
 
@@ -219,6 +230,7 @@ def _write_public_exam_bundle(
         encoding="utf-8",
     )
     artifacts["public/sample-exam-bundle.json"] = str(public_bundle_path)
+    _mirror_public_assets(out_dir, public_bundle_path.parent, artifacts)
 
 
 def _resolve_public_bundle_path(out_dir: Path, configured_path: str | Path | None) -> Path | None:
@@ -231,3 +243,12 @@ def _resolve_public_bundle_path(out_dir: Path, configured_path: str | Path | Non
             return candidate / "sample-exam-bundle.json"
 
     return None
+
+
+def _mirror_public_assets(out_dir: Path, public_dir: Path, artifacts: dict[str, str]) -> None:
+    source_assets = out_dir / "assets"
+    if not source_assets.is_dir():
+        return
+    target_assets = public_dir / "sample-assets"
+    shutil.copytree(source_assets, target_assets, dirs_exist_ok=True)
+    artifacts["public/sample-assets"] = str(target_assets)

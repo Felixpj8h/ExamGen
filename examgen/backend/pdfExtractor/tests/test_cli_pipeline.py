@@ -83,7 +83,7 @@ def test_pipeline_exam_only_writes_questions_and_bundle(
     tmp_path: Path, monkeypatch
 ) -> None:
     out_dir = tmp_path / "out"
-    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path: sample_extraction())
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path, **kwargs: sample_extraction())
     monkeypatch.setattr(
         "exam_parser.pipeline.extract_questions_with_gemini",
         lambda extraction_result, **kwargs: sample_questions(),
@@ -107,7 +107,7 @@ def test_pipeline_mirrors_exam_bundle_to_frontend_public(
     public_dir = project_dir / "public"
     public_dir.mkdir(parents=True)
     (public_dir / "index.html").write_text("<div id=\"root\"></div>", encoding="utf-8")
-    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path: sample_extraction())
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path, **kwargs: sample_extraction())
     monkeypatch.setattr(
         "exam_parser.pipeline.extract_questions_with_gemini",
         lambda extraction_result, **kwargs: sample_questions(),
@@ -128,7 +128,7 @@ def test_pipeline_can_skip_public_bundle_mirror(
     public_dir = project_dir / "public"
     public_dir.mkdir(parents=True)
     (public_dir / "index.html").write_text("<div id=\"root\"></div>", encoding="utf-8")
-    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path: sample_extraction())
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path, **kwargs: sample_extraction())
     monkeypatch.setattr(
         "exam_parser.pipeline.extract_questions_with_gemini",
         lambda extraction_result, **kwargs: sample_questions(),
@@ -144,7 +144,7 @@ def test_pipeline_exam_only_can_generate_ai_marked_solutions(
     tmp_path: Path, monkeypatch
 ) -> None:
     out_dir = tmp_path / "out"
-    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path: sample_extraction())
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path, **kwargs: sample_extraction())
     monkeypatch.setattr(
         "exam_parser.pipeline.extract_questions_with_gemini",
         lambda extraction_result, **kwargs: sample_questions(),
@@ -179,7 +179,7 @@ def test_pipeline_with_separate_solution_pdf_writes_solutions_and_bundle(
 ) -> None:
     out_dir = tmp_path / "out"
 
-    def fake_extract_pdf(path):
+    def fake_extract_pdf(path, **kwargs):
         if str(path).endswith("solutions.pdf"):
             return sample_extraction("solutions.pdf")
         return sample_extraction("exam.pdf")
@@ -211,7 +211,7 @@ def test_pipeline_combined_heading_with_correct_answers_uses_full_text_ai_path(
     extraction = sample_extraction_with_text(combined_text)
     questions = sample_questions()
 
-    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path: extraction)
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path, **kwargs: extraction)
     monkeypatch.setattr(
         "exam_parser.pipeline.extract_questions_with_gemini",
         lambda extraction_result, **kwargs: questions,
@@ -243,7 +243,7 @@ def test_pipeline_combined_interleaved_answers_uses_full_text_ai_path(
     combined_text = "Questions\n1. P(orange).\nAnswers\n1. True.\n2. False."
     extraction = sample_extraction_with_text(combined_text)
 
-    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path: extraction)
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path, **kwargs: extraction)
     monkeypatch.setattr(
         "exam_parser.pipeline.extract_questions_with_gemini",
         lambda extraction_result, **kwargs: sample_questions(),
@@ -268,7 +268,7 @@ def test_pipeline_combined_falls_back_to_ai_generated_when_requested(
     extraction = sample_extraction_with_text(combined_text)
     calls: list[str] = []
 
-    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path: extraction)
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path, **kwargs: extraction)
     monkeypatch.setattr(
         "exam_parser.pipeline.extract_questions_with_gemini",
         lambda extraction_result, **kwargs: sample_questions(),

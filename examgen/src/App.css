@@ -109,6 +109,36 @@ article h2 {
   line-height: 1.25;
 }
 
+.question-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, max-content));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.question-images figure {
+  margin: 0;
+  padding: 12px;
+  width: fit-content;
+  max-width: min(100%, 620px);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.question-images img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+}
+
+.question-images figcaption {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+
 .meta-row,
 .subquestion-meta {
   display: flex;

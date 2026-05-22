@@ -9,6 +9,7 @@ from typing import Any
 def build_exam_bundle(
     questions_result: dict[str, Any],
     solutions_result: dict[str, Any] | None = None,
+    extraction_result: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Merge solutions into matching question/subquestion records."""
     warnings: list[str] = []
@@ -21,6 +22,7 @@ def build_exam_bundle(
     for question in questions:
         if not isinstance(question, dict):
             continue
+        question["images"] = _images_for_question(question, extraction_result)
         question_key = str(question.get("id") or "")
         number_key = str(question.get("question_number") or "")
         for subquestion in question.get("subquestions", []):
@@ -45,6 +47,7 @@ def build_exam_bundle(
                     "grading_points": solution.get("grading_points", []),
                     "source": solution.get("source"),
                 }
+                _ensure_solution_answer_choice(subquestion)
                 matched_solution_keys.add(solution_key)
                 parent_key = solution_indexes["subsolution_parent_keys"].get(solution_key)
                 if parent_key:
@@ -63,6 +66,7 @@ def build_exam_bundle(
                     "grading_points": [],
                     "source": None,
                 }
+                _ensure_solution_answer_choice(question)
                 matched_solution_keys.add(solution_key)
                 matched_parent_keys.add(solution_key)
             else:
@@ -188,3 +192,68 @@ def _unique_warnings(warnings: list[Any]) -> list[str]:
 def _has_parent_solution_content(solution: dict[str, Any]) -> bool:
     solution_text = solution.get("solution_text")
     return isinstance(solution_text, str) and bool(solution_text.strip())
+
+
+def _ensure_solution_answer_choice(item: dict[str, Any]) -> None:
+    if item.get("interaction_type") != "multiple_choice":
+        return
+    solution = item.get("solution")
+    if not isinstance(solution, dict):
+        return
+    answer = solution.get("answer")
+    if not isinstance(answer, str) or not answer.strip():
+        return
+    choices = item.get("choices")
+    if not isinstance(choices, list):
+        choices = []
+    string_choices = [choice for choice in choices if isinstance(choice, str)]
+    if any(_normalize_choice(choice) == _normalize_choice(answer) for choice in string_choices):
+        item["choices"] = string_choices
+        return
+    item["choices"] = [answer, *string_choices]
+
+
+def _normalize_choice(choice: str) -> str:
+    return choice.strip().strip("\"'").casefold()
+
+
+def _images_for_question(
+    question: dict[str, Any],
+    extraction_result: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    if not extraction_result:
+        return list(question.get("images", [])) if isinstance(question.get("images"), list) else []
+
+    page_start = question.get("page_start")
+    page_end = question.get("page_end") or page_start
+    if not isinstance(page_start, int) or not isinstance(page_end, int):
+        return list(question.get("images", [])) if isinstance(question.get("images"), list) else []
+
+    images: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for page in extraction_result.get("pages", []):
+        if not isinstance(page, dict):
+            continue
+        page_number = page.get("page_number")
+        if not isinstance(page_number, int) or not page_start <= page_number <= page_end:
+            continue
+        for image in page.get("images", []):
+            if not isinstance(image, dict):
+                continue
+            image_id = str(image.get("id") or "")
+            if image_id in seen_ids:
+                continue
+            seen_ids.add(image_id)
+            images.append(
+                {
+                    "id": image_id,
+                    "src": image.get("src") or image.get("path"),
+                    "path": image.get("path"),
+                    "page_number": image.get("page_number"),
+                    "bbox": image.get("bbox"),
+                    "width": image.get("width"),
+                    "height": image.get("height"),
+                    "alt": f"Image from page {image.get('page_number')}",
+                }
+            )
+    return images

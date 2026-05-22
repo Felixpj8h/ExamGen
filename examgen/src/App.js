@@ -274,6 +274,7 @@ function App() {
             <h2 className="mt-2 max-w-4xl text-2xl font-semibold leading-snug">
               {formatDisplayText(selectedQuestion.question_text)}
             </h2>
+            <QuestionImages images={selectedQuestion.images} />
           </article>
 
           <div className="mt-6 space-y-5">
@@ -336,9 +337,27 @@ function SubquestionPanel({ subquestion, value, revealed, onAnswer, onReveal }) 
   );
 }
 
+function QuestionImages({ images }) {
+  const visibleImages = Array.isArray(images) ? images.filter((image) => image?.src) : [];
+  if (visibleImages.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="question-images">
+      {visibleImages.map((image) => (
+        <figure key={image.id || image.src}>
+          <img src={image.src} alt={image.alt || `Image from page ${image.page_number || ''}`} />
+          {image.page_number && <figcaption>Page {image.page_number}</figcaption>}
+        </figure>
+      ))}
+    </div>
+  );
+}
+
 function AnswerInput({ subquestion, value, onAnswer }) {
   if (subquestion.interaction_type === 'true_false' || subquestion.interaction_type === 'multiple_choice') {
-    const choices = Array.isArray(subquestion.choices) ? subquestion.choices : [];
+    const choices = getDisplayChoices(subquestion);
     return (
       <div className="flex flex-wrap gap-2">
         {choices.map((choice) => (
@@ -471,6 +490,24 @@ function formatDisplayText(text) {
     .replace(/(\S)([∧∨→↔])/g, '$1 $2')
     .replace(/\s+([),.;:?])/g, '$1')
     .replace(/([(])\s+/g, '$1');
+}
+
+function getDisplayChoices(subquestion) {
+  const choices = Array.isArray(subquestion.choices) ? [...subquestion.choices] : [];
+  const answer = subquestion.solution?.answer;
+  if (
+    subquestion.interaction_type === 'multiple_choice' &&
+    typeof answer === 'string' &&
+    answer.trim() &&
+    !choices.some((choice) => normalizeChoice(choice) === normalizeChoice(answer))
+  ) {
+    return [answer, ...choices];
+  }
+  return choices;
+}
+
+function normalizeChoice(choice) {
+  return String(choice || '').trim().replace(/^["']|["']$/g, '').toLowerCase();
 }
 
 export default App;

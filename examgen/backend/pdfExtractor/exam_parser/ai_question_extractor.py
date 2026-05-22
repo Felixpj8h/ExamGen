@@ -86,7 +86,13 @@ def _combined_page_text(extraction_result: dict[str, Any]) -> str:
         if not clean_text:
             continue
         page_number = page.get("page_number")
-        page_blocks.append(f"[PAGE {page_number}]\n{clean_text}")
+        image_lines = [
+            f"- {image.get('id')} bbox={image.get('bbox')}"
+            for image in page.get("images", [])
+            if isinstance(image, dict) and image.get("id")
+        ]
+        image_block = "\n\nImages on this page:\n" + "\n".join(image_lines) if image_lines else ""
+        page_blocks.append(f"[PAGE {page_number}]\n{clean_text}{image_block}")
     return "\n\n".join(page_blocks).strip()
 
 
@@ -213,13 +219,18 @@ def _parse_json_response(response_text: str) -> dict[str, Any]:
     return parsed
 
 
-def post_process_questions(result: dict[str, Any]) -> dict[str, Any]:
+def post_process_questions(
+    result: dict[str, Any],
+    extraction_result: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Apply deterministic cleanup to Gemini's structured question output."""
     processed = result
     _ensure_warning_list(processed)
     _normalize_language(processed)
     _normalize_question_text(processed)
     _normalize_interaction_metadata(processed)
+    if extraction_result is not None:
+        _recover_multiple_choice_options_from_raw(processed, extraction_result)
     _split_merged_followups(processed)
     _warn_about_generic_topics(processed)
     return processed
@@ -291,6 +302,106 @@ def _ensure_interaction_fields(
         choices = []
     item["interaction_type"] = interaction_type
     item["choices"] = choices
+
+
+def _recover_multiple_choice_options_from_raw(
+    result: dict[str, Any],
+    extraction_result: dict[str, Any],
+) -> None:
+    pages_by_number = {
+        page.get("page_number"): str(page.get("raw_text") or "")
+        for page in extraction_result.get("pages", [])
+        if isinstance(page, dict)
+    }
+    for question in result.get("questions", []):
+        if not isinstance(question, dict):
+            continue
+        page_numbers = _question_page_numbers(question)
+        raw_lines = _raw_lines_for_pages(pages_by_number, page_numbers)
+        if not raw_lines:
+            continue
+        for subquestion in question.get("subquestions", []):
+            if isinstance(subquestion, dict):
+                _recover_item_choices_from_raw(subquestion, raw_lines)
+        _recover_item_choices_from_raw(question, raw_lines)
+
+
+def _question_page_numbers(question: dict[str, Any]) -> list[int]:
+    page_start = question.get("page_start")
+    page_end = question.get("page_end") or page_start
+    if not isinstance(page_start, int) or not isinstance(page_end, int):
+        return []
+    return list(range(page_start, page_end + 1))
+
+
+def _raw_lines_for_pages(pages_by_number: dict[Any, str], page_numbers: list[int]) -> list[str]:
+    lines: list[str] = []
+    for page_number in page_numbers:
+        raw_text = pages_by_number.get(page_number, "")
+        lines.extend(line.strip() for line in raw_text.splitlines() if line.strip())
+    return lines
+
+
+def _recover_item_choices_from_raw(item: dict[str, Any], raw_lines: list[str]) -> None:
+    if item.get("interaction_type") != "multiple_choice":
+        return
+    choices = item.get("choices")
+    if not isinstance(choices, list) or not all(isinstance(choice, str) for choice in choices):
+        return
+
+    normalized_choice_indexes: list[int] = []
+    normalized_choices = {_normalize_choice_text(choice) for choice in choices}
+    for index, line in enumerate(raw_lines):
+        if _normalize_choice_text(line) in normalized_choices:
+            normalized_choice_indexes.append(index)
+    if len(normalized_choice_indexes) < 2:
+        return
+
+    start = max(0, min(normalized_choice_indexes) - 2)
+    end = min(len(raw_lines) - 1, max(normalized_choice_indexes) + 2)
+    recovered = list(choices)
+    seen = {_normalize_choice_text(choice) for choice in recovered}
+    for line in raw_lines[start : end + 1]:
+        normalized = _normalize_choice_text(line)
+        if normalized in seen or not _looks_like_choice_line(line):
+            continue
+        recovered.insert(_choice_insert_index(raw_lines, recovered, line), line)
+        seen.add(normalized)
+    item["choices"] = recovered
+
+
+def _choice_insert_index(raw_lines: list[str], choices: list[str], candidate: str) -> int:
+    candidate_index = _first_line_index(raw_lines, candidate)
+    for choice_index, choice in enumerate(choices):
+        existing_index = _first_line_index(raw_lines, choice)
+        if existing_index != -1 and candidate_index != -1 and candidate_index < existing_index:
+            return choice_index
+    return len(choices)
+
+
+def _first_line_index(raw_lines: list[str], text: str) -> int:
+    normalized = _normalize_choice_text(text)
+    for index, line in enumerate(raw_lines):
+        if _normalize_choice_text(line) == normalized:
+            return index
+    return -1
+
+
+def _looks_like_choice_line(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return False
+    if stripped.casefold() in {"velg ett alternativ", "maks poeng"}:
+        return False
+    if re.fullmatch(r"\d+/\d+", stripped):
+        return False
+    if re.fullmatch(r"\d{1,3}", stripped):
+        return True
+    return any(token in stripped for token in ('"', "'", "[", "]", "->", "::", "Integer", "String", "Char"))
+
+
+def _normalize_choice_text(text: str) -> str:
+    return re.sub(r"\s+", " ", str(text or "")).strip().strip("\"'").casefold()
 
 
 def infer_interaction_type(text: str, *, inherited_context: str = "") -> str:
@@ -537,6 +648,9 @@ def extract_questions_with_gemini(
     except Exception as exc:
         raise QuestionExtractionError(f"Gemini API request failed: {exc}") from exc
 
-    result = post_process_questions(_parse_json_response(_extract_response_text(response)))
+    result = post_process_questions(
+        _parse_json_response(_extract_response_text(response)),
+        extraction_result=extraction_result,
+    )
     validate_question_extraction_result(result)
     return result
