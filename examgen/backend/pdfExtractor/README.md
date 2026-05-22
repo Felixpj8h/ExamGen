@@ -77,6 +77,17 @@ Use `exam_bundle.json` as the single frontend input. It contains exam metadata, 
 - `same_pdf`: official answer found in the same PDF
 - `ai_generated`: AI-generated practice answer, not an official answer key
 
+Questions and subquestions include frontend interaction metadata:
+
+```json
+{
+  "interaction_type": "true_false",
+  "choices": ["True", "False"]
+}
+```
+
+Allowed `interaction_type` values are `free_text`, `true_false`, `multiple_choice`, `numeric`, `proof`, and `translation`. Use `choices` for `true_false` and `multiple_choice`; other interaction types use an empty list.
+
 Future FastAPI code should call the stable backend wrapper instead of shelling out to the CLI:
 
 ```python

@@ -39,6 +39,25 @@ BROAD_TOPIC_VALUES = {
     "math",
     "logic",
 }
+INTERACTION_TYPES = {
+    "free_text",
+    "true_false",
+    "multiple_choice",
+    "numeric",
+    "proof",
+    "translation",
+}
+TRUE_FALSE_CHOICES = ["True", "False"]
+TRUE_FALSE_PROMPT_RE = re.compile(
+    r"\b(truth values?|true or false|is (?:the )?statement true|sann(?:e|t)?|usann(?:e|t)?)\b",
+    re.IGNORECASE,
+)
+MULTIPLE_CHOICE_RE = re.compile(
+    r"(?s)(?:^|\n)\s*(?:A|B|C|D|[A-Da-d])[\).]\s+\S.*(?:\n|\s+)(?:B|C|D|[B-Da-d])[\).]\s+\S"
+)
+NUMERIC_PROMPT_RE = re.compile(r"\b(calculate|compute|find the value|how many|numeric|number)\b", re.IGNORECASE)
+PROOF_PROMPT_RE = re.compile(r"\b(prove|show that|justify|explain why)\b", re.IGNORECASE)
+TRANSLATION_PROMPT_RE = re.compile(r"\b(translate|express .* in logic|write .* in english)\b", re.IGNORECASE)
 
 
 class QuestionExtractionError(Exception):
@@ -104,6 +123,13 @@ Rules:
 - Use "mixed" as language if headings/metadata and questions use different languages.
 - Use specific topic labels when obvious. Avoid using only the broad course name for every question.
 - If unsure about the topic, use null instead of guessing.
+- For every question and subquestion, set interaction_type for frontend rendering.
+- interaction_type must be one of: free_text, true_false, multiple_choice, numeric, proof, translation.
+- Use true_false for prompts asking for truth values, true/false, sant/usant, or yes/no validity where the expected answer is binary.
+- Use multiple_choice only when explicit answer choices/options are present in the text.
+- Set choices to ["True", "False"] for true_false questions.
+- Set choices to the visible option labels/text for multiple_choice questions.
+- Use choices as [] for free_text, numeric, proof, or translation.
 - If uncertain, include a warning instead of guessing.
 - Return only JSON matching the schema.
 
@@ -193,6 +219,7 @@ def post_process_questions(result: dict[str, Any]) -> dict[str, Any]:
     _ensure_warning_list(processed)
     _normalize_language(processed)
     _normalize_question_text(processed)
+    _normalize_interaction_metadata(processed)
     _split_merged_followups(processed)
     _warn_about_generic_topics(processed)
     return processed
@@ -229,6 +256,57 @@ def _normalize_question_text(result: dict[str, Any]) -> None:
         for subquestion in question.get("subquestions", []):
             if isinstance(subquestion, dict) and isinstance(subquestion.get("text"), str):
                 subquestion["text"] = normalize_obvious_math_squares(subquestion["text"])
+
+
+def _normalize_interaction_metadata(result: dict[str, Any]) -> None:
+    for question in result.get("questions", []):
+        if not isinstance(question, dict):
+            continue
+        question_context = str(question.get("question_text") or "")
+        _ensure_interaction_fields(question, context=question_context, inherited_context=question_context)
+        for subquestion in question.get("subquestions", []):
+            if isinstance(subquestion, dict):
+                _ensure_interaction_fields(
+                    subquestion,
+                    context=str(subquestion.get("text") or ""),
+                    inherited_context=question_context,
+                )
+
+
+def _ensure_interaction_fields(
+    item: dict[str, Any],
+    *,
+    context: str,
+    inherited_context: str,
+) -> None:
+    interaction_type = item.get("interaction_type")
+    choices = item.get("choices")
+    if interaction_type not in INTERACTION_TYPES:
+        interaction_type = infer_interaction_type(context, inherited_context=inherited_context)
+    if not isinstance(choices, list) or not all(isinstance(choice, str) for choice in choices):
+        choices = []
+    if interaction_type == "true_false":
+        choices = TRUE_FALSE_CHOICES
+    elif interaction_type != "multiple_choice":
+        choices = []
+    item["interaction_type"] = interaction_type
+    item["choices"] = choices
+
+
+def infer_interaction_type(text: str, *, inherited_context: str = "") -> str:
+    """Conservatively infer frontend interaction type from question text."""
+    combined = f"{inherited_context}\n{text}".strip()
+    if TRUE_FALSE_PROMPT_RE.search(combined):
+        return "true_false"
+    if MULTIPLE_CHOICE_RE.search(text):
+        return "multiple_choice"
+    if TRANSLATION_PROMPT_RE.search(combined):
+        return "translation"
+    if PROOF_PROMPT_RE.search(combined):
+        return "proof"
+    if NUMERIC_PROMPT_RE.search(combined):
+        return "numeric"
+    return "free_text"
 
 
 def normalize_obvious_math_squares(text: str) -> str:
@@ -290,7 +368,14 @@ def _split_subquestion_followup(
         "label": FOLLOWUP_LABEL,
         "text": followup,
         "points": None,
+        "interaction_type": infer_interaction_type(followup, inherited_context=str(question.get("question_text") or "")),
+        "choices": [],
     }
+    _ensure_interaction_fields(
+        followup_subquestion,
+        context=followup,
+        inherited_context=str(question.get("question_text") or ""),
+    )
     return [updated_subquestion, followup_subquestion]
 
 
@@ -379,6 +464,7 @@ def _validate_question(question: Any, index: int) -> None:
     topic = question.get("topic")
     if topic is not None and not isinstance(topic, str):
         raise QuestionExtractionError(f"Question {index} topic must be a string or null.")
+    _validate_interaction_fields(question, f"Question {index}")
 
     subquestions = question.get("subquestions")
     if not isinstance(subquestions, list):
@@ -409,6 +495,20 @@ def _validate_subquestion(subquestion: Any, question_index: int, sub_index: int)
         raise QuestionExtractionError(
             f"Question {question_index} subquestion {sub_index} points must be a number or null."
         )
+    _validate_interaction_fields(subquestion, f"Question {question_index} subquestion {sub_index}")
+
+
+def _validate_interaction_fields(item: dict[str, Any], label: str) -> None:
+    interaction_type = item.get("interaction_type")
+    choices = item.get("choices")
+    if interaction_type not in INTERACTION_TYPES:
+        raise QuestionExtractionError(f"{label} has invalid interaction_type.")
+    if not isinstance(choices, list) or not all(isinstance(choice, str) for choice in choices):
+        raise QuestionExtractionError(f"{label} choices must be a list of strings.")
+    if interaction_type == "true_false" and choices != TRUE_FALSE_CHOICES:
+        raise QuestionExtractionError(f"{label} true_false choices must be ['True', 'False'].")
+    if interaction_type != "multiple_choice" and interaction_type != "true_false" and choices:
+        raise QuestionExtractionError(f"{label} choices must be empty unless multiple_choice or true_false.")
 
 
 def extract_questions_with_gemini(

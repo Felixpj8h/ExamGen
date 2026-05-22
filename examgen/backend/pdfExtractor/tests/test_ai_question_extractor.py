@@ -7,6 +7,7 @@ from exam_parser.ai_question_extractor import (
     QuestionExtractionError,
     build_question_extraction_prompt,
     extract_questions_with_gemini,
+    infer_interaction_type,
     normalize_obvious_math_squares,
     post_process_questions,
     validate_question_extraction_result,
@@ -45,8 +46,17 @@ def sample_questions() -> dict:
                 "page_end": 1,
                 "points": None,
                 "topic": "predicate logic",
+                "interaction_type": "free_text",
+                "choices": [],
                 "subquestions": [
-                    {"id": "1a", "label": "a", "text": "P(orange).", "points": None}
+                    {
+                        "id": "1a",
+                        "label": "a",
+                        "text": "P(orange).",
+                        "points": None,
+                        "interaction_type": "free_text",
+                        "choices": [],
+                    }
                 ],
             }
         ],
@@ -67,6 +77,8 @@ def test_prompt_tells_model_not_to_solve_questions() -> None:
     assert "Do not solve anything." in prompt
     assert "Do not answer the exam questions." in prompt
     assert 'label "followup"' in prompt
+    assert "interaction_type must be one of" in prompt
+    assert 'choices to ["True", "False"]' in prompt
 
 
 def test_validation_accepts_correct_result() -> None:
@@ -105,12 +117,21 @@ def test_post_process_splits_merged_q8_followup() -> None:
 
     subquestions = processed["questions"][0]["subquestions"]
     assert subquestions == [
-        {"id": "q8c", "label": "c", "text": "No professors are vain.", "points": None},
+        {
+            "id": "q8c",
+            "label": "c",
+            "text": "No professors are vain.",
+            "points": None,
+            "interaction_type": "free_text",
+            "choices": [],
+        },
         {
             "id": "q8_followup",
             "label": "followup",
             "text": "Does (c) follow from (a) and (b)?",
             "points": None,
+            "interaction_type": "free_text",
+            "choices": [],
         },
     ]
 
@@ -158,6 +179,45 @@ def test_post_process_sets_mixed_language_for_norwegian_title_with_english_langu
     processed = post_process_questions(result)
 
     assert processed["language"] == "mixed"
+
+
+def test_post_process_adds_true_false_interaction_metadata_to_subquestions() -> None:
+    result = sample_questions()
+    result["questions"][0]["question_text"] = "What are these truth values?"
+    result["questions"][0].pop("interaction_type")
+    result["questions"][0].pop("choices")
+    result["questions"][0]["subquestions"][0].pop("interaction_type")
+    result["questions"][0]["subquestions"][0].pop("choices")
+
+    processed = post_process_questions(result)
+
+    subquestion = processed["questions"][0]["subquestions"][0]
+    assert subquestion["interaction_type"] == "true_false"
+    assert subquestion["choices"] == ["True", "False"]
+
+
+def test_post_process_preserves_explicit_multiple_choice_metadata() -> None:
+    result = sample_questions()
+    subquestion = result["questions"][0]["subquestions"][0]
+    subquestion["interaction_type"] = "multiple_choice"
+    subquestion["choices"] = ["A", "B", "C", "D"]
+
+    processed = post_process_questions(result)
+
+    assert processed["questions"][0]["subquestions"][0]["interaction_type"] == "multiple_choice"
+    assert processed["questions"][0]["subquestions"][0]["choices"] == ["A", "B", "C", "D"]
+
+
+def test_infer_interaction_type_defaults_to_free_text_when_uncertain() -> None:
+    assert infer_interaction_type("Discuss the concept briefly.") == "free_text"
+
+
+def test_validation_rejects_invalid_interaction_type() -> None:
+    malformed = sample_questions()
+    malformed["questions"][0]["subquestions"][0]["interaction_type"] = "slider"
+
+    with pytest.raises(QuestionExtractionError):
+        validate_question_extraction_result(malformed)
 
 
 class _FakeResponse:

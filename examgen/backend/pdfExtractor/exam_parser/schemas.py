@@ -5,11 +5,23 @@ from __future__ import annotations
 from typing import Any, Literal, TypedDict
 
 
+InteractionType = Literal[
+    "free_text",
+    "true_false",
+    "multiple_choice",
+    "numeric",
+    "proof",
+    "translation",
+]
+
+
 class ExtractedSubquestion(TypedDict):
     id: str
     label: str
     text: str
     points: float | int | None
+    interaction_type: InteractionType
+    choices: list[str]
 
 
 class ExtractedQuestion(TypedDict):
@@ -20,6 +32,8 @@ class ExtractedQuestion(TypedDict):
     page_end: int | None
     points: float | int | None
     topic: str | None
+    interaction_type: InteractionType
+    choices: list[str]
     subquestions: list[ExtractedSubquestion]
 
 
@@ -54,6 +68,18 @@ QUESTION_EXTRACTION_SCHEMA: dict[str, Any] = {
                     "page_end": {"type": "integer", "nullable": True},
                     "points": {"type": "number", "nullable": True},
                     "topic": {"type": "string", "nullable": True},
+                    "interaction_type": {
+                        "type": "string",
+                        "enum": [
+                            "free_text",
+                            "true_false",
+                            "multiple_choice",
+                            "numeric",
+                            "proof",
+                            "translation",
+                        ],
+                    },
+                    "choices": {"type": "array", "items": {"type": "string"}},
                     "subquestions": {
                         "type": "array",
                         "items": {
@@ -66,8 +92,27 @@ QUESTION_EXTRACTION_SCHEMA: dict[str, Any] = {
                                 },
                                 "text": {"type": "string"},
                                 "points": {"type": "number", "nullable": True},
+                                "interaction_type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "free_text",
+                                        "true_false",
+                                        "multiple_choice",
+                                        "numeric",
+                                        "proof",
+                                        "translation",
+                                    ],
+                                },
+                                "choices": {"type": "array", "items": {"type": "string"}},
                             },
-                            "required": ["id", "label", "text", "points"],
+                            "required": [
+                                "id",
+                                "label",
+                                "text",
+                                "points",
+                                "interaction_type",
+                                "choices",
+                            ],
                         },
                     },
                 },
@@ -79,6 +124,8 @@ QUESTION_EXTRACTION_SCHEMA: dict[str, Any] = {
                     "page_end",
                     "points",
                     "topic",
+                    "interaction_type",
+                    "choices",
                     "subquestions",
                 ],
             },
