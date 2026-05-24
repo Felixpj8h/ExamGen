@@ -41,7 +41,7 @@ const uploadedBundle = {
       question_number: '2',
       question_text: 'Explain the argument error.',
       context:
-        'Use the provided inference rule setup.\n\n```haskell\nmodule Shop where\ntype Money = Integer\n\ndata Expr\n= Lit Int\n| Var String\neval env expr = case expr of\nLit n -> __________________________\n```\n\n```kotlin\nfun total(var amount: Int): Int\n```',
+        'Use the provided inference rule setup.\n\ntype Env = [(String, Int)] data Expr = Lit Int | Var String\n\nlookupEnv :: String -> Env -> Maybe Int lookupEnv x [] = Nothing lookupEnv x ((y,v):rest) | x == y = Just v | otherwise = lookupEnv x rest\n\neval env expr = case expr of Lit n -> __________________________\n\n```kotlin\nfun total(var amount: Int): Int\n```',
       page_start: 2,
       page_end: 2,
       topic: 'logical errors',
@@ -148,8 +148,15 @@ test('uploads files and connects to the existing mock exam workspace', async () 
   fireEvent.click(screen.getByRole('button', { name: /question 2/i }));
   expect(screen.getByText(/use the provided inference rule setup/i)).toBeInTheDocument();
   expect(screen.getByText('haskell')).toBeInTheDocument();
-  expect(screen.getByText((_, element) => element?.tagName.toLowerCase() === 'code' && element.textContent.includes('module Shop where'))).toBeInTheDocument();
-  expect(screen.getByText((_, element) => element?.tagName.toLowerCase() === 'code' && element.textContent.includes('\n  = Lit Int\n  | Var String'))).toBeInTheDocument();
+  expect(screen.getAllByText('haskell')).toHaveLength(1);
+  expect(screen.getByText((_, element) => {
+    if (element?.tagName.toLowerCase() !== 'code') {
+      return false;
+    }
+    return element.textContent.includes('\n  = Lit Int\n  | Var String')
+      && element.textContent.includes('lookupEnv :: String -> Env -> Maybe Int')
+      && element.textContent.includes('eval env expr = case expr of');
+  })).toBeInTheDocument();
   expect(screen.getByText('kotlin')).toBeInTheDocument();
   expect(screen.getByRole('img', { name: /image from page 2/i })).toHaveAttribute(
     'src',

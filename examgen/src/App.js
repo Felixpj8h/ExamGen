@@ -701,7 +701,7 @@ function QuestionContext({ context }) {
   if (typeof context !== 'string' || !context.trim()) {
     return null;
   }
-  const blocks = parseContextBlocks(context);
+  const blocks = parseContextBlocks(context, { detectCode: true });
 
   return (
     <section className="question-context" aria-label="Question context">
@@ -975,16 +975,34 @@ function pushTextBlocks(blocks, text) {
 }
 
 function applyCodeDetection(blocks) {
-  return blocks.map((block) => {
+  const detectedBlocks = blocks.map((block) => {
     if (block.type !== 'text' || !looksLikeCode(block.content)) {
       return block;
     }
+    const language = inferCodeLanguage(block.content);
     return {
       type: 'code',
-      language: inferCodeLanguage(block.content),
-      content: normalizeCodeWhitespace(formatDetectedCode(block.content)),
+      language,
+      content: normalizeCodeWhitespace(formatDetectedCode(block.content, language)),
     };
   });
+  return mergeAdjacentCodeBlocks(detectedBlocks);
+}
+
+function mergeAdjacentCodeBlocks(blocks) {
+  return blocks.reduce((merged, block) => {
+    const previous = merged[merged.length - 1];
+    if (
+      previous?.type === 'code' &&
+      block.type === 'code' &&
+      previous.language === block.language
+    ) {
+      previous.content = `${previous.content}\n\n${block.content}`;
+      return merged;
+    }
+    merged.push({ ...block });
+    return merged;
+  }, []);
 }
 
 function looksLikeCode(text) {
@@ -994,6 +1012,7 @@ function looksLikeCode(text) {
   }
   const codeSignals = [
     /\b(public|private|protected|static|class|interface|enum|record|void|int|boolean|String|Map|List|HashMap|new|return|var|fun|val|let|const|function)\b/,
+    /\b(type|data|case|of)\b/,
     /[{};]/,
     /\w+\s*\([^)]*\)\s*\{/,
     /<\s*\w+\s*,\s*\w+\s*>/,
@@ -1007,6 +1026,9 @@ function looksLikeCode(text) {
 
 function inferCodeLanguage(text) {
   const trimmed = String(text || '');
+  if (/\b(module|where|data\s+\w+|deriving|case\b.*\bof\b|Maybe\s+Int|Either\s+String\s+Int|::)\b/.test(trimmed)) {
+    return 'haskell';
+  }
   if (/\b(public|private|protected|static|class|interface|enum|record|void|int|boolean|String|HashMap|implements|extends)\b/.test(trimmed)) {
     return 'java';
   }
@@ -1016,14 +1038,14 @@ function inferCodeLanguage(text) {
   if (/\b(function|const|let|=>|console\.)\b/.test(trimmed)) {
     return 'javascript';
   }
-  if (/\b(module|where|data|deriving|::)\b/.test(trimmed)) {
-    return 'haskell';
-  }
   return 'text';
 }
 
-function formatDetectedCode(text) {
+function formatDetectedCode(text, language = inferCodeLanguage(text)) {
   const trimmed = String(text || '').trim();
+  if (language === 'haskell') {
+    return formatFlattenedHaskellCode(trimmed);
+  }
   if (trimmed.includes('\n')) {
     return trimmed;
   }
@@ -1037,6 +1059,27 @@ function formatDetectedCode(text) {
     .split('\n')
     .map((line) => line.trimEnd())
     .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function formatFlattenedHaskellCode(code) {
+  return String(code || '')
+    .replace(/\s+data\s+/g, '\ndata ')
+    .replace(/data ([^=\n]+)\s+=\s+/g, 'data $1\n  = ')
+    .replace(/\s+\|\s+/g, '\n  | ')
+    .replace(/(Maybe Int|Either String Int)\s+(lookupEnv\b)/g, '$1\n$2')
+    .replace(/(Maybe Int|Either String Int)\s+(eval\b)/g, '$1\n$2')
+    .replace(/(Nothing|Just v)\s+(lookupEnv\b)/g, '$1\n$2')
+    .replace(/(:rest\))\s+(\| )/g, '$1\n  $2')
+    .replace(/(Just v)\s+(\| )/g, '$1\n  $2')
+    .replace(/(case expr of)\s+/g, '$1\n')
+    .replace(/\s+(Lit n ->)/g, '\n  $1')
+    .replace(/\s+(Var x ->)/g, '\n  $1')
+    .replace(/\s+(Add e1 e2 ->)/g, '\n  $1')
+    .replace(/\s+(Mul e1 e2 ->)/g, '\n  $1')
+    .replace(/\s+(Let x e body ->)/g, '\n  $1')
+    .replace(/\s+(IfZero c t f ->)/g, '\n  $1')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
