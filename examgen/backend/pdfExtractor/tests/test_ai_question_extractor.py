@@ -42,6 +42,7 @@ def sample_questions() -> dict:
                 "id": "1",
                 "question_number": "1",
                 "question_text": "Let P(x) be the statement.",
+                "context": None,
                 "page_start": 1,
                 "page_end": 1,
                 "points": None,
@@ -79,6 +80,8 @@ def test_prompt_tells_model_not_to_solve_questions() -> None:
     assert 'label "followup"' in prompt
     assert "interaction_type must be one of" in prompt
     assert 'choices to ["True", "False"]' in prompt
+    assert "Extract question-specific context" in prompt
+    assert "Do not put general exam metadata or instructions in context" in prompt
 
 
 def test_validation_accepts_correct_result() -> None:
@@ -179,6 +182,43 @@ def test_post_process_sets_mixed_language_for_norwegian_title_with_english_langu
     processed = post_process_questions(result)
 
     assert processed["language"] == "mixed"
+
+
+def test_post_process_preserves_question_specific_context() -> None:
+    result = sample_questions()
+    result["questions"][0]["context"] = (
+        "I denne oppgaven skal du vise at du behersker listebehandling.\n"
+        "map :: (a -> b) -> [a] -> [b]"
+    )
+
+    processed = post_process_questions(result)
+
+    assert processed["questions"][0]["context"] == (
+        "I denne oppgaven skal du vise at du behersker listebehandling.\n"
+        "map :: (a -> b) -> [a] -> [b]"
+    )
+
+
+def test_post_process_removes_general_exam_context() -> None:
+    result = sample_questions()
+    result["questions"][0]["context"] = (
+        "Velkommen til eksamen.\n"
+        "Tillatte hjelpemidler: ingen.\n"
+        "Candidate 151"
+    )
+
+    processed = post_process_questions(result)
+
+    assert processed["questions"][0]["context"] is None
+
+
+def test_post_process_defaults_missing_context_to_null() -> None:
+    result = sample_questions()
+    result["questions"][0].pop("context")
+
+    processed = post_process_questions(result)
+
+    assert processed["questions"][0]["context"] is None
 
 
 def test_post_process_adds_true_false_interaction_metadata_to_subquestions() -> None:

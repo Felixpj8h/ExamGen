@@ -42,6 +42,7 @@ test('renders exam practice workspace from the exam bundle', async () => {
               id: 'q2',
               question_number: '2',
               question_text: 'Explain the argument error.',
+              context: 'Use the provided inference rule setup.',
               page_start: 2,
               page_end: 2,
               topic: 'logical errors',
@@ -75,6 +76,7 @@ test('renders exam practice workspace from the exam bundle', async () => {
   expect(screen.getAllByRole('button', { name: 'True' }).length).toBeGreaterThan(0);
 
   fireEvent.click(screen.getByRole('button', { name: /question 2/i }));
+  expect(screen.getByText(/use the provided inference rule setup/i)).toBeInTheDocument();
   expect(screen.getByText('Answer')).toBeInTheDocument();
   expect(screen.getByRole('img', { name: /image from page 2/i })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: /reveal solution/i }));

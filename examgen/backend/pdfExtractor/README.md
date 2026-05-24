@@ -93,6 +93,8 @@ Questions and subquestions include frontend interaction metadata:
 
 Allowed `interaction_type` values are `free_text`, `true_false`, `multiple_choice`, `numeric`, `proof`, and `translation`. Use `choices` for `true_false` and `multiple_choice`; other interaction types use an empty list.
 
+Main questions can include `context` for task-specific setup such as introductions, definitions, helper functions, code blocks, rules, examples, data models, or figure references. General exam information such as candidate metadata, allowed aids, date/time, welcome text, table of contents, and page headers/footers should not be included.
+
 Future FastAPI code should call the stable backend wrapper instead of shelling out to the CLI:
 
 ```python

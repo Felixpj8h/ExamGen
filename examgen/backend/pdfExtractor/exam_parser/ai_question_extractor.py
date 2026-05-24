@@ -693,6 +693,10 @@ def _validate_question(question: Any, index: int) -> None:
         if not isinstance(question.get(field), str) or not question[field].strip():
             raise QuestionExtractionError(f"Question {index} has invalid {field}.")
 
+    context = question.get("context")
+    if context is not None and not isinstance(context, str):
+        raise QuestionExtractionError(f"Question {index} context must be a string or null.")
+
     for field in ("page_start", "page_end"):
         value = question.get(field)
         if value is not None and not isinstance(value, int):

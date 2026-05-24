@@ -274,6 +274,7 @@ function App() {
             <h2 className="mt-2 max-w-4xl text-2xl font-semibold leading-snug">
               {formatDisplayText(selectedQuestion.question_text)}
             </h2>
+            <QuestionContext context={selectedQuestion.context} />
             <QuestionImages images={selectedQuestion.images} />
           </article>
 
@@ -352,6 +353,19 @@ function QuestionImages({ images }) {
         </figure>
       ))}
     </div>
+  );
+}
+
+function QuestionContext({ context }) {
+  if (typeof context !== 'string' || !context.trim()) {
+    return null;
+  }
+
+  return (
+    <section className="question-context" aria-label="Question context">
+      <h3>Context</h3>
+      <pre>{formatDisplayText(context)}</pre>
+    </section>
   );
 }
 

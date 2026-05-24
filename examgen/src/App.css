@@ -139,6 +139,33 @@ article h2 {
   font-size: 13px;
 }
 
+.question-context {
+  margin-top: 20px;
+  padding: 16px;
+  max-width: 980px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.question-context h3 {
+  margin: 0 0 10px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.question-context pre {
+  margin: 0;
+  white-space: pre-wrap;
+  color: #0f172a;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
 .meta-row,
 .subquestion-meta {
   display: flex;

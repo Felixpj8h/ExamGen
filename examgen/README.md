@@ -59,6 +59,7 @@ result = run_exam_pipeline(
 ```
 
 Each question/subquestion can include `interaction_type` and `choices` so the frontend can render true/false buttons, multiple-choice options, or a free-text style input.
+Each main question can also include `context`: task-specific setup such as definitions, helper code, rules, examples, or data models needed for that question. General exam information is intentionally excluded.
 
 Convert extracted PDF JSON into structured question JSON:
 
