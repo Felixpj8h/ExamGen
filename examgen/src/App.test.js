@@ -42,7 +42,7 @@ test('renders exam practice workspace from the exam bundle', async () => {
               id: 'q2',
               question_number: '2',
               question_text: 'Explain the argument error.',
-              context: 'Use the provided inference rule setup.',
+              context: 'Use the provided inference rule setup.\n\n```haskell\nmodule Shop where\ntype Money = Integer\n```\n\n```kotlin\nfun total(var amount: Int): Int\n```',
               page_start: 2,
               page_end: 2,
               topic: 'logical errors',
@@ -87,6 +87,11 @@ test('renders exam practice workspace from the exam bundle', async () => {
 
   fireEvent.click(screen.getByRole('button', { name: /question 2/i }));
   expect(screen.getByText(/use the provided inference rule setup/i)).toBeInTheDocument();
+  expect(screen.getByText('haskell')).toBeInTheDocument();
+  expect(screen.getByText((_, element) => element?.tagName.toLowerCase() === 'code' && element.textContent.includes('module Shop where'))).toBeInTheDocument();
+  expect(screen.getByText((_, element) => element?.tagName.toLowerCase() === 'code' && element.textContent.includes('type Money = Integer'))).toBeInTheDocument();
+  expect(screen.getByText('kotlin')).toBeInTheDocument();
+  expect(screen.getByText((_, element) => element?.tagName.toLowerCase() === 'code' && element.textContent.includes('fun total'))).toBeInTheDocument();
   expect(screen.getByText('Answer')).toBeInTheDocument();
   expect(screen.getByRole('img', { name: /image from page 2/i })).toBeInTheDocument();
   expect(screen.queryByRole('img', { name: /tiny icon from page 2/i })).not.toBeInTheDocument();

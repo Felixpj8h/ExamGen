@@ -369,12 +369,33 @@ function QuestionContext({ context }) {
   if (typeof context !== 'string' || !context.trim()) {
     return null;
   }
+  const blocks = parseContextBlocks(context);
 
   return (
     <section className="question-context" aria-label="Question context">
       <h3>Context</h3>
-      <pre>{formatDisplayText(context)}</pre>
+      <div className="context-blocks">
+        {blocks.map((block, index) =>
+          block.type === 'code' ? (
+            <CodeBlock key={`${block.type}-${index}`} language={block.language} code={block.content} />
+          ) : (
+            <p key={`${block.type}-${index}`}>{formatDisplayText(block.content)}</p>
+          ),
+        )}
+      </div>
     </section>
+  );
+}
+
+function CodeBlock({ language, code }) {
+  const normalizedLanguage = normalizeCodeLanguage(language);
+  return (
+    <div className="code-block">
+      <div className="code-block-header">{normalizedLanguage}</div>
+      <pre>
+        <code>{highlightCode(code, normalizedLanguage)}</code>
+      </pre>
+    </div>
   );
 }
 
@@ -568,6 +589,162 @@ function looksLikeQuestionPrompt(choice) {
     normalized.startsWith('anta at ') ||
     normalized.endsWith('?')
   );
+}
+
+function parseContextBlocks(context) {
+  const blocks = [];
+  const fencePattern = /```([A-Za-z0-9_-]*)\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = fencePattern.exec(context)) !== null) {
+    pushTextBlocks(blocks, context.slice(lastIndex, match.index));
+    blocks.push({
+      type: 'code',
+      language: match[1] || 'text',
+      content: normalizeCodeWhitespace(match[2]),
+    });
+    lastIndex = fencePattern.lastIndex;
+  }
+
+  pushTextBlocks(blocks, context.slice(lastIndex));
+  if (blocks.length === 0) {
+    pushTextBlocks(blocks, context);
+  }
+  return blocks;
+}
+
+function pushTextBlocks(blocks, text) {
+  const paragraphs = String(text || '')
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+  paragraphs.forEach((paragraph) => blocks.push({ type: 'text', content: paragraph }));
+}
+
+function normalizeCodeWhitespace(code) {
+  const withoutTabs = String(code || '').replace(/\t/g, '  ');
+  const trimmed = withoutTabs.replace(/^\s*\n/, '').replace(/\n\s*$/, '');
+  const lines = trimmed.split('\n');
+  const indents = lines
+    .filter((line) => line.trim())
+    .map((line) => line.match(/^ */)?.[0].length || 0);
+  const commonIndent = indents.length ? Math.min(...indents) : 0;
+  if (commonIndent === 0) {
+    return trimmed;
+  }
+  return lines.map((line) => (line.trim() ? line.slice(commonIndent) : '')).join('\n');
+}
+
+function normalizeCodeLanguage(language) {
+  const normalized = String(language || 'text').trim().toLowerCase();
+  if (['hs', 'haskell'].includes(normalized)) {
+    return 'haskell';
+  }
+  if (['py', 'python'].includes(normalized)) {
+    return 'python';
+  }
+  if (['js', 'javascript', 'jsx'].includes(normalized)) {
+    return 'javascript';
+  }
+  if (['ts', 'typescript', 'tsx'].includes(normalized)) {
+    return 'typescript';
+  }
+  if (['java'].includes(normalized)) {
+    return 'java';
+  }
+  if (['kt', 'kotlin'].includes(normalized)) {
+    return 'kotlin';
+  }
+  return normalized || 'text';
+}
+
+function highlightCode(code, language) {
+  const syntax = getSyntaxConfig(language);
+  if (!syntax) {
+    return code;
+  }
+
+  const tokenPattern = syntax.pattern;
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = tokenPattern.exec(code)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(code.slice(lastIndex, match.index));
+    }
+    const token = match[0];
+    parts.push(
+      <span key={`${match.index}-${token}`} className={`syntax-${classifyToken(token, syntax)}`}>
+        {token}
+      </span>,
+    );
+    lastIndex = tokenPattern.lastIndex;
+  }
+
+  if (lastIndex < code.length) {
+    parts.push(code.slice(lastIndex));
+  }
+  return parts;
+}
+
+function getSyntaxConfig(language) {
+  const commonOperatorPattern = String.raw`==|!=|<=|>=|&&|\|\||::|->|=>|[=+\-*/%<>!|&{}[\]().,;:]`;
+  const configs = {
+    haskell: {
+      pattern: new RegExp(
+        String.raw`(--.*$|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b(?:module|where|import|qualified|as|type|data|newtype|deriving|instance|class|case|of|let|in|if|then|else|do)\b|\b(?:Integer|String|Bool|Char|Maybe|Map|IO|Eq|Show|Ord|Int|Double|Float)\b|${commonOperatorPattern})`,
+        'gm',
+      ),
+      types: /^(Integer|String|Bool|Char|Maybe|Map|IO|Eq|Show|Ord|Int|Double|Float)$/,
+    },
+    java: {
+      pattern: new RegExp(
+        String.raw`(//.*$|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b(?:abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|final|finally|float|for|if|implements|import|instanceof|int|interface|long|new|null|package|private|protected|public|record|return|short|static|strictfp|super|switch|synchronized|this|throw|throws|transient|try|var|void|volatile|while)\b|\b(?:String|Integer|Boolean|Character|Double|Float|Long|Short|Byte|Object|List|Map|Set|HashMap|ArrayList|Optional)\b|${commonOperatorPattern})`,
+        'gm',
+      ),
+      types: /^(String|Integer|Boolean|Character|Double|Float|Long|Short|Byte|Object|List|Map|Set|HashMap|ArrayList|Optional)$/,
+    },
+    kotlin: {
+      pattern: new RegExp(
+        String.raw`(//.*$|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b(?:as|break|class|continue|data|do|else|false|for|fun|if|import|in|interface|is|null|object|package|return|super|this|throw|true|try|typealias|val|var|when|while)\b|\b(?:String|Int|Boolean|Char|Double|Float|Long|Short|Byte|Any|Unit|List|Map|Set|MutableList|MutableMap)\b|${commonOperatorPattern})`,
+        'gm',
+      ),
+      types: /^(String|Int|Boolean|Char|Double|Float|Long|Short|Byte|Any|Unit|List|Map|Set|MutableList|MutableMap)$/,
+    },
+    javascript: {
+      pattern: new RegExp(
+        String.raw`(//.*$|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|` + '`' + String.raw`(?:\\.|[^` + '`' + String.raw`\\])*` + '`' + String.raw`|\b(?:async|await|break|case|catch|class|const|continue|default|do|else|export|extends|finally|for|from|function|if|import|in|let|new|null|return|static|super|switch|this|throw|try|typeof|undefined|var|while|yield)\b|\b(?:Array|Boolean|Date|Map|Number|Object|Promise|Set|String)\b|${commonOperatorPattern})`,
+        'gm',
+      ),
+      types: /^(Array|Boolean|Date|Map|Number|Object|Promise|Set|String)$/,
+    },
+    typescript: {
+      pattern: new RegExp(
+        String.raw`(//.*$|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|` + '`' + String.raw`(?:\\.|[^` + '`' + String.raw`\\])*` + '`' + String.raw`|\b(?:abstract|any|as|async|await|boolean|break|case|catch|class|const|continue|default|do|else|enum|export|extends|false|finally|for|from|function|if|implements|import|in|interface|keyof|let|namespace|new|null|number|private|protected|public|readonly|return|static|string|super|switch|this|throw|true|try|type|typeof|undefined|var|void|while|yield)\b|\b(?:Array|Boolean|Date|Map|Number|Object|Promise|Set|String)\b|${commonOperatorPattern})`,
+        'gm',
+      ),
+      types: /^(Array|Boolean|Date|Map|Number|Object|Promise|Set|String)$/,
+    },
+  };
+  return configs[language] || null;
+}
+
+function classifyToken(token, syntax) {
+  if (token.startsWith('--') || token.startsWith('//') || token.startsWith('/*')) {
+    return 'comment';
+  }
+  if (token.startsWith('"') || token.startsWith("'") || token.startsWith('`')) {
+    return 'string';
+  }
+  if (syntax.types.test(token)) {
+    return 'type';
+  }
+  if (/^(==|!=|<=|>=|&&|\|\||::|->|=>|[=+\-*/%<>!|&{}[\]().,;:])$/.test(token)) {
+    return 'operator';
+  }
+  return 'keyword';
 }
 
 export default App;

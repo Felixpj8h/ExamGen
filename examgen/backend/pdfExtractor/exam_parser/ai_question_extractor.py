@@ -131,6 +131,12 @@ Rules:
   - definitions, helper functions, type signatures, rules, assumptions, examples, or code blocks
   - data models or initial values used by the subquestions
   - figure/image references tied to the question
+- Preserve paragraph breaks and line breaks inside context.
+- Format code inside context as fenced Markdown code blocks with the best language tag, for example ```haskell for Haskell code, ```python for Python, ```java for Java, or ```text if uncertain.
+- Keep explanatory prose outside code fences and code/type declarations inside code fences.
+- Inside code fences, preserve the original code line breaks and indentation as closely as possible.
+- Do not collapse code into one paragraph, do not add extra blank lines, and do not rewrite code into another programming language.
+- If indentation is unclear from PDF extraction, use conservative 2-space indentation for nested or continued code lines.
 - Do not put general exam metadata or instructions in context, such as table of contents, candidate number, date/time, allowed aids, grading overview, welcome text, page headers/footers, or generic exam instructions.
 - If there is no question-specific context, set context to null.
 - Lettered subquestions are only the text directly belonging to that label.

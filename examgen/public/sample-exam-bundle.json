@@ -1,107 +1,101 @@
 {
   "exam": {
-    "title": "Funksjonell programmering",
-    "course_code": "INF122",
-    "source_file": "Task10.pdf"
+    "title": "Java Programming - written exam",
+    "course_code": "JAVA122",
+    "source_file": "Task11.pdf"
   },
   "questions": [
     {
       "id": "q1",
       "question_number": "1",
-      "question_text": "Verdier i Haskell",
+      "question_text": "Values and expressions in Java",
       "context": null,
-      "page_start": 3,
-      "page_end": 4,
+      "page_start": 2,
+      "page_end": 2,
       "points": 12,
-      "topic": "Verdier i Haskell",
+      "topic": "Values and expressions",
       "interaction_type": "multiple_choice",
       "choices": [],
       "subquestions": [
         {
-          "id": "q1a",
-          "label": "a",
-          "text": "Hva er verdien av head (tail [1,2,3]) ?",
+          "id": "q1_1",
+          "label": "1",
+          "text": "What is printed by the following code?\nSystem.out.println(\"abc\".substring(1));",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "[1]",
-            "2",
-            "[2,3]",
+            "abc",
+            "bc",
+            "ab",
+            "Throws StringIndexOutOfBoundsException"
+          ],
+          "solution": null
+        },
+        {
+          "id": "q1_2",
+          "label": "2",
+          "text": "What is the value of x after this code?\nint x = 7 / 2;",
+          "points": null,
+          "interaction_type": "multiple_choice",
+          "choices": [
+            "3",
+            "3.5",
+            "4",
+            "The code gives a type error"
+          ],
+          "solution": null
+        },
+        {
+          "id": "q1_3",
+          "label": "3",
+          "text": "What is printed?\nint[] a = {1, 2, 3};\nSystem.out.println(a[1]);",
+          "points": null,
+          "interaction_type": "multiple_choice",
+          "choices": [
             "1",
-            "Ingen verdi, grunnet kjørefeil/error"
-          ],
-          "solution": null
-        },
-        {
-          "id": "q1b",
-          "label": "b",
-          "text": "Hva er verdien av snd ([1,2],3)?",
-          "points": null,
-          "interaction_type": "multiple_choice",
-          "choices": [
             "2",
             "3",
-            "(2,3)",
-            "[2,3]",
-            "Ingen verdi, grunnet typefeil"
+            "Throws ArrayIndexOutOfBoundsException"
           ],
           "solution": null
         },
         {
-          "id": "q1c",
-          "label": "c",
-          "text": "Hva er verdien av length [2,4,6,8] / 2?",
+          "id": "q1_4",
+          "label": "4",
+          "text": "What is the value of b?\nboolean b = true || (10 / 0 == 0);",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "2",
-            "Ingen verdi, grunnet kjørefeil/error",
-            "[1,2,3,4]",
-            "Ingen verdi, grunnet typefeil",
-            "4"
+            "true",
+            "false",
+            "Throws ArithmeticException",
+            "The code gives a type error"
           ],
           "solution": null
         },
         {
-          "id": "q1d",
-          "label": "d",
-          "text": "Hva er verdien av length [1,4..13]?",
+          "id": "q1_5",
+          "label": "5",
+          "text": "What is printed?\nString s = \"Hi\";\ns.toLowerCase();\nSystem.out.println(s);",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "Ingen verdi, grunnet kjørefeil/error",
+            "hi",
+            "The code gives a type error"
+          ],
+          "solution": null
+        },
+        {
+          "id": "q1_6",
+          "label": "6",
+          "text": "What is printed?\nArrayList<Integer> xs = new ArrayList<>(List.of(1, 2, 3));\nxs.add(4);\nSystem.out.println(xs.size());",
+          "points": null,
+          "interaction_type": "multiple_choice",
+          "choices": [
             "3",
-            "Ingen verdi, grunnet typefeil",
-            "13"
-          ],
-          "solution": null
-        },
-        {
-          "id": "q1e",
-          "label": "e",
-          "text": "Hva er verdien av length [1,4..5]?",
-          "points": null,
-          "interaction_type": "multiple_choice",
-          "choices": [
-            "2",
-            "Ingen verdi, grunnet typefeil",
-            "Ingen verdi, grunnet kjørefeil/error"
-          ],
-          "solution": null
-        },
-        {
-          "id": "q1f",
-          "label": "f",
-          "text": "Hva er verdien av map sort [\"en\",\"to\",\"tre\"] (Anta at vi har importert sort fra Data.List)?",
-          "points": null,
-          "interaction_type": "multiple_choice",
-          "choices": [
-            "[\"tre\",\"to\",\"en\"]",
-            "[\"en\",\"to\",\"tre\"]",
-            "Ingen verdi, grunnet kjørefeil/error",
-            "[\"en\",\"ot\",\"ert\"]",
-            "[\"en\",\"ert\",\"ot\"]",
-            "Ingen verdi, grunnet typefeil"
+            "4",
+            "[1, 2, 3, 4]",
+            "Throws UnsupportedOperationException"
           ],
           "solution": null
         }
@@ -111,101 +105,95 @@
     {
       "id": "q2",
       "question_number": "2",
-      "question_text": "Typer og Kinds i Haskell",
+      "question_text": "Types, classes and generics in Java",
       "context": null,
-      "page_start": 5,
-      "page_end": 6,
+      "page_start": 3,
+      "page_end": 3,
       "points": 12,
-      "topic": "Typer og Kinds i Haskell",
+      "topic": "Types, classes and generics",
       "interaction_type": "multiple_choice",
       "choices": [],
       "subquestions": [
         {
-          "id": "q2a",
-          "label": "a",
-          "text": "Hva er en gyldig typing av uncurry (+)?",
+          "id": "q2_1",
+          "label": "1",
+          "text": "Which declaration is valid Java?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "Integer -> (Integer, Integer)",
-            "(Integer -> Integer) -> Integer",
-            "(Integer , Integer) -> Integer",
-            "Integer -> (Integer -> Integer)",
-            "Uttrykket gir en typefeil."
+            "List xs = new ArrayList<>();",
+            "ArrayList xs = new ArrayList();",
+            "Map m = new HashMap<>();"
           ],
           "solution": null
         },
         {
-          "id": "q2b",
-          "label": "b",
-          "text": "Hvilket av alternativene er ikke en gyldig typing av 3?",
+          "id": "q2_2",
+          "label": "2",
+          "text": "Which method header correctly describes a method that takes a String and returns its length?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "Integer",
-            "Num a => a",
-            "Float",
-            "Eq a => a"
+            "int length(String s)",
+            "String length(int s)",
+            "void length(String s)",
+            "int length = String s"
           ],
           "solution": null
         },
         {
-          "id": "q2c",
-          "label": "c",
-          "text": "Hva er en gyldig typing av (:)?",
+          "id": "q2_3",
+          "label": "3",
+          "text": "Which statement about String in Java is correct?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "[a -> a] -> a",
-            "[a]",
-            "a -> [a] -> [a]",
-            "[a] -> [a -> a]",
-            "[a -> a]"
+            "String objects are mutable.",
+            "String objects are immutable.",
+            "Calling toUpperCase changes the original String in place.",
+            "String cannot be compared with equals."
           ],
           "solution": null
         },
         {
-          "id": "q2d",
-          "label": "d",
-          "text": "Hva er en gyldig typing av (.)? Husk at f . g = \\x -> f (g x).",
+          "id": "q2_4",
+          "label": "4",
+          "text": "Given class Dog extends Animal, which assignment is valid?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "(b -> c) -> (a -> b) -> a -> c",
-            "(a -> b) -> c -> b -> a -> c",
-            "(a -> b) -> (b -> c) -> a -> c",
-            "(a -> b) -> (c -> b) -> a -> c"
+            "Dog d = new Animal();",
+            "Animal a = new Dog();",
+            "ArrayList xs = new ArrayList();",
+            "Dog d = (Dog) new Object(); is always safe."
           ],
           "solution": null
         },
         {
-          "id": "q2e",
-          "label": "e",
-          "text": "Hva er en gyldig typing av map . (:)?",
+          "id": "q2_5",
+          "label": "5",
+          "text": "What is the most precise return type for a method that might fail to find a Student?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "(a -> b) -> (c -> b) -> a -> c",
-            "(a -> a) -> [a -> a]",
-            "a -> [a] -> [a]",
-            "Uttrykket gir en typefeil.",
-            "[a -> a] -> a -> [a]",
-            "a -> [[a]] -> [[a]]"
+            "Student",
+            "null only",
+            "Optional",
+            "void"
           ],
           "solution": null
         },
         {
-          "id": "q2f",
-          "label": "f",
-          "text": "Hvilken kind har Map fra Data.Map?",
+          "id": "q2_6",
+          "label": "6",
+          "text": "What does static mean in a method declaration?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "a -> [[a]] -> [[a]]",
-            "(* -> *) -> *",
-            "* -> *",
-            "* -> * -> *",
-            "*"
+            "The method belongs to the class rather than one object.",
+            "The method can never be called.",
+            "The method cannot use parameters.",
+            "The method is automatically private."
           ],
           "solution": null
         }
@@ -215,19 +203,19 @@
     {
       "id": "q3",
       "question_number": "3",
-      "question_text": "IO",
-      "context": "IO funksjonen getChar :: IO Char henter en enkelt Char som input fra brukeren.",
-      "page_start": 7,
-      "page_end": 7,
+      "question_text": "Console I/O and string processing",
+      "context": "In this task you show that you understand basic console input/output, loops, and string processing in Java.\nYou may use Scanner, StringBuilder, Character.toUpperCase and Character.toLowerCase.",
+      "page_start": 4,
+      "page_end": 4,
       "points": 14,
-      "topic": "IO",
+      "topic": "Console I/O and string processing",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
           "id": "q3a",
           "label": "a",
-          "text": "Skriv en funksjon getSentence :: IO String som, ved hjelp av getChar, leser én og én Char helt til brukeren skriver inn '.', og deretter returnerer hele setningen (inklusive ‘.’).",
+          "text": "Write a method readSentence that reads characters from standard input until the user enters a period character \".\". The returned String must include the period.\n```java\npublic static String readSentence(Scanner sc) {\n  // TODO\n}\n```",
           "points": 6,
           "interaction_type": "free_text",
           "choices": [],
@@ -236,7 +224,7 @@
         {
           "id": "q3b",
           "label": "b",
-          "text": "Skriv en main :: IO () funksjon som leser inn en setning (ved hjelp av getSentence fra forrige oppgave), og skriver ut setningen med reversert ordrekkefølge. Ta høyde for å endre store/små bokstaver med toUpper :: Char -> Char og toLower :: Char -> Char: Første ord i setningen skal ha stor forbokstav, og siste ord skal ikke ha det (se eksempel). Du kan anta at brukeren skriver inn en setning med minst ett ord, og at første ord i setningen ikke er et særnavn.",
+          "text": "Write a main method that uses readSentence and prints the sentence with the word order reversed. The first word in the result must start with an uppercase letter, and the last word must start with a lowercase letter. You may assume at least one word and no proper nouns.\nInput: This is a test.\nOutput: Test a is this.",
           "points": 8,
           "interaction_type": "free_text",
           "choices": [],
@@ -248,19 +236,19 @@
     {
       "id": "q4",
       "question_number": "4",
-      "question_text": "Listebehandling",
-      "context": "Her er noen nyttige funksjoner på lister: map :: (a -> b) -> [a] -> [b], filter :: (a -> Bool) -> [a] -> [a], group :: Eq a => [a] -> [[a]], concat :: [[a]] -> [a], take :: Int -> [a] -> [a], replicate :: Int -> a -> [a], group :: (Eq a) => [a] -> [[a]]",
-      "page_start": 8,
-      "page_end": 9,
+      "question_text": "Arrays, ArrayList and higher-order style operations",
+      "context": "In this task you show that you understand list processing in Java. You may use loops. Where the task explicitly asks for streams, use java.util.stream.\n```java\nimport java.util.*;\nimport java.util.stream.*;\n```",
+      "page_start": 5,
+      "page_end": 6,
       "points": 25,
-      "topic": "Listebehandling",
+      "topic": "Arrays, ArrayList and higher-order style operations",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
           "id": "q4a",
           "label": "a",
-          "text": "Bruk listekomprehensjon til å skrive en funksjon squareEvens :: [Integer] -> [Integer] som returnerer kvadratet av alle partall i en liste. F.eks. skal squareEvens [1,2,3,4] evaluere til [4,16].",
+          "text": "Write a method squareEvens that returns a new list containing the square of every even number in the input list. Example: squareEvens(List.of(1,2,3,4)) returns [4, 16].\n```java\npublic static List<Integer> squareEvens(List<Integer> xs) {\n  // TODO\n}\n```",
           "points": 5,
           "interaction_type": "free_text",
           "choices": [],
@@ -269,7 +257,7 @@
         {
           "id": "q4b",
           "label": "b",
-          "text": "Skriv samme funksjon som i a), men bruk filter og map istedet for listekomprehensjon.",
+          "text": "Write the same function as in a), but this time use stream(), filter and map instead of an explicit loop.\n```java\npublic static List<Integer> squareEvensStream(List<Integer> xs) {\n  // TODO\n}\n```",
           "points": 5,
           "interaction_type": "free_text",
           "choices": [],
@@ -278,7 +266,7 @@
         {
           "id": "q4c",
           "label": "c",
-          "text": "Skriv en funksjon countNothing :: [Maybe a] -> Integer som teller antall forekomster av Nothing i en liste. For eksempel skal countNothing [Nothing, Just \"foo\", Nothing, Just \"bar\"] evaluere til 2. Merk at du ikke kan anta begrensningen Eq a eller Eq (Maybe a) i denne oppgaven.",
+          "text": "Write a generic method countNull that counts how many elements in a list are null. The method must work for lists of any element type.\n```java\npublic static <T> int countNull(List<T> xs) {\n  // TODO\n}\n```",
           "points": 5,
           "interaction_type": "free_text",
           "choices": [],
@@ -287,7 +275,7 @@
         {
           "id": "q4d",
           "label": "d",
-          "text": "Vi kan definere en funksjon: dedupe :: (Eq a) => [a] -> [a] dedupe = concat . map (take 1) . group Gi en alternativ definisjon av dedupe som bruker mønstermatching og rekursjon i stedet for concat, map og group.",
+          "text": "Write a method dedupeConsecutive that removes consecutive duplicates, but keeps one copy of each run. Example: [1,1,2,2,2,3,1,1] becomes [1,2,3,1].\n```java\npublic static <T> List<T> dedupeConsecutive(List<T> xs) {\n  // TODO\n}\n```",
           "points": 5,
           "interaction_type": "free_text",
           "choices": [],
@@ -296,7 +284,7 @@
         {
           "id": "q4e",
           "label": "e",
-          "text": "La dupe = concat . map (replicate 2). Er dedupe (dupe x) = x for enhver liste x :: [Integer]? Husk å begrunne svaret ditt presist.",
+          "text": "Let duplicateEach(xs) return a list where every element occurs twice in a row. Is dedupeConsecutive(duplicateEach(xs)).equals(xs) true for every List xs? Give a precise explanation.\n```java\npublic static <T> List<T> duplicateEach(List<T> xs) {\n  // imagine this is already implemented\n}\n```",
           "points": 5,
           "interaction_type": "free_text",
           "choices": [],
@@ -308,19 +296,19 @@
     {
       "id": "q5",
       "question_number": "5",
-      "question_text": "Map og egendefinerte datastrukturer",
-      "context": "I denne oppgaven skal du vise at du forstår Maybe og Data.Map. Vi skal implementere en liten modell av et inventar- og kassesystem for en butikk. Typene vi skal bruke i modellen er de følgende: module Shop where import Data.Map (Map) import qualified Data.Map as Map type Money = Integer type Amount = Integer type ItemID = Integer data ItemInfo = ItemInfo { name :: String , price :: Money} deriving (Eq, Show) type ProductBase = Map ItemID ItemInfo type Inventory = Map ItemID Amount data Offer = Percent Integer | ThreeForTwo deriving (Eq, Show) data BillItem = Purchase ItemID ItemInfo | Discount Money deriving (Eq, Show) type Bill = [BillItem] data Shop = Shop { inventory :: Inventory , products :: ProductBase , offers :: Map ItemID Offer , till :: Money }",
-      "page_start": 10,
-      "page_end": 12,
+      "question_text": "HashMap and custom classes",
+      "context": "In this task you implement a small inventory and checkout model for a shop. The item id identifies a product type.\n```java\nimport java.util.*;\nclass ItemInfo {\n  String name;\n  int price; // kroner\n  ItemInfo(String name, int price) {\n    this.name = name;\n    this.price = price;\n  }\n}\nenum OfferType { PERCENT, THREE_FOR_TWO }\nclass Offer {\n  OfferType type;\n  int percent; // only used when type == PERCENT\n  Offer(OfferType type, int percent) {\n    this.type = type;\n    this.percent = percent;\n  }\n}\ninterface BillItem {}\nrecord Purchase(int itemId, ItemInfo info) implements BillItem {}\nrecord Discount(int amount) implements BillItem {}\nclass Shop {\n  Map<Integer, Integer> inventory = new HashMap<>(); // itemId -> amount\n  Map<Integer, ItemInfo> products = new HashMap<>(); // itemId -> info\n  Map<Integer, Offer> offers = new HashMap<>(); // itemId -> offer\n  int till;\n}\n```\nExample: If bananas cost 15 kr and have a three-for-two offer, buying 5 bananas gives one free banana: 5 * 15 - 15 = 60 kr.",
+      "page_start": 7,
+      "page_end": 8,
       "points": 20,
-      "topic": "Map og egendefinerte datastrukturer",
+      "topic": "HashMap and custom classes",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
           "id": "q5a",
           "label": "a",
-          "text": "Skriv en funksjon som regner ut hvor mye avslag man får dersom man får et prosentavslag på en pris, rundet av til nærmeste hele krone. For eksempel, dersom man får 30 prosent avslag på en vare som koster 201kr får man et avslag på 60kr. Altså må computePercentDiscount 30 201 = 60 Gjør mellomberegninger i Double.",
+          "text": "Write computePercentDiscount. It must compute the discount amount rounded to the nearest whole krone. Example: computePercentDiscount(30, 201) == 60. Use double for intermediate calculations.\n```java\npublic static int computePercentDiscount(int percent, int price) {\n  // TODO\n}\n```",
           "points": 6,
           "interaction_type": "free_text",
           "choices": [],
@@ -329,7 +317,7 @@
         {
           "id": "q5b",
           "label": "b",
-          "text": "Skriv en funksjon takeItem som tar ut et element fra inventaret. Funksjonen skal kun fjerne et item fra inventaret dersom det er minst ett item der av denne typen. Dersom Amount blir 0 etter at elementet er tatt ut, skal ItemID-nøkkelen fjernes fra inventarets Map.",
+          "text": "Write takeItem. It removes one item from the inventory only if there is at least one item of that type. If the amount becomes 0, remove the key from the map.\n```java\npublic static void takeItem(int itemId, Map<Integer, Integer> inventory) {\n  // TODO\n}\n```",
           "points": 6,
           "interaction_type": "free_text",
           "choices": [],
@@ -338,7 +326,7 @@
         {
           "id": "q5c",
           "label": "c",
-          "text": "En Bill er en liste med varer som kjøpes og eventuelle avslag som skal regnes inn i totalprisen. Når en ny vare scannes i kassen legges den og alle gyldige avslag til på Bill-listen. Vi skal nå skrive addItem som legger til et slikt element. Vi begynner med å slå opp ItemInfo om produktet i shop :: Shop, og lagre det i info. Din oppgave er å regne ut eventuelle avslag på prisen, som en Maybe verdi, ved å se i butikkens tilbudsoversikt offers shop :: Map ItemID Offer. Skriv inneholdet i discount :: Maybe BillItem, nedenfor:",
+          "text": "Write addItem. If the product exists, add a Purchase to the bill. Then add a Discount when a valid offer applies. For THREE_FOR_TWO, look at how many purchases of this item will be in the bill after the current item is added; every third item gives a discount equal to the item price.\n```java\npublic static void addItem(Shop shop, int itemId, List<BillItem> bill) {\n  // TODO\n}\n```",
           "points": 8,
           "interaction_type": "free_text",
           "choices": [],
@@ -350,19 +338,19 @@
     {
       "id": "q6",
       "question_number": "6",
-      "question_text": "Induktive datastrukturer",
-      "context": "Vi skal se på trær som representerer mengder av ord. Vi skal bruke følgende induktive data struktur for å representere treet: data WordTree = WordTree { endAllowed :: Bool , continuations :: [(Char,WordTree)] } deriving (Eq,Show,Ord)",
-      "page_start": 13,
-      "page_end": 15,
+      "question_text": "Inductive data structures: word trie",
+      "context": "In this task you show that you understand recursive data structures. We represent a set of words as a trie. A node marks whether a word may end here, and maps each possible next character to a subtree.\n```java\nimport java.util.*;\nclass WordTree {\n  boolean endAllowed;\n  Map<Character, WordTree> continuations;\n  WordTree(boolean endAllowed) {\n    this.endAllowed = endAllowed;\n    this.continuations = new HashMap<>();\n  }\n}\n```\nThe invariant is that a character has at most one continuation from each node. Using Map enforces this at the level of keys.",
+      "page_start": 9,
+      "page_end": 9,
       "points": 17,
-      "topic": "Induktive datastrukturer",
+      "topic": "Inductive data structures",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
           "id": "q6a",
           "label": "a",
-          "text": "Skriv en funksjon insertWord som tar inn en streng og et tre, og lager et nytt tre som legger strengen som et nytt mulig ord i treet.",
+          "text": "Write insertWord. It must add the given word as a possible word in the tree. The method may mutate the tree.\n```java\npublic static void insertWord(String word, WordTree tree) {\n  // TODO\n}\n```",
           "points": 7,
           "interaction_type": "free_text",
           "choices": [],
@@ -371,7 +359,7 @@
         {
           "id": "q6b",
           "label": "b",
-          "text": "Forklar hvordan funksjonen du skrev i a) bevarer invarianten beskrevet ovenfor. Du skal altså vise at dersom continuations tree er en assosiasjonsliste, så er også continuations (insertWord w tree) en assosiasjonsliste for en hver w :: String.",
+          "text": "Explain why your insertWord method preserves the invariant that each character has at most one continuation from a node.",
           "points": 4,
           "interaction_type": "free_text",
           "choices": [],
@@ -380,120 +368,14 @@
         {
           "id": "q6c",
           "label": "c",
-          "text": "Skriv en funksjon som henter ut alle mulige ord fra et WordTree: allWords :: WordTree -> [String]",
+          "text": "Write allWords, which returns all words represented by the tree. The order of the returned list does not matter.\n```java\npublic static List<String> allWords(WordTree tree) {\n  // TODO\n}\n// You may write a private recursive helper method if you want.\n```",
           "points": 6,
           "interaction_type": "free_text",
           "choices": [],
           "solution": null
         }
       ],
-      "images": [
-        {
-          "id": "page_13_img_1",
-          "src": "/sample-assets/exam/page_13_img_1.png",
-          "path": "assets/exam/page_13_img_1.png",
-          "page_number": 13,
-          "bbox": [
-            70.89,
-            58.46,
-            519.08,
-            206.88
-          ],
-          "width": 898,
-          "height": 298,
-          "alt": "Image from page 13"
-        },
-        {
-          "id": "page_14_img_1",
-          "src": "/sample-assets/exam/page_14_img_1.png",
-          "path": "assets/exam/page_14_img_1.png",
-          "page_number": 14,
-          "bbox": [
-            84.05,
-            439.39,
-            87.7,
-            443.04
-          ],
-          "width": 8,
-          "height": 9,
-          "alt": "Image from page 14"
-        },
-        {
-          "id": "page_14_img_2",
-          "src": "/sample-assets/exam/page_14_img_2.png",
-          "path": "assets/exam/page_14_img_2.png",
-          "page_number": 14,
-          "bbox": [
-            84.05,
-            459.86,
-            87.7,
-            463.51
-          ],
-          "width": 8,
-          "height": 9,
-          "alt": "Image from page 14"
-        },
-        {
-          "id": "page_14_img_3",
-          "src": "/sample-assets/exam/page_14_img_3.png",
-          "path": "assets/exam/page_14_img_3.png",
-          "page_number": 14,
-          "bbox": [
-            84.05,
-            480.33,
-            87.7,
-            483.99
-          ],
-          "width": 8,
-          "height": 8,
-          "alt": "Image from page 14"
-        },
-        {
-          "id": "page_14_img_4",
-          "src": "/sample-assets/exam/page_14_img_4.png",
-          "path": "assets/exam/page_14_img_4.png",
-          "page_number": 14,
-          "bbox": [
-            84.05,
-            551.98,
-            87.7,
-            555.64
-          ],
-          "width": 8,
-          "height": 9,
-          "alt": "Image from page 14"
-        },
-        {
-          "id": "page_14_img_5",
-          "src": "/sample-assets/exam/page_14_img_5.png",
-          "path": "assets/exam/page_14_img_5.png",
-          "page_number": 14,
-          "bbox": [
-            84.05,
-            572.45,
-            87.7,
-            576.11
-          ],
-          "width": 8,
-          "height": 9,
-          "alt": "Image from page 14"
-        },
-        {
-          "id": "page_14_img_6",
-          "src": "/sample-assets/exam/page_14_img_6.png",
-          "path": "assets/exam/page_14_img_6.png",
-          "page_number": 14,
-          "bbox": [
-            84.05,
-            592.93,
-            87.7,
-            596.58
-          ],
-          "width": 8,
-          "height": 9,
-          "alt": "Image from page 14"
-        }
-      ]
+      "images": []
     }
   ],
   "warnings": []

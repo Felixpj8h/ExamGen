@@ -81,6 +81,8 @@ def test_prompt_tells_model_not_to_solve_questions() -> None:
     assert "interaction_type must be one of" in prompt
     assert 'choices to ["True", "False"]' in prompt
     assert "Extract question-specific context" in prompt
+    assert "fenced Markdown code blocks" in prompt
+    assert "```haskell" in prompt
     assert "Do not put general exam metadata or instructions in context" in prompt
 
 

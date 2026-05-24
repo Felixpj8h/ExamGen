@@ -156,14 +156,77 @@ article h2 {
   text-transform: uppercase;
 }
 
-.question-context pre {
+.context-blocks {
+  display: grid;
+  gap: 14px;
+}
+
+.context-blocks p {
   margin: 0;
-  white-space: pre-wrap;
   color: #0f172a;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.55;
+  text-transform: none;
+}
+
+.code-block {
+  overflow: hidden;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+}
+
+.code-block-header {
+  padding: 8px 12px;
+  color: #cbd5e1;
+  background: #1e293b;
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.code-block pre {
+  margin: 0;
+  overflow-x: auto;
+  padding: 14px 16px;
+  white-space: pre-wrap;
+  overflow-wrap: normal;
+  tab-size: 2;
+  color: #e2e8f0;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.code-block code {
+  font: inherit;
+}
+
+.syntax-keyword {
+  color: #93c5fd;
+  font-weight: 700;
+}
+
+.syntax-type {
+  color: #fbbf24;
+}
+
+.syntax-string {
+  color: #86efac;
+}
+
+.syntax-comment {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.syntax-operator {
+  color: #f0abfc;
 }
 
 .meta-row,
