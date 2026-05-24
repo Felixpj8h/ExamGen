@@ -50,3 +50,23 @@ def test_extract_pdf_omits_image_files_without_output_dir(tmp_path: Path) -> Non
 
     assert result["images"] == []
     assert result["pages"][0]["images"] == []
+
+
+def test_extract_pdf_filters_tiny_embedded_image_crops(tmp_path: Path) -> None:
+    pdf_path = tmp_path / "exam.pdf"
+    document = fitz.open()
+    page = document.new_page(width=300, height=300)
+    page.insert_text((36, 36), "Question 1. Ignore the tiny icon.")
+    page.insert_image(fitz.Rect(50, 70, 55, 75), stream=ONE_PIXEL_PNG)
+    document.save(pdf_path)
+    document.close()
+
+    result = extract_pdf(
+        pdf_path,
+        image_output_dir=tmp_path / "assets" / "exam",
+        image_path_prefix="assets/exam",
+        image_url_prefix="/sample-assets/exam",
+    )
+
+    assert result["images"] == []
+    assert result["pages"][0]["images"] == []

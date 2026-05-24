@@ -54,6 +54,16 @@ test('renders exam practice workspace from the exam bundle', async () => {
                   src: '/sample-assets/exam/page_2_img_1.png',
                   alt: 'Image from page 2',
                   page_number: 2,
+                  width: 220,
+                  height: 180,
+                },
+                {
+                  id: 'page_2_img_2',
+                  src: '/sample-assets/exam/page_2_img_2.png',
+                  alt: 'Tiny icon from page 2',
+                  page_number: 2,
+                  width: 8,
+                  height: 8,
                 },
               ],
               subquestions: [],
@@ -79,6 +89,7 @@ test('renders exam practice workspace from the exam bundle', async () => {
   expect(screen.getByText(/use the provided inference rule setup/i)).toBeInTheDocument();
   expect(screen.getByText('Answer')).toBeInTheDocument();
   expect(screen.getByRole('img', { name: /image from page 2/i })).toBeInTheDocument();
+  expect(screen.queryByRole('img', { name: /tiny icon from page 2/i })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: /reveal solution/i }));
   expect(screen.getByText(/existential instantiation is used incorrectly/i)).toBeInTheDocument();
 });

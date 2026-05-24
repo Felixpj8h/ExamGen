@@ -339,7 +339,7 @@ function SubquestionPanel({ subquestion, value, revealed, onAnswer, onReveal }) 
 }
 
 function QuestionImages({ images }) {
-  const visibleImages = Array.isArray(images) ? images.filter((image) => image?.src) : [];
+  const visibleImages = Array.isArray(images) ? images.filter(isVisibleQuestionImage) : [];
   if (visibleImages.length === 0) {
     return null;
   }
@@ -354,6 +354,15 @@ function QuestionImages({ images }) {
       ))}
     </div>
   );
+}
+
+function isVisibleQuestionImage(image) {
+  if (!image?.src) {
+    return false;
+  }
+  const width = Number(image.width || 0);
+  const height = Number(image.height || 0);
+  return width >= 80 && height >= 80;
 }
 
 function QuestionContext({ context }) {

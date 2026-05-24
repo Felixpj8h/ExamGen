@@ -9,6 +9,9 @@ import fitz
 
 from exam_parser.text_cleaner import clean_pages, normalize_whitespace
 
+MIN_EXTRACTED_IMAGE_WIDTH = 80
+MIN_EXTRACTED_IMAGE_HEIGHT = 80
+
 
 class PDFExtractionError(Exception):
     """Raised when a PDF cannot be validated or extracted."""
@@ -97,6 +100,9 @@ def _extract_page_image_crops(
                             clip=rect,
                             alpha=False,
                         )
+                        if _is_too_small_image(pixmap):
+                            pixmap = None
+                            continue
                         pixmap.save(output_path)
                         images.append(
                             {
@@ -119,6 +125,10 @@ def _extract_page_image_crops(
 
 def _round_bbox(rect: fitz.Rect) -> list[float]:
     return [round(rect.x0, 2), round(rect.y0, 2), round(rect.x1, 2), round(rect.y1, 2)]
+
+
+def _is_too_small_image(pixmap: fitz.Pixmap) -> bool:
+    return pixmap.width < MIN_EXTRACTED_IMAGE_WIDTH or pixmap.height < MIN_EXTRACTED_IMAGE_HEIGHT
 
 
 def _join_asset_path(prefix: str | None, file_name: str) -> str:
