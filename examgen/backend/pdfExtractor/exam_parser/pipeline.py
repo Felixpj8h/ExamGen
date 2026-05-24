@@ -31,6 +31,7 @@ class PipelineOptions:
     generate_missing_solutions: bool = False
     mirror_bundle_to_public: bool = True
     public_bundle_path: str | Path | None = None
+    asset_url_prefix: str | None = None
     indent: int = 2
 
 
@@ -55,7 +56,7 @@ def run_exam_pipeline(
         exam_pdf,
         image_output_dir=output_dir / "assets" / "exam",
         image_path_prefix="assets/exam",
-        image_url_prefix="/sample-assets/exam",
+        image_url_prefix=_asset_url_prefix(resolved_options, "exam"),
     )
     _write_artifact(output_dir, "extracted_exam.json", exam_extraction, resolved_options, artifacts)
 
@@ -107,7 +108,7 @@ def _run_separate_solution_pipeline(
         solutions_pdf,
         image_output_dir=out_dir / "assets" / "solutions",
         image_path_prefix="assets/solutions",
-        image_url_prefix="/sample-assets/solutions",
+        image_url_prefix=_asset_url_prefix(options, "solutions"),
     )
     _write_artifact(out_dir, "extracted_solutions.json", solution_extraction, options, artifacts)
     solution_classification = classify_extracted_document(solution_extraction)
@@ -199,6 +200,12 @@ def _generate_ai_solutions(
         max_output_tokens=max(options.max_output_tokens, 16384),
         source_type="ai_generated",
     )
+
+
+def _asset_url_prefix(options: PipelineOptions, asset_group: str) -> str:
+    if options.asset_url_prefix:
+        return f"{options.asset_url_prefix.rstrip('/')}/{asset_group}"
+    return f"/sample-assets/{asset_group}"
 
 
 def _write_artifact(

@@ -3,6 +3,7 @@ from pathlib import Path
 
 from exam_parser.ai_solution_extractor import SolutionExtractionError
 from exam_parser.cli_pipeline import main as pipeline_main
+from exam_parser.pipeline import PipelineOptions, run_exam_pipeline
 
 
 def sample_extraction(file_name: str = "exam.pdf") -> dict:
@@ -97,6 +98,46 @@ def test_pipeline_exam_only_writes_questions_and_bundle(
     assert (out_dir / "questions.json").exists()
     bundle = json.loads((out_dir / "exam_bundle.json").read_text(encoding="utf-8"))
     assert bundle["exam"]["title"] == "Sample"
+
+
+def test_pipeline_uses_configured_asset_url_prefix(tmp_path: Path, monkeypatch) -> None:
+    out_dir = tmp_path / "out"
+
+    def fake_extract_pdf(path, **kwargs):
+        extraction = sample_extraction()
+        extraction["pages"][0]["images"] = [
+            {
+                "id": "page_1_img_1",
+                "path": "assets/exam/page_1_img_1.png",
+                "src": f"{kwargs['image_url_prefix']}/page_1_img_1.png",
+                "page_number": 1,
+                "bbox": [0, 0, 100, 100],
+                "width": 100,
+                "height": 100,
+            }
+        ]
+        extraction["images"] = extraction["pages"][0]["images"]
+        return extraction
+
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", fake_extract_pdf)
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_questions_with_gemini",
+        lambda extraction_result, **kwargs: sample_questions(),
+    )
+
+    run_exam_pipeline(
+        "exam.pdf",
+        out_dir=out_dir,
+        options=PipelineOptions(
+            asset_url_prefix="/api/exams/exam_123/assets",
+            mirror_bundle_to_public=False,
+        ),
+    )
+
+    bundle = json.loads((out_dir / "exam_bundle.json").read_text(encoding="utf-8"))
+    assert bundle["questions"][0]["images"][0]["src"] == (
+        "/api/exams/exam_123/assets/exam/page_1_img_1.png"
+    )
 
 
 def test_pipeline_mirrors_exam_bundle_to_frontend_public(

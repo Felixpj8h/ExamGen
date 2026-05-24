@@ -17,11 +17,21 @@ PAGE_NUMBER_PATTERNS = (
 def normalize_whitespace(text: str) -> str:
     """Normalize whitespace while preserving readable paragraph line breaks."""
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
-    normalized = normalized.replace("\t", " ")
-    normalized = re.sub(r"[ \f\v]+", " ", normalized)
-    normalized = re.sub(r" *\n *", "\n", normalized)
+    normalized = normalized.replace("\t", "    ")
+    normalized_lines: list[str] = []
+    for line in normalized.split("\n"):
+        if not line.strip():
+            normalized_lines.append("")
+            continue
+
+        leading_spaces = re.match(r"^ *", line).group(0)
+        body = line[len(leading_spaces) :]
+        body = re.sub(r"[ \f\v]{2,}", " ", body).rstrip()
+        normalized_lines.append(f"{leading_spaces}{body}")
+
+    normalized = "\n".join(normalized_lines)
     normalized = re.sub(r"\n{3,}", "\n\n", normalized)
-    return normalized.strip()
+    return normalized.strip("\n")
 
 
 def is_page_number_line(line: str) -> bool:

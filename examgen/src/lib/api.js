@@ -1,8 +1,31 @@
-const API_BASE_URL =
+const CONFIGURED_API_BASE_URL =
   (typeof process !== 'undefined' &&
     process.env &&
     (process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_BASE_URL)) ||
   '';
+
+function getApiBaseUrl() {
+  if (CONFIGURED_API_BASE_URL) {
+    return CONFIGURED_API_BASE_URL;
+  }
+  if (
+    typeof window !== 'undefined' &&
+    window.location &&
+    window.location.hostname === 'localhost' &&
+    window.location.port === '3000'
+  ) {
+    return 'http://localhost:8000';
+  }
+  return '';
+}
+
+export function getApiUrl(path) {
+  const normalizedPath = String(path || '');
+  if (/^https?:\/\//i.test(normalizedPath)) {
+    return normalizedPath;
+  }
+  return `${getApiBaseUrl()}${normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`}`;
+}
 
 export async function processExamUpload({
   examFile,
@@ -16,7 +39,7 @@ export async function processExamUpload({
   }
   formData.append('auto_generate_solutions', String(autoGenerateSolutions));
 
-  const response = await fetch(`${API_BASE_URL}/api/exams/process`, {
+  const response = await fetch(getApiUrl('/api/exams/process'), {
     method: 'POST',
     body: formData,
   });

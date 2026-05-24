@@ -8,7 +8,7 @@ from exam_parser.text_cleaner import (
 def test_normalize_whitespace_preserves_readable_line_breaks() -> None:
     text = "  Question   1  \n\n\n  What\tis Python?  \n  Answer here.  "
 
-    assert normalize_whitespace(text) == "Question 1\n\nWhat is Python?\nAnswer here."
+    assert normalize_whitespace(text) == "  Question 1\n\n  What is Python?\n  Answer here."
 
 
 def test_page_number_removal() -> None:

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import FileDropzone from './components/FileDropzone';
 import LoadingOverlay from './components/LoadingOverlay';
-import { processExamUpload } from './lib/api';
+import { getApiUrl, processExamUpload } from './lib/api';
 
 const fallbackExamBundle = {
   exam: {
@@ -151,6 +151,7 @@ function App() {
     return (
       <MockExamWorkspace
         initialBundle={activeExamBundle || loadStoredExamBundle()}
+        examId={activeExamId}
         loadLabel={activeExamId ? `Generated exam ${activeExamId}` : 'Generated exam'}
       />
     );
@@ -159,10 +160,11 @@ function App() {
   return (
     <HomePage
       onExamReady={(response) => {
-        const bundle = getBundleFromProcessResponse(response);
-        setActiveExamId(response.exam_id || response.examId || null);
+        const examId = response.exam_id || response.examId || null;
+        const bundle = withExamAssetUrls(getBundleFromProcessResponse(response), examId);
+        setActiveExamId(examId);
         setActiveExamBundle(bundle);
-        storeExamBundle(bundle, response.exam_id || response.examId || null);
+        storeExamBundle(bundle, examId);
         setMockExamLocation();
         setView('mock-exam');
       }}
@@ -344,7 +346,10 @@ function isValidExamBundle(bundle) {
 
 function storeExamBundle(bundle, examId) {
   try {
-    window.localStorage.setItem('exam-generator:last-bundle', JSON.stringify(bundle));
+    window.localStorage.setItem(
+      'exam-generator:last-bundle',
+      JSON.stringify(withExamAssetUrls(bundle, examId)),
+    );
     if (examId) {
       window.localStorage.setItem('exam-generator:last-exam-id', examId);
     }
@@ -366,7 +371,7 @@ function loadStoredExamBundle() {
       return null;
     }
     const parsed = JSON.parse(stored);
-    return isValidExamBundle(parsed) ? parsed : null;
+    return isValidExamBundle(parsed) ? withExamAssetUrls(parsed, loadStoredExamId()) : null;
   } catch (error) {
     console.warn('Could not load stored exam bundle:', error);
     return null;
@@ -382,20 +387,70 @@ function loadStoredExamId() {
   }
 }
 
-function MockExamWorkspace({ initialBundle = null, loadLabel = 'Loaded public/sample-exam-bundle.json' }) {
-  const initialQuestions = Array.isArray(initialBundle?.questions) && initialBundle.questions.length > 0
-    ? initialBundle.questions
+function withExamAssetUrls(bundle, examId) {
+  if (!isValidExamBundle(bundle) || !examId) {
+    return bundle;
+  }
+
+  return {
+    ...bundle,
+    questions: bundle.questions.map((question) => ({
+      ...question,
+      images: Array.isArray(question.images)
+        ? question.images.map((image) => withExamAssetUrl(image, examId))
+        : question.images,
+    })),
+  };
+}
+
+function withExamAssetUrl(image, examId) {
+  if (!image || typeof image !== 'object') {
+    return image;
+  }
+
+  const src = String(image.src || '');
+  if (src.startsWith(`/api/exams/${examId}/assets/`)) {
+    return {
+      ...image,
+      src: getApiUrl(src),
+    };
+  }
+  if (src.startsWith('/sample-assets/')) {
+    return {
+      ...image,
+      src: getApiUrl(`/api/exams/${examId}/assets/${src.slice('/sample-assets/'.length)}`),
+    };
+  }
+
+  const path = String(image.path || '');
+  if (path.startsWith('assets/')) {
+    return {
+      ...image,
+      src: getApiUrl(`/api/exams/${examId}/assets/${path.slice('assets/'.length)}`),
+    };
+  }
+
+  return image;
+}
+
+function MockExamWorkspace({ initialBundle = null, examId = null, loadLabel = 'Loaded public/sample-exam-bundle.json' }) {
+  const normalizedInitialBundle = useMemo(
+    () => withExamAssetUrls(initialBundle, examId),
+    [initialBundle, examId],
+  );
+  const initialQuestions = Array.isArray(normalizedInitialBundle?.questions) && normalizedInitialBundle.questions.length > 0
+    ? normalizedInitialBundle.questions
     : fallbackExamBundle.questions;
-  const [examBundle, setExamBundle] = useState(initialBundle || fallbackExamBundle);
-  const [loadState, setLoadState] = useState(initialBundle ? 'uploaded' : 'loading');
+  const [examBundle, setExamBundle] = useState(normalizedInitialBundle || fallbackExamBundle);
+  const [loadState, setLoadState] = useState(normalizedInitialBundle ? 'uploaded' : 'loading');
   const [selectedId, setSelectedId] = useState(initialQuestions[0].id);
   const [answers, setAnswers] = useState({});
   const [revealed, setRevealed] = useState({});
 
   useEffect(() => {
-    if (initialBundle) {
-      const questions = Array.isArray(initialBundle.questions) ? initialBundle.questions : [];
-      setExamBundle(initialBundle);
+    if (normalizedInitialBundle) {
+      const questions = Array.isArray(normalizedInitialBundle.questions) ? normalizedInitialBundle.questions : [];
+      setExamBundle(normalizedInitialBundle);
       setSelectedId(questions[0]?.id || fallbackExamBundle.questions[0].id);
       setAnswers({});
       setRevealed({});
@@ -435,7 +490,7 @@ function MockExamWorkspace({ initialBundle = null, loadLabel = 'Loaded public/sa
     return () => {
       isMounted = false;
     };
-  }, [initialBundle]);
+  }, [normalizedInitialBundle]);
 
   const questions = useMemo(
     () => (Array.isArray(examBundle.questions) ? examBundle.questions : []),
@@ -684,11 +739,12 @@ function RichTextBlocks({ text, className = '', detectCode = false }) {
 
 function CodeBlock({ language, code }) {
   const normalizedLanguage = normalizeCodeLanguage(language);
+  const displayCode = formatCodeForLanguage(code, normalizedLanguage);
   return (
     <div className="code-block">
       <div className="code-block-header">{normalizedLanguage}</div>
       <pre>
-        <code>{highlightCode(code, normalizedLanguage)}</code>
+        <code>{highlightCode(displayCode, normalizedLanguage)}</code>
       </pre>
     </div>
   );
@@ -986,17 +1042,37 @@ function formatDetectedCode(text) {
 }
 
 function normalizeCodeWhitespace(code) {
-  const withoutTabs = String(code || '').replace(/\t/g, '  ');
-  const trimmed = withoutTabs.replace(/^\s*\n/, '').replace(/\n\s*$/, '');
-  const lines = trimmed.split('\n');
-  const indents = lines
-    .filter((line) => line.trim())
-    .map((line) => line.match(/^ */)?.[0].length || 0);
-  const commonIndent = indents.length ? Math.min(...indents) : 0;
-  if (commonIndent === 0) {
-    return trimmed;
+  return String(code || '')
+    .replace(/^\s*\n/, '')
+    .replace(/\n\s*$/, '');
+}
+
+function formatCodeForLanguage(code, language) {
+  const normalizedCode = normalizeCodeWhitespace(code);
+  if (language === 'haskell') {
+    return repairFlattenedHaskellIndentation(normalizedCode);
   }
-  return lines.map((line) => (line.trim() ? line.slice(commonIndent) : '')).join('\n');
+  return normalizedCode;
+}
+
+function repairFlattenedHaskellIndentation(code) {
+  const lines = String(code || '').split('\n');
+  if (lines.some((line) => /^ {2,}\S/.test(line))) {
+    return code;
+  }
+
+  return lines
+    .map((line) => {
+      const trimmed = line.trimStart();
+      if (!trimmed) {
+        return '';
+      }
+      if (/^(=|\|)\s/.test(trimmed) || /^(Lit|Var|Add|Mul|Let|IfZero)\b.*->/.test(trimmed)) {
+        return `  ${trimmed}`;
+      }
+      return trimmed;
+    })
+    .join('\n');
 }
 
 function normalizeCodeLanguage(language) {

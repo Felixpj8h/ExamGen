@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from exam_parser.pipeline import PipelineError, PipelineOptions, run_exam_pipeline
 
@@ -57,6 +58,7 @@ async def process_exam_upload(
                 out_dir=out_dir,
                 options=PipelineOptions(
                     generate_missing_solutions=auto_generate,
+                    asset_url_prefix=f"/api/exams/{exam_id}/assets",
                     # The frontend receives the bundle directly in this response.
                     # Mirroring into public/ during dev makes CRA reload and drops the UI flow.
                     mirror_bundle_to_public=False,
@@ -76,6 +78,19 @@ async def process_exam_upload(
     }
 
 
+@app.get("/api/exams/{exam_id}/assets/{asset_path:path}")
+def get_exam_asset(exam_id: str, asset_path: str) -> FileResponse:
+    """Serve generated assets that belong to a processed exam."""
+    if not _is_safe_exam_id(exam_id):
+        raise HTTPException(status_code=404, detail="Asset not found.")
+
+    assets_root = (_project_output_dir() / exam_id / "assets").resolve()
+    asset_file = (assets_root / asset_path).resolve()
+    if not _is_relative_to(asset_file, assets_root) or not asset_file.is_file():
+        raise HTTPException(status_code=404, detail="Asset not found.")
+    return FileResponse(asset_file)
+
+
 def _validate_pdf_upload(upload: UploadFile, *, field_name: str) -> None:
     filename = upload.filename or ""
     if not filename.lower().endswith(".pdf"):
@@ -92,6 +107,20 @@ async def _save_upload(upload: UploadFile, destination: Path) -> None:
 def _safe_upload_name(filename: str) -> str:
     safe_name = Path(filename).name.replace(" ", "_")
     return safe_name if safe_name.lower().endswith(".pdf") else f"{safe_name}.pdf"
+
+
+def _is_safe_exam_id(exam_id: str) -> bool:
+    return exam_id.startswith("exam_") and all(
+        character.isalnum() or character == "_" for character in exam_id
+    )
+
+
+def _is_relative_to(path: Path, parent: Path) -> bool:
+    try:
+        path.relative_to(parent)
+    except ValueError:
+        return False
+    return True
 
 
 def _project_output_dir() -> Path:
