@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import './App.css';
+import FileDropzone from './components/FileDropzone';
+import LoadingOverlay from './components/LoadingOverlay';
+import { processExamUpload } from './lib/api';
 
 const fallbackExamBundle = {
   exam: {
@@ -129,13 +132,277 @@ const sourceLabels = {
 };
 
 function App() {
-  const [examBundle, setExamBundle] = useState(fallbackExamBundle);
-  const [loadState, setLoadState] = useState('loading');
-  const [selectedId, setSelectedId] = useState(fallbackExamBundle.questions[0].id);
+  const [activeExamBundle, setActiveExamBundle] = useState(() => loadStoredExamBundle());
+  const [activeExamId, setActiveExamId] = useState(() => loadStoredExamId());
+  const [view, setView] = useState(() =>
+    getInitialView(activeExamBundle),
+  );
+
+  useEffect(() => {
+    function handleLocationChange() {
+      setView(getInitialView(loadStoredExamBundle()));
+    }
+
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
+  if (view === 'mock-exam') {
+    return (
+      <MockExamWorkspace
+        initialBundle={activeExamBundle || loadStoredExamBundle()}
+        loadLabel={activeExamId ? `Generated exam ${activeExamId}` : 'Generated exam'}
+      />
+    );
+  }
+
+  return (
+    <HomePage
+      onExamReady={(response) => {
+        const bundle = getBundleFromProcessResponse(response);
+        setActiveExamId(response.exam_id || response.examId || null);
+        setActiveExamBundle(bundle);
+        storeExamBundle(bundle, response.exam_id || response.examId || null);
+        setMockExamLocation();
+        setView('mock-exam');
+      }}
+    />
+  );
+}
+
+function getInitialView(storedBundle) {
+  return window.location.hash === '#mock-exam' && isValidExamBundle(storedBundle)
+    ? 'mock-exam'
+    : 'landing';
+}
+
+function HomePage({ onExamReady }) {
+  const [examFile, setExamFile] = useState(null);
+  const [solutionsFile, setSolutionsFile] = useState(null);
+  const [autoGenerateSolutions, setAutoGenerateSolutions] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  function validate() {
+    const nextErrors = {};
+    if (!examFile) {
+      nextErrors.examFile = 'Upload an exam PDF to continue.';
+    }
+    if (!autoGenerateSolutions && !solutionsFile) {
+      nextErrors.solutionsFile = 'Upload a solutions PDF or enable auto-generated solutions.';
+    }
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
+
+  async function handleStart() {
+    setSubmitError('');
+    if (!validate()) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await processExamUpload({
+        examFile,
+        solutionsFile,
+        autoGenerateSolutions,
+      });
+      const bundle = getBundleFromProcessResponse(response);
+      if (!isValidExamBundle(bundle)) {
+        throw new Error('The backend did not return an exam bundle.');
+      }
+      onExamReady(response);
+    } catch (error) {
+      console.error('Failed to process exam upload:', error);
+      setSubmitError(error instanceof Error ? error.message : 'Failed to process exam upload.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const canStart = Boolean(examFile) && (autoGenerateSolutions || Boolean(solutionsFile));
+
+  return (
+    <main className="landing-page">
+      <div className={`landing-shell ${isLoading ? 'is-blurred' : ''}`}>
+        <div className="landing-glow" />
+        <header className="landing-header">
+          <div className="eg-logo">
+            EG
+          </div>
+        </header>
+
+        <div className="landing-center">
+          <div className="landing-content">
+            <div className="landing-copy">
+              <p className="landing-kicker">
+                AI-assisted practice
+              </p>
+              <h1 className="landing-title">
+                Exam Generator
+              </h1>
+              <p className="landing-subtitle">
+                Upload an exam and solutions to generate a mock exam experience.
+              </p>
+            </div>
+
+            <div className="upload-card">
+              <div className="upload-grid">
+                <FileDropzone
+                  label="Exam PDF"
+                  helperText="Drag and drop your exam PDF here, or click to browse"
+                  file={examFile}
+                  onFileChange={(file) => {
+                    setExamFile(file);
+                    setErrors((current) => ({ ...current, examFile: '' }));
+                  }}
+                  required
+                  error={errors.examFile}
+                />
+                <FileDropzone
+                  label="Solutions PDF"
+                  helperText="Drag and drop your solution PDF here, or click to browse"
+                  file={solutionsFile}
+                  onFileChange={(file) => {
+                    setSolutionsFile(file);
+                    setErrors((current) => ({ ...current, solutionsFile: '' }));
+                  }}
+                  required={!autoGenerateSolutions}
+                  optionalTone={autoGenerateSolutions}
+                  error={errors.solutionsFile}
+                />
+              </div>
+
+              <div className="toggle-panel">
+                <div className="toggle-row">
+                  <div>
+                    <label htmlFor="auto-generate-solutions" className="toggle-title">
+                      Auto-generate solutions
+                    </label>
+                    <p className="toggle-help">
+                      Use this if you do not have a solution PDF. You can review generated solutions before grading.
+                    </p>
+                  </div>
+                  <button
+                    id="auto-generate-solutions"
+                    type="button"
+                    role="switch"
+                    aria-label="Auto-generate solutions"
+                    aria-checked={autoGenerateSolutions}
+                    onClick={() => {
+                      setAutoGenerateSolutions((enabled) => !enabled);
+                      setErrors((current) => ({ ...current, solutionsFile: '' }));
+                    }}
+                    className={`toggle-switch ${autoGenerateSolutions ? 'is-on' : ''}`}
+                  >
+                    <span
+                      className="toggle-knob"
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {submitError && (
+                <div
+                  className="upload-error"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {submitError}
+                </div>
+              )}
+
+              <div className="start-row">
+                <button
+                  type="button"
+                  onClick={handleStart}
+                  disabled={!canStart || isLoading}
+                  className="start-button"
+                >
+                  Start
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {isLoading && <LoadingOverlay />}
+    </main>
+  );
+}
+
+function getBundleFromProcessResponse(response) {
+  return response?.bundle || response?.exam_bundle || response?.examBundle || null;
+}
+
+function isValidExamBundle(bundle) {
+  return Boolean(bundle && typeof bundle === 'object' && Array.isArray(bundle.questions));
+}
+
+function storeExamBundle(bundle, examId) {
+  try {
+    window.localStorage.setItem('exam-generator:last-bundle', JSON.stringify(bundle));
+    if (examId) {
+      window.localStorage.setItem('exam-generator:last-exam-id', examId);
+    }
+  } catch (error) {
+    console.warn('Could not store generated exam bundle:', error);
+  }
+}
+
+function setMockExamLocation() {
+  if (window.location.hash !== '#mock-exam') {
+    window.history.pushState(null, '', '#mock-exam');
+  }
+}
+
+function loadStoredExamBundle() {
+  try {
+    const stored = window.localStorage.getItem('exam-generator:last-bundle');
+    if (!stored) {
+      return null;
+    }
+    const parsed = JSON.parse(stored);
+    return isValidExamBundle(parsed) ? parsed : null;
+  } catch (error) {
+    console.warn('Could not load stored exam bundle:', error);
+    return null;
+  }
+}
+
+function loadStoredExamId() {
+  try {
+    return window.localStorage.getItem('exam-generator:last-exam-id');
+  } catch (error) {
+    console.warn('Could not load stored exam id:', error);
+    return null;
+  }
+}
+
+function MockExamWorkspace({ initialBundle = null, loadLabel = 'Loaded public/sample-exam-bundle.json' }) {
+  const initialQuestions = Array.isArray(initialBundle?.questions) && initialBundle.questions.length > 0
+    ? initialBundle.questions
+    : fallbackExamBundle.questions;
+  const [examBundle, setExamBundle] = useState(initialBundle || fallbackExamBundle);
+  const [loadState, setLoadState] = useState(initialBundle ? 'uploaded' : 'loading');
+  const [selectedId, setSelectedId] = useState(initialQuestions[0].id);
   const [answers, setAnswers] = useState({});
   const [revealed, setRevealed] = useState({});
 
   useEffect(() => {
+    if (initialBundle) {
+      const questions = Array.isArray(initialBundle.questions) ? initialBundle.questions : [];
+      setExamBundle(initialBundle);
+      setSelectedId(questions[0]?.id || fallbackExamBundle.questions[0].id);
+      setAnswers({});
+      setRevealed({});
+      setLoadState('uploaded');
+      return undefined;
+    }
+
     let isMounted = true;
 
     fetch('/sample-exam-bundle.json')
@@ -168,7 +435,7 @@ function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [initialBundle]);
 
   const questions = useMemo(
     () => (Array.isArray(examBundle.questions) ? examBundle.questions : []),
@@ -208,10 +475,12 @@ function App() {
             <p className="mt-2 text-sm text-slate-600">{examBundle.exam.source_file}</p>
             <p className="mt-2 text-xs text-slate-500">
               {loadState === 'loaded'
-                ? 'Loaded public/sample-exam-bundle.json'
+                ? loadLabel
                 : loadState === 'loading'
                   ? 'Loading exam bundle...'
-                  : 'Using fallback sample'}
+                  : loadState === 'uploaded'
+                    ? loadLabel
+                    : 'Using fallback sample'}
             </p>
           </div>
 

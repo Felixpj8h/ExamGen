@@ -1,142 +1,160 @@
 {
   "exam": {
-    "title": "Java Programming - written exam",
-    "course_code": "JAVA122",
-    "source_file": "Task11.pdf"
+    "title": "Eksamen i INF122 – Tidlig eksamen våren",
+    "course_code": "INF122",
+    "source_file": "Task7.pdf"
   },
   "questions": [
     {
       "id": "q1",
       "question_number": "1",
-      "question_text": "Values and expressions in Java",
+      "question_text": "Verdier og typer",
       "context": null,
       "page_start": 2,
-      "page_end": 2,
-      "points": 12,
-      "topic": "Values and expressions",
-      "interaction_type": "multiple_choice",
+      "page_end": 3,
+      "points": 14,
+      "topic": "Verdier og typer",
+      "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
-          "id": "q1_1",
-          "label": "1",
-          "text": "What is printed by the following code?\nSystem.out.println(\"abc\".substring(1));",
+          "id": "q1a",
+          "label": "a",
+          "text": "Hva er verdien av uttrykket: snd (9,3) ?",
           "points": null,
-          "interaction_type": "multiple_choice",
-          "choices": [
-            "abc",
-            "bc",
-            "ab",
-            "Throws StringIndexOutOfBoundsException"
-          ],
-          "solution": {
-            "answer": "bc",
-            "explanation": "substring(1) returns the string starting from index 1 to the end.",
-            "grading_points": [
-              "Correct selection of 'bc'"
-            ],
-            "source": "ai_generated"
-          }
-        },
-        {
-          "id": "q1_2",
-          "label": "2",
-          "text": "What is the value of x after this code?\nint x = 7 / 2;",
-          "points": null,
-          "interaction_type": "multiple_choice",
-          "choices": [
-            "3",
-            "3.5",
-            "4",
-            "The code gives a type error"
-          ],
+          "interaction_type": "free_text",
+          "choices": [],
           "solution": {
             "answer": "3",
-            "explanation": "Integer division 7 / 2 truncates the decimal part.",
+            "explanation": "The function snd returns the second element of a tuple.",
             "grading_points": [
-              "Correct selection of '3'"
+              "Correct value identified"
             ],
             "source": "ai_generated"
           }
         },
         {
-          "id": "q1_3",
-          "label": "3",
-          "text": "What is printed?\nint[] a = {1, 2, 3};\nSystem.out.println(a[1]);",
+          "id": "q1b",
+          "label": "b",
+          "text": "Hva er verdien av uttrykket: tail [3,5,7] ?",
           "points": null,
-          "interaction_type": "multiple_choice",
-          "choices": [
-            "1",
-            "2",
-            "3",
-            "Throws ArrayIndexOutOfBoundsException"
-          ],
+          "interaction_type": "free_text",
+          "choices": [],
           "solution": {
-            "answer": "2",
-            "explanation": "Array indexing is 0-based; index 1 is the second element.",
+            "answer": "[5,7]",
+            "explanation": "The function tail returns all elements of a list except the first one.",
             "grading_points": [
-              "Correct selection of '2'"
+              "Correct list returned"
             ],
             "source": "ai_generated"
           }
         },
         {
-          "id": "q1_4",
-          "label": "4",
-          "text": "What is the value of b?\nboolean b = true || (10 / 0 == 0);",
+          "id": "q1c",
+          "label": "c",
+          "text": "Hva er verdien til uttrykket length $ \"Hello\" ++ \"World\"?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "true",
-            "false",
-            "Throws ArithmeticException",
-            "The code gives a type error"
+            "10",
+            "\"HelloWorld\"",
+            "5",
+            "\"HWeolrllod\"",
+            "[('H','W'),('e','o'),('l','r'),('l','l'),('o','d')]"
           ],
           "solution": {
-            "answer": "true",
-            "explanation": "Short-circuit OR (||) returns true if the first operand is true, skipping the second.",
+            "answer": "10",
+            "explanation": "The expression concatenates \"Hello\" and \"World\" to get \"HelloWorld\", which has length 10.",
             "grading_points": [
-              "Correct selection of 'true'"
+              "Correct length identified"
             ],
             "source": "ai_generated"
           }
         },
         {
-          "id": "q1_5",
-          "label": "5",
-          "text": "What is printed?\nString s = \"Hi\";\ns.toLowerCase();\nSystem.out.println(s);",
+          "id": "q1d",
+          "label": "d",
+          "text": "Hva er typen til uttrykket: tail \"123\"?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "hi",
-            "The code gives a type error"
+            "[('H','W'),('e','o'),('l','r'),('l','l'),('o','d')]",
+            "Integer",
+            "Char",
+            "[Integer]",
+            "String"
           ],
           "solution": {
-            "answer": "Hi",
-            "explanation": "Strings are immutable; toLowerCase() returns a new string and does not modify the original.",
+            "answer": "String",
+            "explanation": "In Haskell, a String is a list of characters ([Char]). tail \"123\" returns \"23\", which is a String.",
             "grading_points": [
-              "Correct selection of 'Hi'"
+              "Correct type identified"
             ],
             "source": "ai_generated"
           }
         },
         {
-          "id": "q1_6",
-          "label": "6",
-          "text": "What is printed?\nArrayList<Integer> xs = new ArrayList<>(List.of(1, 2, 3));\nxs.add(4);\nSystem.out.println(xs.size());",
+          "id": "q1e",
+          "label": "e",
+          "text": "Hva er typen til funksjonen head fra standardbiblioteket?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "3",
-            "4",
-            "[1, 2, 3, 4]",
-            "Throws UnsupportedOperationException"
+            "String",
+            "[a] -> a",
+            "a -> [a]",
+            "a -> a",
+            "[a] -> [a]"
           ],
           "solution": {
-            "answer": "4",
-            "explanation": "List.of creates an immutable list, but the ArrayList constructor creates a new mutable copy.",
+            "answer": "[a] -> a",
+            "explanation": "The head function takes a list of any type 'a' and returns the first element of type 'a'.",
             "grading_points": [
-              "Correct selection of '4'"
+              "Correct type signature identified"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q1f",
+          "label": "f",
+          "text": "Hva er verdien av uttrykket map reverse (words \"en to tre\")?",
+          "points": null,
+          "interaction_type": "multiple_choice",
+          "choices": [
+            "\"ne ot ert\"",
+            "[\"tre\",\"to\",\"en\"]",
+            "\"tre to en\"",
+            "[\"ne\",\"ot\",\"ert\"]"
+          ],
+          "solution": {
+            "answer": "[\"ne\",\"ot\",\"ert\"]",
+            "explanation": "words splits the string into [\"en\", \"to\", \"tre\"]. map reverse reverses each word.",
+            "grading_points": [
+              "Correct list of strings identified"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q1g",
+          "label": "g",
+          "text": "Hvilken type er en gyldig typing av uttrykket zipWith (+) [1..] ?",
+          "points": null,
+          "interaction_type": "multiple_choice",
+          "choices": [
+            "[Integer]",
+            "[\"ne\",\"ot\",\"ert\"]",
+            "[Integer] -> Integer",
+            "[Integer] -> [Integer]",
+            "Integer -> Integer",
+            "Integer"
+          ],
+          "solution": {
+            "answer": "[Integer] -> [Integer]",
+            "explanation": "zipWith (+) [1..] takes a list of integers and returns a function that adds the elements of the input list to the infinite list [1..].",
+            "grading_points": [
+              "Correct type signature identified"
             ],
             "source": "ai_generated"
           }
@@ -147,136 +165,155 @@
     {
       "id": "q2",
       "question_number": "2",
-      "question_text": "Types, classes and generics in Java",
+      "question_text": "Typer, kinds og monader",
       "context": null,
-      "page_start": 3,
-      "page_end": 3,
-      "points": 12,
-      "topic": "Types, classes and generics",
-      "interaction_type": "multiple_choice",
+      "page_start": 4,
+      "page_end": 5,
+      "points": 7,
+      "topic": "Typer, kinds og monader",
+      "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
-          "id": "q2_1",
-          "label": "1",
-          "text": "Which declaration is valid Java?",
+          "id": "q2a",
+          "label": "a",
+          "text": "Hva er en mulig typing av uttrykket Right (2,[\"remain\",\"silent\"])?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "List xs = new ArrayList<>();",
-            "ArrayList xs = new ArrayList();",
-            "Map m = new HashMap<>();"
+            "Either a (Integer,[String])",
+            "Either Integer [String]",
+            "Maybe (Integer,String)",
+            "Right (String, [Integer])"
           ],
           "solution": {
-            "answer": "Map m = new HashMap<>();",
-            "explanation": "The other options have syntax errors or type mismatches.",
+            "answer": "Either a (Integer,[String])",
+            "explanation": "Right (2,[\"remain\",\"silent\"]) is a Right constructor of Either, where the second component is a tuple (Integer, [String]).",
             "grading_points": [
-              "Correct selection of 'Map m = new HashMap<>();'"
+              "Correct type identified"
             ],
             "source": "ai_generated"
           }
         },
         {
-          "id": "q2_2",
-          "label": "2",
-          "text": "Which method header correctly describes a method that takes a String and returns its length?",
+          "id": "q2b",
+          "label": "b",
+          "text": "Hva er en mulig typing av uttrykket \\xs -> [(x,x) | x <- xs] ?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "int length(String s)",
-            "String length(int s)",
-            "void length(String s)",
-            "int length = String s"
+            "Right (String, [Integer])",
+            "[x] -> [(x,x)]",
+            "[(a,a)] -> [a]",
+            "x -> [(x,x)]",
+            "[(a,a) -> (a,a)]"
           ],
           "solution": {
-            "answer": "int length(String s)",
-            "explanation": "Correct return type and parameter type for a length method.",
+            "answer": "[x] -> [(x,x)]",
+            "explanation": "The lambda function takes a list of elements of type x and returns a list of tuples (x,x).",
             "grading_points": [
-              "Correct selection of 'int length(String s)'"
+              "Correct type identified"
             ],
             "source": "ai_generated"
           }
         },
         {
-          "id": "q2_3",
-          "label": "3",
-          "text": "Which statement about String in Java is correct?",
+          "id": "q2c",
+          "label": "c",
+          "text": "Hva er en mulig typing av uttrykket zipWith ($)?\nHusk at zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]  og at ($) :: (a -> b) -> a -> b.",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "String objects are mutable.",
-            "String objects are immutable.",
-            "Calling toUpperCase changes the original String in place.",
-            "String cannot be compared with equals."
+            "[(a,a) -> (a,a)]",
+            "(a -> b) -> [[a]] -> [[b]]",
+            "[a -> b] -> [a -> b]",
+            "([a] -> [b]) -> [a -> b]",
+            "[a -> b] -> [a] -> [b]"
           ],
           "solution": {
-            "answer": "String objects are immutable.",
-            "explanation": "Strings cannot be changed after creation.",
+            "answer": "[a -> b] -> [a] -> [b]",
+            "explanation": "zipWith ($) takes a list of functions and a list of arguments, applying each function to the corresponding argument.",
             "grading_points": [
-              "Correct selection of 'String objects are immutable.'"
+              "Correct type identified"
             ],
             "source": "ai_generated"
           }
         },
         {
-          "id": "q2_4",
-          "label": "4",
-          "text": "Given class Dog extends Animal, which assignment is valid?",
+          "id": "q2d",
+          "label": "d",
+          "text": "Hvilken kind har Maybe Integer?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "Dog d = new Animal();",
-            "Animal a = new Dog();",
-            "ArrayList xs = new ArrayList();",
-            "Dog d = (Dog) new Object(); is always safe."
+            "*",
+            "Functor",
+            "* -> *",
+            "Maybe",
+            "Monad"
           ],
           "solution": {
-            "answer": "Animal a = new Dog();",
-            "explanation": "Polymorphism allows assigning a subclass instance to a superclass reference.",
+            "answer": "*",
+            "explanation": "Maybe is * -> * and Integer is *, so Maybe Integer is a concrete type of kind *.",
             "grading_points": [
-              "Correct selection of 'Animal a = new Dog();'"
+              "Correct kind identified"
             ],
             "source": "ai_generated"
           }
         },
         {
-          "id": "q2_5",
-          "label": "5",
-          "text": "What is the most precise return type for a method that might fail to find a Student?",
+          "id": "q2e",
+          "label": "e",
+          "text": "Hvilken kind har Either (Maybe Integer)?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "Student",
-            "null only",
-            "Optional",
-            "void"
+            "* -> *",
+            "Either",
+            "* -> * -> *"
           ],
           "solution": {
-            "answer": "Optional",
-            "explanation": "Optional is the standard way to handle potentially missing values.",
+            "answer": "* -> * -> *",
+            "explanation": "Either is a type constructor of kind * -> * -> *. Applying it to one argument (Maybe Integer) results in a type constructor of kind * -> *.",
             "grading_points": [
-              "Correct selection of 'Optional'"
+              "Correct kind identified"
             ],
             "source": "ai_generated"
           }
         },
         {
-          "id": "q2_6",
-          "label": "6",
-          "text": "What does static mean in a method declaration?",
+          "id": "q2f",
+          "label": "f",
+          "text": "Hva er verdien til uttrykket (\"hei\" >>= (take 3 . repeat)) ?\nHusk at (>>=) :: m a -> (a -> m b) -> m b   er den monadiske bind operasjonen og at lister er en\nmonade. repeat :: a -> [a]  er funksjonen som lager en uendelig liste med kopier av et element.",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "[\"hhh\",\"eee\",\"iii\"]",
+            "explanation": "The bind operation on a list applies the function to each element and flattens the result. repeat 'h' gives an infinite list of 'h's, take 3 gives \"hhh\".",
+            "grading_points": [
+              "Correct value identified"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q2g",
+          "label": "g",
+          "text": "Hva er typen til (>>= putStrLn)?\nHusk at (>>=) :: m a -> (a -> m b) -> m b   er den monadiske bind operasjonen",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "The method belongs to the class rather than one object.",
-            "The method can never be called.",
-            "The method cannot use parameters.",
-            "The method is automatically private."
+            "IO () -> String",
+            "IO String -> IO ()",
+            "String -> IO ()",
+            "IO String"
           ],
           "solution": {
-            "answer": "The method belongs to the class rather than one object.",
-            "explanation": "Static methods are associated with the class type.",
+            "answer": "IO String -> IO ()",
+            "explanation": "The bind operator (>>=) for IO has type IO a -> (a -> IO b) -> IO b. Here, a is String and b is ().",
             "grading_points": [
-              "Correct selection of 'The method belongs to the class rather than one object.'"
+              "Correct type identified"
             ],
             "source": "ai_generated"
           }
@@ -287,82 +324,48 @@
     {
       "id": "q3",
       "question_number": "3",
-      "question_text": "Console I/O and string processing",
-      "context": "In this task you show that you understand basic console input/output, loops, and string processing in Java.\nYou may use Scanner, StringBuilder, Character.toUpperCase and Character.toLowerCase.",
-      "page_start": 4,
-      "page_end": 4,
-      "points": 14,
-      "topic": "Console I/O and string processing",
+      "question_text": "Grunnleggende IO",
+      "context": "Skriv et Haskell program som leser inn en setning og skriver ut hvor mange ord den består av.\nDu vil ha bruk for IO funksjoner slik som putStr og getLine, samt words :: String -> [String].\n\nEksempelkjøring:\n\nSkriv en setning: Eksamen gikk bedre enn foventet.\nSetningen bestod av 5 ord.",
+      "page_start": 6,
+      "page_end": 6,
+      "points": 6,
+      "topic": "IO",
       "interaction_type": "free_text",
       "choices": [],
-      "subquestions": [
-        {
-          "id": "q3a",
-          "label": "a",
-          "text": "Write a method readSentence that reads characters from standard input until the user enters a period character \".\". The returned String must include the period.\n```java\npublic static String readSentence(Scanner sc) {\n  // TODO\n}\n```",
-          "points": 6,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "public static String readSentence(Scanner sc) { StringBuilder sb = new StringBuilder(); while (sc.hasNext()) { String s = sc.next(); sb.append(s).append(\" \"); if (s.endsWith(\".\")) break; } return sb.toString().trim(); }",
-            "explanation": "Reads tokens until one ends with a period.",
-            "grading_points": [
-              "Uses Scanner",
-              "Uses loop",
-              "Handles period termination",
-              "Returns correct String"
-            ],
-            "source": "ai_generated"
-          }
-        },
-        {
-          "id": "q3b",
-          "label": "b",
-          "text": "Write a main method that uses readSentence and prints the sentence with the word order reversed. The first word in the result must start with an uppercase letter, and the last word must start with a lowercase letter. You may assume at least one word and no proper nouns.\nInput: This is a test.\nOutput: Test a is this.",
-          "points": 8,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "public static void main(String[] args) { Scanner sc = new Scanner(System.in); String s = readSentence(sc); String[] words = s.replace(\".\", \"\").split(\" \"); List<String> list = Arrays.asList(words); Collections.reverse(list); ... }",
-            "explanation": "Splits, reverses, and adjusts casing.",
-            "grading_points": [
-              "Reverses word order",
-              "First word capitalized",
-              "Last word lowercase",
-              "Handles period removal"
-            ],
-            "source": "ai_generated"
-          }
-        }
-      ],
-      "images": []
+      "subquestions": [],
+      "images": [],
+      "solution": {
+        "answer": null,
+        "explanation": "Grunnleggende IO",
+        "grading_points": [],
+        "source": null
+      }
     },
     {
       "id": "q4",
       "question_number": "4",
-      "question_text": "Arrays, ArrayList and higher-order style operations",
-      "context": "In this task you show that you understand list processing in Java. You may use loops. Where the task explicitly asks for streams, use java.util.stream.\n```java\nimport java.util.*;\nimport java.util.stream.*;\n```",
-      "page_start": 5,
-      "page_end": 6,
-      "points": 25,
-      "topic": "Arrays, ArrayList and higher-order style operations",
+      "question_text": "Lister",
+      "context": "I denne oppgaven skal du vise at du behersker listemanipulasjon i Haskell. Du kan fritt bruke\nfunksjoner fra standardbiblioteket. For eksempel kan følgende funksjoner komme til nytte:\n\n fst :: (a,b) -> a\n snd :: (a,b) -> b\n map :: (a -> b) -> [a] -> [b]\n all :: (a -> Bool) -> [a] -> Bool\n any :: (a -> Bool) -> [a] -> Bool\n filter :: (a -> Bool) -> [a] -> [a]\n zip :: [a] -> [b] -> [(a,b)]",
+      "page_start": 7,
+      "page_end": 8,
+      "points": 13,
+      "topic": "Lister",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
           "id": "q4a",
           "label": "a",
-          "text": "Write a method squareEvens that returns a new list containing the square of every even number in the input list. Example: squareEvens(List.of(1,2,3,4)) returns [4, 16].\n```java\npublic static List<Integer> squareEvens(List<Integer> xs) {\n  // TODO\n}\n```",
-          "points": 5,
+          "text": "Skriv en funksjon evens :: [Integer] -> [Integer] som gir alle partallene i en liste. For\neksempel evens [1,5,2,6,7,8] = [2,6,8]. Husk at funksjonen even :: Integer -> Bool sjekker om et\nheltall er et partall.",
+          "points": null,
           "interaction_type": "free_text",
           "choices": [],
           "solution": {
-            "answer": "public static List<Integer> squareEvens(List<Integer> xs) { List<Integer> res = new ArrayList<>(); for (int x : xs) { if (x % 2 == 0) res.add(x * x); } return res; }",
-            "explanation": "Iterates and filters even numbers.",
+            "answer": "```haskell\nevens :: [Integer] -> [Integer]\nevens xs = filter even xs\n```",
+            "explanation": "Uses the filter function with the even predicate.",
             "grading_points": [
-              "Correct loop",
-              "Correct filter",
-              "Correct square calculation"
+              "Correct use of filter",
+              "Correct use of even"
             ],
             "source": "ai_generated"
           }
@@ -370,17 +373,16 @@
         {
           "id": "q4b",
           "label": "b",
-          "text": "Write the same function as in a), but this time use stream(), filter and map instead of an explicit loop.\n```java\npublic static List<Integer> squareEvensStream(List<Integer> xs) {\n  // TODO\n}\n```",
-          "points": 5,
+          "text": "Skriv en funksjon allEqual :: (Eq a) => [a] -> Bool som sjekker om alle elementer i en liste\ner like. For eksempel allEqual [1,1,1] = True og allEqual [1,0,1] = False. Returner True dersom\nlisten er tom.",
+          "points": null,
           "interaction_type": "free_text",
           "choices": [],
           "solution": {
-            "answer": "public static List<Integer> squareEvensStream(List<Integer> xs) { return xs.stream().filter(x -> x % 2 == 0).map(x -> x * x).collect(Collectors.toList()); }",
-            "explanation": "Uses stream API.",
+            "answer": "```haskell\nallEqual :: (Eq a) => [a] -> Bool\nallEqual [] = True\nallEqual (x:xs) = all (== x) xs\n```",
+            "explanation": "Checks if all elements in the list are equal to the first element.",
             "grading_points": [
-              "Uses stream()",
-              "Uses filter",
-              "Uses map"
+              "Handles empty list",
+              "Correct logic for non-empty list"
             ],
             "source": "ai_generated"
           }
@@ -388,16 +390,16 @@
         {
           "id": "q4c",
           "label": "c",
-          "text": "Write a generic method countNull that counts how many elements in a list are null. The method must work for lists of any element type.\n```java\npublic static <T> int countNull(List<T> xs) {\n  // TODO\n}\n```",
-          "points": 5,
+          "text": "Skriv en funksjon unique :: (Eq a) => [a] -> Bool som sjekker om alle elementer i en liste\ner ulike. For eksempel unique [1,2,3] = True og uniqe [1,0,1] = False. Returner True dersom listen\ner tom.",
+          "points": null,
           "interaction_type": "free_text",
           "choices": [],
           "solution": {
-            "answer": "public static <T> int countNull(List<T> xs) { int count = 0; for (T x : xs) { if (x == null) count++; } return count; }",
-            "explanation": "Counts null elements.",
+            "answer": "```haskell\nunique :: (Eq a) => [a] -> Bool\nunique [] = True\nunique (x:xs) = not (elem x xs) && unique xs\n```",
+            "explanation": "Recursively checks if the head is not in the tail and if the tail is unique.",
             "grading_points": [
-              "Generic method",
-              "Correct null check"
+              "Handles empty list",
+              "Correct recursive logic"
             ],
             "source": "ai_generated"
           }
@@ -405,16 +407,16 @@
         {
           "id": "q4d",
           "label": "d",
-          "text": "Write a method dedupeConsecutive that removes consecutive duplicates, but keeps one copy of each run. Example: [1,1,2,2,2,3,1,1] becomes [1,2,3,1].\n```java\npublic static <T> List<T> dedupeConsecutive(List<T> xs) {\n  // TODO\n}\n```",
-          "points": 5,
+          "text": "Funksjonen zip :: [a] -> [b] -> [(a,b)]  setter sammen to lister parvis til en liste med par. Man kan\ntenke seg en funksjon som går andre veien, og tar en liste av par og lager to lister: unzip :: [(a,b)] -\n> ([a],[b]) . For eksempel blir unzip [(1,2),(3,4),(5,6)] = ([1,3,5],[2,4,6]). Skriv funksjonen unzip.",
+          "points": null,
           "interaction_type": "free_text",
           "choices": [],
           "solution": {
-            "answer": "public static <T> List<T> dedupeConsecutive(List<T> xs) { List<T> res = new ArrayList<>(); T last = null; for (T x : xs) { if (res.isEmpty() || !x.equals(last)) { res.add(x); last = x; } } return res; }",
-            "explanation": "Removes consecutive duplicates.",
+            "answer": "```haskell\nunzip :: [(a,b)] -> ([a],[b])\nunzip [] = ([],[])\nunzip ((x,y):ps) = let (xs,ys) = unzip ps in (x:xs, y:ys)\n```",
+            "explanation": "Recursively deconstructs the list of pairs into two separate lists.",
             "grading_points": [
-              "Handles empty list",
-              "Correct comparison logic"
+              "Correct base case",
+              "Correct recursive step"
             ],
             "source": "ai_generated"
           }
@@ -422,16 +424,33 @@
         {
           "id": "q4e",
           "label": "e",
-          "text": "Let duplicateEach(xs) return a list where every element occurs twice in a row. Is dedupeConsecutive(duplicateEach(xs)).equals(xs) true for every List xs? Give a precise explanation.\n```java\npublic static <T> List<T> duplicateEach(List<T> xs) {\n  // imagine this is already implemented\n}\n```",
-          "points": 5,
+          "text": "La unzip være slik som i forrige oppgave. Er det sant at zip (fst (unzip ps)) (snd (unzip ps)) =\nps for en hver liste med par ps :: [(a,b)] ? Husk å begrunne svaret.",
+          "points": null,
           "interaction_type": "free_text",
           "choices": [],
           "solution": {
-            "answer": "Yes, it is true. Because duplicateEach doubles every element, dedupeConsecutive will always collapse the pair back to the original single element.",
-            "explanation": "Logic explanation.",
+            "answer": "Yes, it is true.",
+            "explanation": "zip and unzip are inverse operations for lists of pairs. Reconstructing the pairs from the separated lists will yield the original list.",
             "grading_points": [
-              "Correct conclusion",
-              "Clear explanation"
+              "Correct answer",
+              "Reasonable justification"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q4f",
+          "label": "f",
+          "text": "La unzip være slik som i d). Er det sant at unzip (zip as bs) = (as,bs) for alle lister as :: [a]\nog bs :: [b] ? Husk å begrunne svaret.",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "No, it is not necessarily true.",
+            "explanation": "If the lists as and bs have different lengths, zip will truncate the longer list to the length of the shorter one, so unzip will not recover the original lists.",
+            "grading_points": [
+              "Correct answer",
+              "Reasonable justification regarding list lengths"
             ],
             "source": "ai_generated"
           }
@@ -442,28 +461,27 @@
     {
       "id": "q5",
       "question_number": "5",
-      "question_text": "HashMap and custom classes",
-      "context": "In this task you implement a small inventory and checkout model for a shop. The item id identifies a product type.\n```java\nimport java.util.*;\nclass ItemInfo {\n  String name;\n  int price; // kroner\n  ItemInfo(String name, int price) {\n    this.name = name;\n    this.price = price;\n  }\n}\nenum OfferType { PERCENT, THREE_FOR_TWO }\nclass Offer {\n  OfferType type;\n  int percent; // only used when type == PERCENT\n  Offer(OfferType type, int percent) {\n    this.type = type;\n    this.percent = percent;\n  }\n}\ninterface BillItem {}\nrecord Purchase(int itemId, ItemInfo info) implements BillItem {}\nrecord Discount(int amount) implements BillItem {}\nclass Shop {\n  Map<Integer, Integer> inventory = new HashMap<>(); // itemId -> amount\n  Map<Integer, ItemInfo> products = new HashMap<>(); // itemId -> info\n  Map<Integer, Offer> offers = new HashMap<>(); // itemId -> offer\n  int till;\n}\n```\nExample: If bananas cost 15 kr and have a three-for-two offer, buying 5 bananas gives one free banana: 5 * 15 - 15 = 60 kr.",
-      "page_start": 7,
-      "page_end": 8,
-      "points": 20,
-      "topic": "HashMap and custom classes",
+      "question_text": "Tic-tac-toe funksjoner",
+      "context": "```haskell\nimport Data.Map (Map)\nimport qualified Data.Map as Map\nMap.insert :: Ord k => k -> a -> Map k a -> Map k a\nMap.lookup :: Ord k => k -> Map k a -> Maybe a\nMap.fromList :: Ord k => [(k,a)] -> Map k a\n```\nI denne oppgaven skal vi implementere funksjoner relatert til spillet “Tre-på-rad”. Spillet spilles på\net 3×3 rutenett og de to spillerne tures om å sette merker i rutene, X (første spiller) eller O (andre\nspiller), for å forsøke å få tre på rad. På sin tur kan man kun sette sitt eget merke i en rute på\nbrettet som ikke allerede har et merke.\n\n```haskell\ndata Mark = X | O\n  deriving (Eq, Show)\ntype Position = (Integer, Integer)\ntype Board = Map Position Mark\n```\nVi bruker typen Position = (Integer,Integer) for å representere posisjoner på brettet. Vi begrenser\noss til posisjoner med koordinater fra 0 til 2, slik at vi får et 3×3 spillebrett. Data typen Mark (se\nnedenfor) representerer ett merke, og Board = Map Position Mark representerer tilstanden til\nspillebrettet som en mapping fra posisjoner til merker. Husk at et Map ikke behøver ha verdier for\nhver nøkkel, så det er mulig å representere også tomme ruter.\n\nFor eksempel vil brettet som ser slik ut:\n\nrepresentes av:\n\n```haskell\nexampleBoard :: Board\nexampleBoard = Map.fromList [ ((0, 0), X)\n                            , ((0, 1), X)\n                            , ((0, 2), O)\n                            , ((1, 1), O)\n                            , ((2, 1), O)\n                            , ((2, 2), X) ]\n```",
+      "page_start": 9,
+      "page_end": 11,
+      "points": 10,
+      "topic": "Tic-tac-toe",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
           "id": "q5a",
           "label": "a",
-          "text": "Write computePercentDiscount. It must compute the discount amount rounded to the nearest whole krone. Example: computePercentDiscount(30, 201) == 60. Use double for intermediate calculations.\n```java\npublic static int computePercentDiscount(int percent, int price) {\n  // TODO\n}\n```",
-          "points": 6,
+          "text": "Bruk listekomprehensjon til å lage listen allPositions :: [Position] med alle posisjoner på\nbrettet.",
+          "points": null,
           "interaction_type": "free_text",
           "choices": [],
           "solution": {
-            "answer": "public static int computePercentDiscount(int percent, int price) { return (int) Math.round((percent / 100.0) * price); }",
-            "explanation": "Uses double for precision.",
+            "answer": "```haskell\nallPositions :: [Position]\nallPositions = [(x,y) | x <- [0..2], y <- [0..2]]\n```",
+            "explanation": "Uses list comprehension to generate all coordinate pairs from 0 to 2.",
             "grading_points": [
-              "Uses double",
-              "Correct rounding"
+              "Correct list comprehension"
             ],
             "source": "ai_generated"
           }
@@ -471,17 +489,15 @@
         {
           "id": "q5b",
           "label": "b",
-          "text": "Write takeItem. It removes one item from the inventory only if there is at least one item of that type. If the amount becomes 0, remove the key from the map.\n```java\npublic static void takeItem(int itemId, Map<Integer, Integer> inventory) {\n  // TODO\n}\n```",
-          "points": 6,
+          "text": "Skriv en funksjon isValidMove :: Board -> Position -> Bool som sjekker om det er mulig å\nsette et merke på den gitte posisjonen på brettet i følge reglene.",
+          "points": null,
           "interaction_type": "free_text",
           "choices": [],
           "solution": {
-            "answer": "public static void takeItem(int itemId, Map<Integer, Integer> inventory) { if (inventory.containsKey(itemId)) { int count = inventory.get(itemId); if (count > 1) inventory.put(itemId, count - 1); else inventory.remove(itemId); } }",
-            "explanation": "Updates map correctly.",
+            "answer": "```haskell\nisValidMove :: Board -> Position -> Bool\nisValidMove board pos = Map.lookup pos board == Nothing\n```",
+            "explanation": "A move is valid if the position is not already in the map.",
             "grading_points": [
-              "Checks existence",
-              "Decrements count",
-              "Removes key if 0"
+              "Correct use of Map.lookup"
             ],
             "source": "ai_generated"
           }
@@ -489,17 +505,132 @@
         {
           "id": "q5c",
           "label": "c",
-          "text": "Write addItem. If the product exists, add a Purchase to the bill. Then add a Discount when a valid offer applies. For THREE_FOR_TWO, look at how many purchases of this item will be in the bill after the current item is added; every third item gives a discount equal to the item price.\n```java\npublic static void addItem(Shop shop, int itemId, List<BillItem> bill) {\n  // TODO\n}\n```",
-          "points": 8,
+          "text": "Skriv en funksjon move ::  Board -> Position -> Mark -> Maybe Board som gir en “kanskje\nverdi” av det nye brettet etter et merke er satt. Nothing signaliserer at det ikke var mulig å sette\nmerke på den gitte posisjonen.",
+          "points": null,
           "interaction_type": "free_text",
           "choices": [],
           "solution": {
-            "answer": "public static void addItem(Shop shop, int itemId, List<BillItem> bill) { ... }",
-            "explanation": "Adds purchase and applies discount logic.",
+            "answer": "```haskell\nmove :: Board -> Position -> Mark -> Maybe Board\nmove board pos mark\n  | isValidMove board pos = Just (Map.insert pos mark board)\n  | otherwise = Nothing\n```",
+            "explanation": "Checks validity first, then inserts the mark if valid.",
             "grading_points": [
-              "Adds Purchase",
-              "Checks offer",
-              "Applies discount logic"
+              "Correct use of isValidMove",
+              "Correct use of Map.insert"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q5d",
+          "label": "d",
+          "text": "Skriv en funksjon hasStreak :: [Positions] -> Board -> Maybe Mark som sjekker om alle\nposisjonene i en liste har samme merke. Dersom noen av de listede rutene er tomme, eller ikke\nalle har samme merke på brettet, så returneres Nothing. Dersom alle de listede rutene inneholder\nX så returnes Just X, og dersom alle inneholder O, så returneres Just O.",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "```haskell\nhasStreak :: [Position] -> Board -> Maybe Mark\nhasStreak posList board = case map (\\p -> Map.lookup p board) posList of\n  [Just X, Just X, Just X] -> Just X\n  [Just O, Just O, Just O] -> Just O\n  _ -> Nothing\n```",
+            "explanation": "Looks up all positions in the streak and checks if they all match X or O.",
+            "grading_points": [
+              "Correct lookup logic",
+              "Correct pattern matching for streaks"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q5e",
+          "label": "e",
+          "text": "Skriv en funksjon won :: Board -> Maybe Mark, som avgjør om et gitt brett er vunnet av\nen spiller. Funksjonen gir Nothing hvis ingen spillere har funnet, Just X dersom første spiler har\nvunnet og Just O dersom den andre spilleren har vunnet. Gjør dette ved å iterere over alle mulige\nstreaks og bruk hasStreak funksjonen for å sjekke om de er en vinnende streak.",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "```haskell\nwon :: Board -> Maybe Mark\nwon board = case filter (/= Nothing) (map (\\s -> hasStreak s board) streaks) of\n  (Just m : _) -> Just m\n  _ -> Nothing\n```",
+            "explanation": "Iterates over all predefined streaks and returns the first non-Nothing result.",
+            "grading_points": [
+              "Correct iteration over streaks",
+              "Correct use of hasStreak"
+            ],
+            "source": "ai_generated"
+          }
+        }
+      ],
+      "images": [
+        {
+          "id": "page_9_img_1",
+          "src": "/sample-assets/exam/page_9_img_1.png",
+          "path": "assets/exam/page_9_img_1.png",
+          "page_number": 9,
+          "bbox": [
+            55.5,
+            478.5,
+            278.25,
+            681.75
+          ],
+          "width": 446,
+          "height": 407,
+          "alt": "Image from page 9"
+        }
+      ]
+    },
+    {
+      "id": "q6",
+      "question_number": "6",
+      "question_text": "Tic-tac-toe parsing",
+      "context": "Vi fortsetter å jobbe med Tre-på-rad. Nå skal du skrive en parser for brettet.\n\nDu skal parse strenger som representerer tilstanden til brettet. Hver linje representerer en rad i\nbrettet. X representer første spiller, O (stor o) representerer andre spiller og understrek (\"_\")\nrepresenterer en tom rute.\n\nHusk at '\\n' :: Char representerer linjeskift. For eksempel representerer \"_X_\\nO_X\\nOX_\" brettet:\n_X_\nO_X\nOX_\n\nParsing\nI dette kurset har vi brukt en enkel parser type:\n\n```haskell\nnewtype Parser a\n    = Parser {runParser :: String -> Maybe (String, a)}\n```\nI disse oppgavene kan du anta at instanser for Functor, Applicative, Alternative og\nMonad klassene er gitt for Parser. Du vil også kanskje ha bruk for følgende operatorer fra disse:\n\n```haskell\n(<$>) :: (a -> b) -> Parser a -> Parser b\n(<*>) :: Parser (a -> b) -> Parser a -> Parser b\n(*>) :: Parser a -> Parser b -> Parser b\n(<*) :: Parser a -> Parser b -> Parser a\n(<|>) :: Parser a -> Parser a -> Parser a\nempty :: Parser a\npure/return :: a -> Parser a\n```\n(Typene er instansiert for Parser)\n\nFor å parse en sekvens kan det være greit å bruke sequence :: [Parser a] -> Parser [a].\n\nDu kan også ta for gitt en funksjon char :: Char -> Parser Char som lager en parser som kun\nparser det gitte tegnet. For eksempel char 'c' parser kun 'c' og ingenting annet.",
+      "page_start": 12,
+      "page_end": 13,
+      "points": 10,
+      "topic": "Parsing",
+      "interaction_type": "free_text",
+      "choices": [],
+      "subquestions": [
+        {
+          "id": "q6a",
+          "label": "a",
+          "text": "Skriv en pMark :: Parser Mark som parser ett enkelt merke.",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "```haskell\npMark :: Parser Mark\npMark = (char 'X' *> pure X) <|> (char 'O' *> pure O)\n```",
+            "explanation": "Parses 'X' or 'O' and returns the corresponding Mark.",
+            "grading_points": [
+              "Correct use of char",
+              "Correct alternative logic"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q6b",
+          "label": "b",
+          "text": "Skriv en pCell :: Parser (Maybe Mark) som parser en celle på brettet. Denne gir Just X for\n\"X\", Just O for \"O\" eller Nothing for \"_\".",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "```haskell\npCell :: Parser (Maybe Mark)\npCell = (Just <$> pMark) <|> (char '_' *> pure Nothing)\n```",
+            "explanation": "Parses a mark or an underscore, returning Just Mark or Nothing.",
+            "grading_points": [
+              "Correct use of pMark",
+              "Correct handling of underscore"
+            ],
+            "source": "ai_generated"
+          }
+        },
+        {
+          "id": "q6c",
+          "label": "c",
+          "text": "Skriv pBoard :: Parser Board som parser et helt 3×3 brett. Hint: Det kan være enklere å\nlage brettet som en liste og så bruke Map.fromList :: (Ord a) => [(a,b)] -> Map a b  for å lage\nmappingen.",
+          "points": null,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": {
+            "answer": "```haskell\npBoard :: Parser Board\npBoard = do\n  cells <- sequence (replicate 9 pCell)\n  let positions = [(x,y) | y <- [0..2], x <- [0..2]]\n  return $ Map.fromList [(p, m) | (p, Just m) <- zip positions cells]\n```",
+            "explanation": "Parses 9 cells, pairs them with positions, and filters out empty cells to create the Map.",
+            "grading_points": [
+              "Correct parsing of 9 cells",
+              "Correct mapping to positions"
             ],
             "source": "ai_generated"
           }
@@ -508,65 +639,47 @@
       "images": []
     },
     {
-      "id": "q6",
-      "question_number": "6",
-      "question_text": "Inductive data structures: word trie",
-      "context": "In this task you show that you understand recursive data structures. We represent a set of words as a trie. A node marks whether a word may end here, and maps each possible next character to a subtree.\n```java\nimport java.util.*;\nclass WordTree {\n  boolean endAllowed;\n  Map<Character, WordTree> continuations;\n  WordTree(boolean endAllowed) {\n    this.endAllowed = endAllowed;\n    this.continuations = new HashMap<>();\n  }\n}\n```\nThe invariant is that a character has at most one continuation from each node. Using Map enforces this at the level of keys.",
-      "page_start": 9,
-      "page_end": 9,
-      "points": 17,
-      "topic": "Inductive data structures",
+      "id": "q7",
+      "question_number": "7",
+      "question_text": "Filsystem som induktiv datatype",
+      "context": "I denne oppgaven du vise at du forstår induktive datastrukturer og kan skrive funksjoner ved hjelp\nav rekursjon på slike.\n\nVi definerer en induktiv datastruktur for å representere et filsystem, med filer og mapper\n(directories):\n\n```haskell\ndata FileSystem = File String Integer -- File name and size in bytes\n                | Directory String [FileSystem] -- Directory name and contents\n                deriving (Show, Eq)\n-- A path to specific file is represented as a list of Strings:\ntype Path = [String]\n\nexampleFileSystem :: FileSystem\nexampleFileSystem = Directory \"root\"\n    [ File \"notes.txt\" 120\n    , File \"todo.txt\" 80\n    , Directory \"projects\"\n        [ File \"projectA.txt\" 200\n        ]\n    ]\n```",
+      "page_start": 14,
+      "page_end": 15,
+      "points": 10,
+      "topic": "Induktive datatyper",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
-          "id": "q6a",
+          "id": "q7a",
           "label": "a",
-          "text": "Write insertWord. It must add the given word as a possible word in the tree. The method may mutate the tree.\n```java\npublic static void insertWord(String word, WordTree tree) {\n  // TODO\n}\n```",
-          "points": 7,
+          "text": "Skriv en funksjon totalSize :: FileSystem -> Integer regner ut den totale størrelsen av alle\nfiler i filsystemet i antall bytes. Hint: Bruk patternmatching og rekursjon.",
+          "points": null,
           "interaction_type": "free_text",
           "choices": [],
           "solution": {
-            "answer": "public static void insertWord(String word, WordTree tree) { WordTree curr = tree; for (char c : word.toCharArray()) { curr = curr.continuations.computeIfAbsent(c, k -> new WordTree(false)); } curr.endAllowed = true; }",
-            "explanation": "Traverses and creates nodes.",
+            "answer": "```haskell\ntotalSize :: FileSystem -> Integer\ntotalSize (File _ size) = size\ntotalSize (Directory _ contents) = sum (map totalSize contents)\n```",
+            "explanation": "Recursively sums the sizes of all files in the directory.",
             "grading_points": [
-              "Correct traversal",
-              "Creates nodes",
-              "Sets endAllowed"
+              "Correct pattern matching",
+              "Correct recursive logic"
             ],
             "source": "ai_generated"
           }
         },
         {
-          "id": "q6b",
+          "id": "q7b",
           "label": "b",
-          "text": "Explain why your insertWord method preserves the invariant that each character has at most one continuation from a node.",
-          "points": 4,
+          "text": "Skriv en funskjon findFile :: String -> FileSystem -> Path som leter igjennom filsystemet\netter en fil med et gitt navn og returnerer stien frem til den. For eksempel blir findFile\n\"projectA.txt\" exampleFileSystem = [\"root\",\"projects\",\"projectA.txt\"]. En tom liste signaliserer at\nfilen ikke ble funnet i filsystemet.",
+          "points": null,
           "interaction_type": "free_text",
           "choices": [],
           "solution": {
-            "answer": "The Map structure ensures that each character key maps to exactly one WordTree instance, preventing multiple paths for the same character.",
-            "explanation": "Invariant explanation.",
+            "answer": "```haskell\nfindFile :: String -> FileSystem -> Path\nfindFile name (File n _) | name == n = [n]\nfindFile name (Directory n contents) = \n  case [n : path | c <- contents, let path = findFile name c, not (null path)] of\n    (p:_) -> p\n    [] -> []\nfindFile _ _ = []\n```",
+            "explanation": "Searches for the file name and prepends the directory name to the path if found.",
             "grading_points": [
-              "Mentions Map uniqueness"
-            ],
-            "source": "ai_generated"
-          }
-        },
-        {
-          "id": "q6c",
-          "label": "c",
-          "text": "Write allWords, which returns all words represented by the tree. The order of the returned list does not matter.\n```java\npublic static List<String> allWords(WordTree tree) {\n  // TODO\n}\n// You may write a private recursive helper method if you want.\n```",
-          "points": 6,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "public static List<String> allWords(WordTree tree) { List<String> res = new ArrayList<>(); collect(tree, \"\", res); return res; } private static void collect(WordTree t, String s, List<String> res) { if (t.endAllowed) res.add(s); for (var entry : t.continuations.entrySet()) collect(entry.getValue(), s + entry.getKey(), res); }",
-            "explanation": "Recursive collection.",
-            "grading_points": [
-              "Recursive helper",
               "Correct base case",
-              "Correct accumulation"
+              "Correct recursive search in directories"
             ],
             "source": "ai_generated"
           }
@@ -577,6 +690,7 @@
   ],
   "warnings": [
     "These are AI-generated solutions and not official solutions.",
-    "AI-generated solutions; not official answer key."
+    "AI-generated solutions; not official answer key.",
+    "Unmatched solution for q3 3."
   ]
 }
