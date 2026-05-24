@@ -122,6 +122,7 @@ Rules:
 - Do not solve anything.
 - Do not add questions that are not present in the text.
 - Preserve all original question text.
+- Do not reduce a task to only its title. If a numbered question has a title followed by instructions, table rows, code, or setup text, preserve the instructions/setup in context.
 - Preserve mathematical and logical notation exactly where possible.
 - Preserve Norwegian/English wording as written.
 - Keep main questions and subquestions separate.
@@ -254,6 +255,7 @@ def post_process_questions(
     _normalize_question_text(processed)
     _normalize_interaction_metadata(processed)
     if extraction_result is not None:
+        _recover_missing_question_context_from_raw(processed, extraction_result)
         _recover_multiple_choice_options_from_raw(processed, extraction_result)
     _split_merged_followups(processed)
     _warn_about_generic_topics(processed)
@@ -381,6 +383,93 @@ def _recover_multiple_choice_options_from_raw(
             if isinstance(subquestion, dict):
                 _recover_item_choices_from_raw(subquestion, raw_lines)
         _recover_item_choices_from_raw(question, raw_lines)
+
+
+def _recover_missing_question_context_from_raw(
+    result: dict[str, Any],
+    extraction_result: dict[str, Any],
+) -> None:
+    clean_text = "\n".join(
+        str(page.get("clean_text") or "")
+        for page in extraction_result.get("pages", [])
+        if isinstance(page, dict)
+    )
+    if not clean_text.strip():
+        return
+
+    questions = [question for question in result.get("questions", []) if isinstance(question, dict)]
+    starts: dict[str, int] = {}
+    for question in questions:
+        start = _find_question_heading_start(clean_text, question)
+        if start is not None:
+            starts[str(id(question))] = start
+
+    for question in questions:
+        if question.get("context") is not None:
+            continue
+        start = starts.get(str(id(question)))
+        if start is None:
+            continue
+        following_starts = [
+            other_start
+            for other_id, other_start in starts.items()
+            if other_id != str(id(question)) and other_start > start
+        ]
+        end = min(following_starts) if following_starts else len(clean_text)
+        segment = clean_text[start:end]
+        recovered = _context_from_question_segment(segment, question)
+        if recovered:
+            question["context"] = normalize_obvious_math_squares(recovered)
+
+
+def _find_question_heading_start(text: str, question: dict[str, Any]) -> int | None:
+    question_number = str(question.get("question_number") or "").strip()
+    question_text = str(question.get("question_text") or "").strip()
+    if not question_number or not question_text:
+        return None
+
+    title_words = re.findall(r"[\wÃ¦Ã¸Ã¥Ã†Ã˜Ã…]+", question_text)[:4]
+    if not title_words:
+        return None
+    title_pattern = r"\s+".join(re.escape(word) for word in title_words)
+    heading_re = re.compile(
+        rf"(?m)^\s*{re.escape(question_number)}(?:[\).])?\s+.*{title_pattern}.*$",
+        re.IGNORECASE,
+    )
+    match = heading_re.search(text)
+    return match.start() if match else None
+
+
+def _context_from_question_segment(segment: str, question: dict[str, Any]) -> str | None:
+    lines = [line.strip() for line in segment.splitlines()]
+    lines = [line for line in lines if line and not re.fullmatch(r"Page\s+\d+", line, re.IGNORECASE)]
+    if len(lines) <= 1:
+        return None
+
+    body_lines = lines[1:]
+    cleaned = "\n".join(body_lines).strip()
+    if not cleaned or len(re.findall(r"\w+", cleaned)) < 8:
+        return None
+    if _looks_like_general_exam_context(cleaned):
+        return None
+    if not _looks_like_question_specific_context(cleaned):
+        return None
+    return cleaned
+
+
+def _looks_like_question_specific_context(text: str) -> bool:
+    return bool(
+        re.search(
+            r"\b("
+            r"write|fill|select|choose|explain|show|consider|complete|compute|state|derive|"
+            r"for each|what|why|which|"
+            r"skriv|fyll|velg|forklar|vis|beregn|hva|hvilken|"
+            r"type|data|class|interface|function|method|fn|let|var"
+            r")\b",
+            text,
+            re.IGNORECASE,
+        )
+    )
 
 
 def _question_page_numbers(question: dict[str, Any]) -> list[int]:

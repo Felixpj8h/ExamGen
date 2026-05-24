@@ -4,6 +4,7 @@ from exam_parser.ai_solution_extractor import (
     SolutionExtractionError,
     build_solution_extraction_prompt,
     post_process_solutions,
+    validate_solution_alignment,
     validate_solution_extraction_result,
 )
 
@@ -96,6 +97,8 @@ def test_ai_generated_prompt_marks_solutions_as_ai_generated() -> None:
     assert 'Set source_type to "ai_generated".' in prompt
     assert 'Set each subsolution source to "ai_generated".' in prompt
     assert "not official solutions" in prompt
+    assert "Return one solution object for every main question" in prompt
+    assert "Do not split a no-subquestion task into artificial subsolutions" in prompt
 
 
 def test_post_process_ai_generated_solutions_adds_warning_and_sources() -> None:
@@ -131,3 +134,84 @@ def test_post_process_ai_generated_solutions_adds_warning_and_sources() -> None:
     assert processed["source_type"] == "ai_generated"
     assert "AI-generated solutions; not official answer key." in processed["warnings"]
     assert processed["solutions"][0]["subsolutions"][0]["source"] == "ai_generated"
+
+
+def test_post_process_aligns_generated_ids_to_exact_question_ids() -> None:
+    result = {
+        "source_file": "exam.pdf",
+        "source_type": "ai_generated",
+        "exam_title": None,
+        "course_code": None,
+        "solutions": [
+            {
+                "question_id": "q1",
+                "question_number": "1",
+                "solution_text": None,
+                "page_start": None,
+                "page_end": None,
+                "subsolutions": [
+                    {
+                        "question_id": "q1_1",
+                        "label": "1.1",
+                        "answer": "2",
+                        "explanation": "Generated explanation.",
+                        "grading_points": [],
+                        "points": None,
+                        "page_start": None,
+                        "page_end": None,
+                        "source": "same_pdf",
+                    }
+                ],
+                "warnings": [],
+            }
+        ],
+        "warnings": ["These are AI-generated solutions and not official solutions."],
+    }
+    questions = {
+        "questions": [
+            {
+                "id": "q1",
+                "question_number": "1",
+                "subquestions": [{"id": "q1a", "label": "1"}],
+            }
+        ]
+    }
+
+    processed = post_process_solutions(result, source_type="ai_generated", questions_result=questions)
+
+    subsolution = processed["solutions"][0]["subsolutions"][0]
+    assert subsolution["question_id"] == "q1a"
+    assert subsolution["label"] == "1"
+    assert processed["warnings"] == ["AI-generated solutions; not official answer key."]
+
+
+def test_ai_generated_alignment_rejects_missing_question_solutions() -> None:
+    result = {
+        "source_file": "exam.pdf",
+        "source_type": "ai_generated",
+        "exam_title": None,
+        "course_code": None,
+        "solutions": [
+            {
+                "question_id": "q1_1",
+                "question_number": "1.1",
+                "solution_text": "Answer for 1.1.",
+                "subsolutions": [],
+                "warnings": [],
+            }
+        ],
+        "warnings": [],
+    }
+    questions = {
+        "questions": [
+            {"id": "q1_1", "question_number": "1.1", "subquestions": []},
+            {
+                "id": "q1_5",
+                "question_number": "1.5",
+                "subquestions": [{"id": "q1_5A", "label": "A"}],
+            },
+        ]
+    }
+
+    with pytest.raises(SolutionExtractionError, match="Missing: q1_5A"):
+        validate_solution_alignment(result, questions, source_type="ai_generated")

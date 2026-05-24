@@ -125,7 +125,7 @@ Rules:
 - For combined documents, ignore the question statements and extract only answer keys, official solutions, explanations, marking guidance, or clearly provided correct answers.
 - Do not treat phrases like "Questions with correct answers" as a reliable section split by themselves.
 - Match solutions to the provided questions by question_number and subquestion label.
-- If question IDs are available in the provided questions, use those IDs.
+- Use exact question IDs and subquestion IDs from the provided questions JSON. Do not invent IDs such as q1_1 when the provided subquestion ID is different.
 - Map solutions back to question IDs, question numbers, subquestion labels, and page_start/page_end when possible.
 - If the solution PDF gives only short answers, preserve them as answers and use explanation null.
 - If the solution gives detailed reasoning, put the reasoning in explanation.
@@ -167,6 +167,11 @@ Rules:
 - Do not add questions that are not present in the provided questions JSON.
 - Match solutions to the provided questions by question_id, question_number, and subquestion label.
 - Use the exact question IDs and subquestion IDs from the provided questions JSON.
+- Do not invent new IDs such as q1_1, q2_3, or q4_1 unless those exact IDs appear in the provided questions JSON.
+- Return one solution object for every main question in the provided questions JSON.
+- If a main question has subquestions, return one subsolution for every provided subquestion and use the exact subquestion id and label.
+- If a main question has no subquestions, put the complete answer in solution_text and keep subsolutions empty.
+- Do not split a no-subquestion task into artificial subsolutions based on method names, table rows, blanks, items, or code identifiers.
 - Put concise final answers in answer.
 - Put reasoning or explanation in explanation.
 - If an answer or explanation contains code, format the code as a fenced Markdown code block with the best language tag, for example ```java, ```haskell, ```python, or ```text.
@@ -228,19 +233,27 @@ def extract_solutions_with_gemini(
     except Exception as exc:
         raise SolutionExtractionError(f"Gemini API request failed: {exc}") from exc
 
-    result = post_process_solutions(result, source_type=source_type)
+    result = post_process_solutions(result, source_type=source_type, questions_result=questions_result)
     validate_solution_extraction_result(result)
+    validate_solution_alignment(result, questions_result, source_type=source_type)
     return result
 
 
-def post_process_solutions(result: dict[str, Any], *, source_type: str) -> dict[str, Any]:
+def post_process_solutions(
+    result: dict[str, Any],
+    *,
+    source_type: str,
+    questions_result: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Normalize source fields and warning containers in solutions JSON."""
     result["source_type"] = source_type
     result.setdefault("warnings", [])
+    result["warnings"] = _dedupe_solution_warnings(result["warnings"])
     if source_type == "ai_generated":
         warning = "AI-generated solutions; not official answer key."
         if warning not in result["warnings"]:
             result["warnings"].append(warning)
+    alignment_indexes = _build_question_alignment_indexes(questions_result)
     source = _subsolution_source(source_type)
     for solution in result.get("solutions", []):
         if not isinstance(solution, dict):
@@ -254,7 +267,90 @@ def post_process_solutions(result: dict[str, Any], *, source_type: str) -> dict[
                 subsolution.setdefault("page_start", None)
                 subsolution.setdefault("page_end", None)
                 subsolution["source"] = source
+                _align_subsolution_to_question(subsolution, solution, alignment_indexes)
     return result
+
+
+def _dedupe_solution_warnings(warnings: list[Any]) -> list[str]:
+    unique: list[str] = []
+    seen: set[str] = set()
+    for warning in warnings:
+        if not isinstance(warning, str) or not warning.strip():
+            continue
+        normalized = warning.strip()
+        if "ai-generated" in normalized.casefold() and "official" in normalized.casefold():
+            normalized = "AI-generated solutions; not official answer key."
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        unique.append(normalized)
+    return unique
+
+
+def _build_question_alignment_indexes(questions_result: dict[str, Any] | None) -> dict[str, Any]:
+    by_id: set[str] = set()
+    by_number_label: dict[tuple[str, str], tuple[str, str]] = {}
+    by_generated_id: dict[str, tuple[str, str]] = {}
+    if not questions_result:
+        return {"by_id": by_id, "by_number_label": by_number_label, "by_generated_id": by_generated_id}
+
+    for question in questions_result.get("questions", []):
+        if not isinstance(question, dict):
+            continue
+        question_number = str(question.get("question_number") or "")
+        question_id = str(question.get("id") or "")
+        if question_id:
+            by_id.add(question_id)
+        for subquestion in question.get("subquestions", []):
+            if not isinstance(subquestion, dict):
+                continue
+            sub_id = str(subquestion.get("id") or "")
+            label = str(subquestion.get("label") or "")
+            if sub_id:
+                by_id.add(sub_id)
+            normalized_label = _normalize_solution_label(label, question_number)
+            by_number_label[(question_number, normalized_label)] = (sub_id, label)
+            by_number_label[(question_number, label)] = (sub_id, label)
+            if question_number and normalized_label:
+                by_generated_id[f"q{question_number}_{normalized_label}"] = (sub_id, label)
+                by_generated_id[f"q{question_number}.{normalized_label}"] = (sub_id, label)
+    return {"by_id": by_id, "by_number_label": by_number_label, "by_generated_id": by_generated_id}
+
+
+def _align_subsolution_to_question(
+    subsolution: dict[str, Any],
+    parent_solution: dict[str, Any],
+    indexes: dict[str, Any],
+) -> None:
+    if not indexes["by_id"]:
+        return
+    sub_id = str(subsolution.get("question_id") or "")
+    if sub_id in indexes["by_id"]:
+        return
+    parent_number = str(parent_solution.get("question_number") or "")
+    label = str(subsolution.get("label") or "")
+    normalized_label = _normalize_solution_label(label, parent_number)
+
+    match = indexes["by_generated_id"].get(sub_id)
+    if match is None:
+        match = indexes["by_number_label"].get((parent_number, normalized_label))
+    if match is None:
+        match = indexes["by_number_label"].get((parent_number, label))
+    if match is None:
+        return
+
+    exact_id, exact_label = match
+    if exact_id:
+        subsolution["question_id"] = exact_id
+    if exact_label:
+        subsolution["label"] = exact_label
+
+
+def _normalize_solution_label(label: str, question_number: str = "") -> str:
+    normalized = str(label or "").strip()
+    if question_number and normalized.startswith(f"{question_number}."):
+        return normalized[len(question_number) + 1 :]
+    return normalized
 
 
 def validate_solution_extraction_result(result: dict[str, Any]) -> None:
@@ -281,6 +377,84 @@ def validate_solution_extraction_result(result: dict[str, Any]) -> None:
             has_content = True
     if not has_content:
         raise SolutionExtractionError("Solutions result contains no answer or explanation content.")
+
+
+def validate_solution_alignment(
+    result: dict[str, Any],
+    questions_result: dict[str, Any] | None,
+    *,
+    source_type: str,
+) -> None:
+    """Reject AI-generated solution payloads that do not cover the question set."""
+    if source_type != "ai_generated" or not questions_result:
+        return
+
+    expected = _expected_answer_item_ids(questions_result)
+    if not expected:
+        return
+    actual = _actual_answer_item_ids(result, questions_result)
+    missing = sorted(expected - actual)
+    if missing:
+        preview = ", ".join(missing[:8])
+        suffix = "..." if len(missing) > 8 else ""
+        raise SolutionExtractionError(
+            f"AI-generated solutions did not cover all questions. Missing: {preview}{suffix}"
+        )
+
+
+def _expected_answer_item_ids(questions_result: dict[str, Any]) -> set[str]:
+    expected: set[str] = set()
+    for question in questions_result.get("questions", []):
+        if not isinstance(question, dict):
+            continue
+        subquestions = question.get("subquestions")
+        if isinstance(subquestions, list) and subquestions:
+            for subquestion in subquestions:
+                if isinstance(subquestion, dict) and subquestion.get("id"):
+                    expected.add(str(subquestion["id"]))
+        elif question.get("id"):
+            expected.add(str(question["id"]))
+    return expected
+
+
+def _actual_answer_item_ids(result: dict[str, Any], questions_result: dict[str, Any]) -> set[str]:
+    question_ids_without_subquestions = {
+        str(question.get("id"))
+        for question in questions_result.get("questions", [])
+        if isinstance(question, dict)
+        and question.get("id")
+        and not question.get("subquestions")
+    }
+    actual: set[str] = set()
+    for solution in result.get("solutions", []):
+        if not isinstance(solution, dict):
+            continue
+        question_id = str(solution.get("question_id") or "")
+        if question_id in question_ids_without_subquestions and _has_parent_solution_text(solution):
+            actual.add(question_id)
+        for subsolution in solution.get("subsolutions", []):
+            if not isinstance(subsolution, dict):
+                continue
+            sub_id = str(subsolution.get("question_id") or "")
+            if sub_id and _has_subsolution_content(subsolution):
+                actual.add(sub_id)
+    return actual
+
+
+def _has_parent_solution_text(solution: dict[str, Any]) -> bool:
+    text = solution.get("solution_text")
+    return isinstance(text, str) and bool(text.strip())
+
+
+def _has_subsolution_content(subsolution: dict[str, Any]) -> bool:
+    for field in ("answer", "explanation"):
+        value = subsolution.get(field)
+        if isinstance(value, str) and value.strip():
+            return True
+    grading_points = subsolution.get("grading_points")
+    return isinstance(grading_points, list) and any(
+        isinstance(point, str) and point.strip() for point in grading_points
+    )
 
 
 def _validate_solution(solution: Any, solution_index: int) -> None:

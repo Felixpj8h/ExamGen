@@ -196,7 +196,7 @@ def _generate_ai_solutions(
         questions_result=questions,
         model_name=options.model_name,
         temperature=options.temperature,
-        max_output_tokens=options.max_output_tokens,
+        max_output_tokens=max(options.max_output_tokens, 16384),
         source_type="ai_generated",
     )
 

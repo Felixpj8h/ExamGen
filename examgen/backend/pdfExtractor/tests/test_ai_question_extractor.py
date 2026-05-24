@@ -77,6 +77,7 @@ def test_prompt_tells_model_not_to_solve_questions() -> None:
 
     assert "Do not solve anything." in prompt
     assert "Do not answer the exam questions." in prompt
+    assert "Do not reduce a task to only its title" in prompt
     assert 'label "followup"' in prompt
     assert "interaction_type must be one of" in prompt
     assert 'choices to ["True", "False"]' in prompt
@@ -221,6 +222,59 @@ def test_post_process_defaults_missing_context_to_null() -> None:
     processed = post_process_questions(result)
 
     assert processed["questions"][0]["context"] is None
+
+
+def test_post_process_recovers_title_only_question_context_from_extraction() -> None:
+    extraction = sample_extraction()
+    extraction["pages"][0]["clean_text"] = (
+        "Page 2\n"
+        "1.5 Typing disciplines (5 points)\n"
+        "For each description, write the best matching term: statically typed, dynamically typed,\n"
+        "nominally typed, structurally typed, duck typed, gradually typed, weakly typed, or strongly typed.\n"
+        "Item\n"
+        "Description\n"
+        "Term\n"
+        "A\n"
+        "A language accepts a value in a context because the value has the required fields/methods.\n"
+        "2.1 FIRST sets and recursive descent parsing\n"
+        "Compute FIRST(A)."
+    )
+    result = sample_questions()
+    result["questions"] = [
+        {
+            "id": "q1_5",
+            "question_number": "1.5",
+            "question_text": "Typing disciplines",
+            "context": None,
+            "page_start": 2,
+            "page_end": 2,
+            "points": None,
+            "topic": "Type systems",
+            "interaction_type": "free_text",
+            "choices": [],
+            "subquestions": [],
+        },
+        {
+            "id": "q2_1",
+            "question_number": "2.1",
+            "question_text": "FIRST sets and recursive descent parsing",
+            "context": None,
+            "page_start": 2,
+            "page_end": 2,
+            "points": None,
+            "topic": "Parsing",
+            "interaction_type": "free_text",
+            "choices": [],
+            "subquestions": [],
+        },
+    ]
+
+    processed = post_process_questions(result, extraction_result=extraction)
+
+    context = processed["questions"][0]["context"]
+    assert "For each description, write the best matching term" in context
+    assert "A language accepts a value" in context
+    assert "FIRST sets" not in context
 
 
 def test_post_process_adds_true_false_interaction_metadata_to_subquestions() -> None:

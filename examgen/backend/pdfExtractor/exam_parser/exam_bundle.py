@@ -17,6 +17,7 @@ def build_exam_bundle(
     warnings: list[str] = []
     questions = deepcopy(questions_result.get("questions", []))
     solution_indexes = _build_solution_indexes(solutions_result)
+    fallback_solution_source = _fallback_solution_source(solutions_result)
     matched_solution_keys: set[tuple[str, str]] = set()
     matched_parent_keys: set[tuple[str, str]] = set()
     has_solutions = solutions_result is not None
@@ -47,7 +48,7 @@ def build_exam_bundle(
                     "answer": solution.get("answer"),
                     "explanation": solution.get("explanation"),
                     "grading_points": solution.get("grading_points", []),
-                    "source": solution.get("source"),
+                    "source": _solution_source(solution, fallback_solution_source),
                 }
                 _ensure_solution_answer_choice(subquestion)
                 matched_solution_keys.add(solution_key)
@@ -66,7 +67,7 @@ def build_exam_bundle(
                     "answer": None,
                     "explanation": solution.get("solution_text"),
                     "grading_points": [],
-                    "source": None,
+                    "source": _solution_source(solution, fallback_solution_source),
                 }
                 _ensure_solution_answer_choice(question)
                 matched_solution_keys.add(solution_key)
@@ -77,6 +78,9 @@ def build_exam_bundle(
                     warnings.append(f"No solution found for question {number_key}.")
 
     for key in solution_indexes["subsolution_keys"]:
+        parent_key = solution_indexes["subsolution_parent_keys"].get(key)
+        if parent_key in matched_parent_keys:
+            continue
         if key not in matched_solution_keys:
             warnings.append(f"Unmatched solution for {key[0]} {key[1]}.".strip())
     for key in solution_indexes["parent_content_keys"]:
@@ -100,6 +104,7 @@ def build_exam_bundle(
 
 def _build_solution_indexes(solutions_result: dict[str, Any] | None) -> dict[str, Any]:
     by_id: dict[str, dict[str, Any]] = {}
+    by_id_alias: dict[str, dict[str, Any]] = {}
     by_number_label: dict[tuple[str, str], dict[str, Any]] = {}
     question_level_by_id: dict[str, dict[str, Any]] = {}
     question_level_by_number: dict[str, dict[str, Any]] = {}
@@ -109,6 +114,7 @@ def _build_solution_indexes(solutions_result: dict[str, Any] | None) -> dict[str
     if not solutions_result:
         return {
             "by_id": by_id,
+            "by_id_alias": by_id_alias,
             "by_number_label": by_number_label,
             "question_level_by_id": question_level_by_id,
             "question_level_by_number": question_level_by_number,
@@ -134,11 +140,15 @@ def _build_solution_indexes(solutions_result: dict[str, Any] | None) -> dict[str
             label = str(subsolution.get("label") or "")
             sub_key = (sub_id or question_number, label)
             by_id[sub_id] = subsolution
+            for alias in _solution_id_aliases(sub_id, question_number, label):
+                by_id_alias[alias] = subsolution
             by_number_label[(question_number, label)] = subsolution
+            by_number_label[(question_number, _normalize_solution_label(label, question_number))] = subsolution
             subsolution_keys.add(sub_key)
             subsolution_parent_keys[sub_key] = parent_key
     return {
         "by_id": by_id,
+        "by_id_alias": by_id_alias,
         "by_number_label": by_number_label,
         "question_level_by_id": question_level_by_id,
         "question_level_by_number": question_level_by_number,
@@ -157,10 +167,21 @@ def _find_subsolution(
 ) -> tuple[dict[str, Any] | None, tuple[str, str]]:
     if question_id in indexes["by_id"]:
         return indexes["by_id"][question_id], (question_id, label)
+    for alias in _question_id_aliases(question_id, question_number, label):
+        if alias in indexes["by_id_alias"]:
+            subsolution = indexes["by_id_alias"][alias]
+            return subsolution, (str(subsolution.get("question_id") or question_number), str(subsolution.get("label") or label))
     key = (question_number, label)
     if key in indexes["by_number_label"]:
         subsolution = indexes["by_number_label"][key]
         return subsolution, (str(subsolution.get("question_id") or question_number), label)
+    normalized_key = (question_number, _normalize_solution_label(label, question_number))
+    if normalized_key in indexes["by_number_label"]:
+        subsolution = indexes["by_number_label"][normalized_key]
+        return subsolution, (
+            str(subsolution.get("question_id") or question_number),
+            str(subsolution.get("label") or label),
+        )
     return None, ("", "")
 
 
@@ -184,6 +205,8 @@ def _unique_warnings(warnings: list[Any]) -> list[str]:
     for warning in warnings:
         if not isinstance(warning, str) or not warning:
             continue
+        if "ai-generated" in warning.casefold() and "official" in warning.casefold():
+            warning = "AI-generated solutions; not official answer key."
         if warning in seen:
             continue
         seen.add(warning)
@@ -194,6 +217,30 @@ def _unique_warnings(warnings: list[Any]) -> list[str]:
 def _has_parent_solution_content(solution: dict[str, Any]) -> bool:
     solution_text = solution.get("solution_text")
     return isinstance(solution_text, str) and bool(solution_text.strip())
+
+
+def _fallback_solution_source(solutions_result: dict[str, Any] | None) -> str | None:
+    if not isinstance(solutions_result, dict):
+        return None
+    source_type = solutions_result.get("source_type")
+    if source_type == "separate_solution_pdf":
+        return "official_solution_pdf"
+    if source_type in {"same_pdf", "ai_generated", "manual"}:
+        return str(source_type)
+    return None
+
+
+def _solution_source(solution: dict[str, Any], fallback_source: str | None) -> str | None:
+    source = solution.get("source")
+    if isinstance(source, str) and source.strip():
+        return source.strip()
+    for subsolution in solution.get("subsolutions", []):
+        if not isinstance(subsolution, dict):
+            continue
+        subsource = subsolution.get("source")
+        if isinstance(subsource, str) and subsource.strip():
+            return subsource.strip()
+    return fallback_source
 
 
 def _ensure_solution_answer_choice(item: dict[str, Any]) -> None:
@@ -295,3 +342,28 @@ def _looks_like_non_choice_text(text: str) -> bool:
             "anta at ",
         )
     ) or folded.endswith("?")
+
+
+def _question_id_aliases(question_id: str, question_number: str, label: str) -> set[str]:
+    aliases = {question_id}
+    normalized_label = _normalize_solution_label(label, question_number)
+    if question_number and normalized_label:
+        aliases.add(f"q{question_number}_{normalized_label}")
+        aliases.add(f"q{question_number}.{normalized_label}")
+    return {alias for alias in aliases if alias}
+
+
+def _solution_id_aliases(solution_id: str, question_number: str, label: str) -> set[str]:
+    aliases = {solution_id}
+    normalized_label = _normalize_solution_label(label, question_number)
+    if question_number and normalized_label:
+        aliases.add(f"q{question_number}_{normalized_label}")
+        aliases.add(f"q{question_number}.{normalized_label}")
+    return {alias for alias in aliases if alias}
+
+
+def _normalize_solution_label(label: str, question_number: str = "") -> str:
+    normalized = str(label or "").strip()
+    if question_number and normalized.startswith(f"{question_number}."):
+        return normalized[len(question_number) + 1 :]
+    return normalized

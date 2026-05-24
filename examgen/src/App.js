@@ -445,6 +445,13 @@ function MockExamWorkspace({ initialBundle = null, loadLabel = 'Loaded public/sa
     () => questions.find((question) => question.id === selectedId) || questions[0],
     [questions, selectedId],
   );
+  const bundleHasAiGeneratedSolutions = useMemo(
+    () =>
+      (examBundle.warnings || []).some((warning) =>
+        String(warning).toLowerCase().includes('ai-generated'),
+      ),
+    [examBundle.warnings],
+  );
 
   const allSubquestions = useMemo(
     () =>
@@ -556,6 +563,7 @@ function MockExamWorkspace({ initialBundle = null, loadLabel = 'Loaded public/sa
                 revealed={Boolean(revealed[subquestion.id])}
                 onAnswer={(value) => setAnswers((current) => ({ ...current, [subquestion.id]: value }))}
                 onReveal={() => setRevealed((current) => ({ ...current, [subquestion.id]: !current[subquestion.id] }))}
+                fallbackSolutionSource={bundleHasAiGeneratedSolutions ? 'ai_generated' : null}
               />
             ))}
           </div>
@@ -565,7 +573,7 @@ function MockExamWorkspace({ initialBundle = null, loadLabel = 'Loaded public/sa
   );
 }
 
-function SubquestionPanel({ subquestion, value, revealed, onAnswer, onReveal }) {
+function SubquestionPanel({ subquestion, value, revealed, onAnswer, onReveal, fallbackSolutionSource }) {
   return (
     <section className="rounded-lg border border-slate-300 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -602,7 +610,7 @@ function SubquestionPanel({ subquestion, value, revealed, onAnswer, onReveal }) 
         </button>
       </div>
 
-      {revealed && <SolutionBlock solution={subquestion.solution} />}
+      {revealed && <SolutionBlock solution={subquestion.solution} fallbackSource={fallbackSolutionSource} />}
     </section>
   );
 }
@@ -728,7 +736,7 @@ function AnswerInput({ subquestion, value, onAnswer }) {
   );
 }
 
-function SolutionBlock({ solution }) {
+function SolutionBlock({ solution, fallbackSource = null }) {
   if (!solution) {
     return (
       <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
@@ -737,14 +745,15 @@ function SolutionBlock({ solution }) {
     );
   }
 
-  const isAiGenerated = solution.source === 'ai_generated';
+  const source = solution.source || fallbackSource;
+  const isAiGenerated = source === 'ai_generated';
 
   return (
     <div
       className={`solution-panel ${isAiGenerated ? 'is-ai' : 'is-official'}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold">{sourceLabels[solution.source] || 'Solution'}</h3>
+        <h3 className="text-sm font-semibold">{sourceLabels[source] || 'Solution'}</h3>
         {isAiGenerated && <span className="rounded bg-purple-200 px-2 py-1 text-xs font-semibold text-purple-950">AI</span>}
       </div>
       {solution.answer && (
