@@ -1010,9 +1010,13 @@ function looksLikeCode(text) {
   if (!trimmed || trimmed.length < 12) {
     return false;
   }
+  if (looksLikePseudoInterfaceCode(trimmed)) {
+    return true;
+  }
   const codeSignals = [
-    /\b(public|private|protected|static|class|interface|enum|record|void|int|boolean|String|Map|List|HashMap|new|return|var|fun|val|let|const|function)\b/,
+    /\b(public|private|protected|static|class|interface|enum|record|void|int|boolean|String|Map|List|HashMap|new|return|var|fun|val|let|const|function|fn|mut|use|impl|match|struct|enum)\b/,
     /\b(type|data|case|of)\b/,
+    /\bprintln!\s*\(|\bvec!\s*\[|String::from|::/,
     /[{};]/,
     /\w+\s*\([^)]*\)\s*\{/,
     /<\s*\w+\s*,\s*\w+\s*>/,
@@ -1026,6 +1030,12 @@ function looksLikeCode(text) {
 
 function inferCodeLanguage(text) {
   const trimmed = String(text || '');
+  if (looksLikePseudoInterfaceCode(trimmed)) {
+    return 'pseudocode';
+  }
+  if (/\b(fn|let|mut|use|impl|match|struct|enum|trait)\b|println!\s*\(|vec!\s*\[|String::from|&mut\b/.test(trimmed)) {
+    return 'rust';
+  }
   if (/\b(module|where|data\s+\w+|deriving|case\b.*\bof\b|Maybe\s+Int|Either\s+String\s+Int|::)\b/.test(trimmed)) {
     return 'haskell';
   }
@@ -1043,6 +1053,9 @@ function inferCodeLanguage(text) {
 
 function formatDetectedCode(text, language = inferCodeLanguage(text)) {
   const trimmed = String(text || '').trim();
+  if (language === 'pseudocode') {
+    return formatPseudoInterfaceCode(trimmed);
+  }
   if (language === 'haskell') {
     return formatFlattenedHaskellCode(trimmed);
   }
@@ -1060,6 +1073,25 @@ function formatDetectedCode(text, language = inferCodeLanguage(text)) {
     .map((line) => line.trimEnd())
     .join('\n')
     .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function looksLikePseudoInterfaceCode(text) {
+  const trimmed = String(text || '').trim();
+  return /\binterface\s+\w+\s*\{/.test(trimmed) && /\bmethod\s+\w+\s*\(/.test(trimmed);
+}
+
+function formatPseudoInterfaceCode(code) {
+  return String(code || '')
+    .replace(/\s*\{\s*/g, ' {\n')
+    .replace(/\s*}\s*/g, '\n}')
+    .replace(/\s*\/\/\s*/g, '\n  // ')
+    .replace(/\s+(method\s+\w+\s*\()/g, '\n  $1')
+    .replace(/;\s*/g, ';\n')
+    .replace(/\n[ \t]*\n[ \t]*\n+/g, '\n\n')
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .join('\n')
     .trim();
 }
 
@@ -1132,6 +1164,9 @@ function normalizeCodeLanguage(language) {
   if (['ts', 'typescript', 'tsx'].includes(normalized)) {
     return 'typescript';
   }
+  if (['rs', 'rust'].includes(normalized)) {
+    return 'rust';
+  }
   if (['java'].includes(normalized)) {
     return 'java';
   }
@@ -1180,6 +1215,13 @@ function getSyntaxConfig(language) {
         'gm',
       ),
       types: /^(Integer|String|Bool|Char|Maybe|Map|IO|Eq|Show|Ord|Int|Double|Float)$/,
+    },
+    rust: {
+      pattern: new RegExp(
+        String.raw`(//.*$|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b(?:as|async|await|break|const|continue|crate|else|enum|extern|false|fn|for|if|impl|in|let|loop|match|mod|move|mut|pub|ref|return|self|Self|static|struct|super|trait|true|type|unsafe|use|where|while)\b|\b(?:String|Vec|Option|Result|Some|None|Ok|Err|Box|usize|isize|u8|u16|u32|u64|i8|i16|i32|i64|bool|char|str)\b|\b\w+!|${commonOperatorPattern})`,
+        'gm',
+      ),
+      types: /^(String|Vec|Option|Result|Some|None|Ok|Err|Box|usize|isize|u8|u16|u32|u64|i8|i16|i32|i64|bool|char|str)$/,
     },
     java: {
       pattern: new RegExp(

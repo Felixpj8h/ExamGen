@@ -74,6 +74,34 @@ const uploadedBundle = {
         source: 'ai_generated',
       },
     },
+    {
+      id: 'q3',
+      question_number: '3',
+      question_text: 'Fill in the Rust ownership blanks.',
+      context:
+        'fn main() {\n  let ____ s = String::from("inf222");\n  let r1 = ____ s;\n  let r2 = ____ s;\n  println!("{} {}", r1, r2);\n  let ____ n = 5;\n  let v = vec![1, 2, 3];\n}',
+      page_start: 3,
+      page_end: 3,
+      topic: 'ownership / borrowing (Rust)',
+      interaction_type: 'free_text',
+      choices: [],
+      subquestions: [],
+      solution: null,
+    },
+    {
+      id: 'q4',
+      question_number: '4',
+      question_text: 'Fill in the parameter passing modes.',
+      context:
+        'interface BagIndex {// Inserts element e into bag b. method insert(_____ Element e, _____ Bag b);// Removes one occurrence of e from bag b. // After execution, removed is true iff an element was removed. method removeOne(_____ boolean removed, _____ Element e, _____ Bag b);// Clears all elements from b. method clear(_____ Bag b);}',
+      page_start: 4,
+      page_end: 4,
+      topic: 'parameter passing modes',
+      interaction_type: 'free_text',
+      choices: [],
+      subquestions: [],
+      solution: null,
+    },
   ],
   warnings: ['Loaded warning'],
 };
@@ -166,6 +194,27 @@ test('uploads files and connects to the existing mock exam workspace', async () 
   fireEvent.click(screen.getByRole('button', { name: /reveal solution/i }));
   expect(screen.getByText(/existential instantiation is used incorrectly/i)).toBeInTheDocument();
   expect(screen.getByText('java')).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /question 3/i }));
+  expect(screen.getByText('rust')).toBeInTheDocument();
+  expect(screen.queryByText('haskell')).not.toBeInTheDocument();
+  expect(screen.getByText((_, element) => (
+    element?.tagName.toLowerCase() === 'code' &&
+    element.textContent.includes('String::from("inf222")') &&
+    element.textContent.includes('println!("{} {}", r1, r2);')
+  ))).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /question 4/i }));
+  expect(screen.getByText('pseudocode')).toBeInTheDocument();
+  expect(screen.getByText((_, element) => {
+    if (element?.tagName.toLowerCase() !== 'code') {
+      return false;
+    }
+    return element.textContent.includes('interface BagIndex {')
+      && element.textContent.includes('\n  // Inserts element e into bag b.')
+      && element.textContent.includes('\n  method insert(_____ Element e, _____ Bag b);')
+      && element.textContent.includes('\n  method clear(_____ Bag b);');
+  })).toBeInTheDocument();
 });
 
 test('allows upload with only exam pdf when auto-generate solutions is enabled', async () => {
