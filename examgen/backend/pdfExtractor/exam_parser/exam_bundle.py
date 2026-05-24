@@ -5,6 +5,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+MAX_MULTIPLE_CHOICE_OPTIONS = 6
+
 
 def build_exam_bundle(
     questions_result: dict[str, Any],
@@ -206,15 +208,34 @@ def _ensure_solution_answer_choice(item: dict[str, Any]) -> None:
     choices = item.get("choices")
     if not isinstance(choices, list):
         choices = []
-    string_choices = [choice for choice in choices if isinstance(choice, str)]
+    string_choices = _sanitize_choice_list([choice for choice in choices if isinstance(choice, str)])
     if any(_normalize_choice(choice) == _normalize_choice(answer) for choice in string_choices):
         item["choices"] = string_choices
         return
-    item["choices"] = [answer, *string_choices]
+    item["choices"] = _sanitize_choice_list([answer, *string_choices], keep_first=True)
 
 
 def _normalize_choice(choice: str) -> str:
     return choice.strip().strip("\"'").casefold()
+
+
+def _sanitize_choice_list(choices: list[str], *, keep_first: bool = False) -> list[str]:
+    sanitized: list[str] = []
+    seen: set[str] = set()
+    for index, choice in enumerate(choices):
+        stripped = choice.strip()
+        normalized = _normalize_choice(stripped)
+        if not stripped or normalized in seen:
+            continue
+        if index != 0 or not keep_first:
+            folded = stripped.casefold()
+            if _looks_like_non_choice_text(stripped):
+                continue
+        sanitized.append(stripped)
+        seen.add(normalized)
+        if len(sanitized) >= MAX_MULTIPLE_CHOICE_OPTIONS:
+            break
+    return sanitized
 
 
 def _images_for_question(
@@ -257,3 +278,20 @@ def _images_for_question(
                 }
             )
     return images
+
+
+def _looks_like_non_choice_text(text: str) -> bool:
+    folded = text.casefold()
+    return folded.startswith(
+        (
+            "hva er ",
+            "hvilken ",
+            "which ",
+            "what ",
+            "husk at ",
+            "hint:",
+            "remember ",
+            "note:",
+            "anta at ",
+        )
+    ) or folded.endswith("?")

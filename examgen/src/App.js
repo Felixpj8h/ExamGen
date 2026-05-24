@@ -493,7 +493,7 @@ function formatDisplayText(text) {
 }
 
 function getDisplayChoices(subquestion) {
-  const choices = Array.isArray(subquestion.choices) ? [...subquestion.choices] : [];
+  const choices = sanitizeChoices(Array.isArray(subquestion.choices) ? subquestion.choices : []);
   const answer = subquestion.solution?.answer;
   if (
     subquestion.interaction_type === 'multiple_choice' &&
@@ -501,13 +501,50 @@ function getDisplayChoices(subquestion) {
     answer.trim() &&
     !choices.some((choice) => normalizeChoice(choice) === normalizeChoice(answer))
   ) {
-    return [answer, ...choices];
+    return sanitizeChoices([answer, ...choices], { keepFirst: true });
   }
   return choices;
 }
 
+function sanitizeChoices(choices, options = {}) {
+  const sanitized = [];
+  const seen = new Set();
+  for (let index = 0; index < choices.length; index += 1) {
+    const choice = String(choices[index] || '').trim();
+    const normalized = normalizeChoice(choice);
+    if (!choice || seen.has(normalized)) {
+      continue;
+    }
+    if (!(options.keepFirst && index === 0) && looksLikeQuestionPrompt(choice)) {
+      continue;
+    }
+    sanitized.push(choice);
+    seen.add(normalized);
+    if (sanitized.length >= 6) {
+      break;
+    }
+  }
+  return sanitized;
+}
+
 function normalizeChoice(choice) {
   return String(choice || '').trim().replace(/^["']|["']$/g, '').toLowerCase();
+}
+
+function looksLikeQuestionPrompt(choice) {
+  const normalized = choice.trim().toLowerCase();
+  return (
+    normalized.startsWith('hva er ') ||
+    normalized.startsWith('hvilken ') ||
+    normalized.startsWith('which ') ||
+    normalized.startsWith('what ') ||
+    normalized.startsWith('husk at ') ||
+    normalized.startsWith('hint:') ||
+    normalized.startsWith('remember ') ||
+    normalized.startsWith('note:') ||
+    normalized.startsWith('anta at ') ||
+    normalized.endsWith('?')
+  );
 }
 
 export default App;

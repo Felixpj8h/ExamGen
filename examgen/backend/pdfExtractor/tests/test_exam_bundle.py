@@ -245,3 +245,25 @@ def test_multiple_choice_choices_include_solution_answer_when_ai_missed_it() -> 
         '"HelloWorld"',
         '"HWeolrllod"',
     ]
+
+
+def test_multiple_choice_choices_are_sanitized_when_ai_added_too_many_options() -> None:
+    question_result = questions()
+    subquestion = question_result["questions"][0]["subquestions"][0]
+    subquestion["interaction_type"] = "multiple_choice"
+    subquestion["choices"] = [
+        "Hva er verdien av length [1,4..5]?",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+    ]
+    solution_result = solutions()
+    solution_result["solutions"][0]["subsolutions"][0]["answer"] = "3"
+
+    bundle = build_exam_bundle(question_result, solution_result)
+
+    assert bundle["questions"][0]["subquestions"][0]["choices"] == ["1", "2", "3", "4", "5", "6"]

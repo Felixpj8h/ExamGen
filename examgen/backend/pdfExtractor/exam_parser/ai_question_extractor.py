@@ -12,6 +12,7 @@ from exam_parser.schemas import QUESTION_EXTRACTION_SCHEMA
 
 DEFAULT_MODEL_NAME = "gemini-3.1-flash-lite-preview"
 TOO_GENERIC_TOPICS_WARNING = "Topics may be too generic."
+MAX_MULTIPLE_CHOICE_OPTIONS = 6
 
 FOLLOWUP_LABEL = "followup"
 FOLLOWUP_PATTERNS = (
@@ -58,6 +59,14 @@ MULTIPLE_CHOICE_RE = re.compile(
 NUMERIC_PROMPT_RE = re.compile(r"\b(calculate|compute|find the value|how many|numeric|number)\b", re.IGNORECASE)
 PROOF_PROMPT_RE = re.compile(r"\b(prove|show that|justify|explain why)\b", re.IGNORECASE)
 TRANSLATION_PROMPT_RE = re.compile(r"\b(translate|express .* in logic|write .* in english)\b", re.IGNORECASE)
+GENERAL_EXAM_CONTEXT_RE = re.compile(
+    r"\b("
+    r"velkommen|eksamenen teller|tillatte hjelpemidler|hjelpemidler|lykke til|"
+    r"kandidat|candidate|innholdsfortegnelse|table of contents|"
+    r"duration|allowed aids|exam instructions|antall oppgaver|sluttkarakter"
+    r")\b",
+    re.IGNORECASE,
+)
 
 
 class QuestionExtractionError(Exception):
@@ -116,6 +125,14 @@ Rules:
 - Preserve mathematical and logical notation exactly where possible.
 - Preserve Norwegian/English wording as written.
 - Keep main questions and subquestions separate.
+- Extract question-specific context into the question context field.
+- Context means text that belongs to that main question and is needed or useful to solve it, such as:
+  - introductory setup for the task
+  - definitions, helper functions, type signatures, rules, assumptions, examples, or code blocks
+  - data models or initial values used by the subquestions
+  - figure/image references tied to the question
+- Do not put general exam metadata or instructions in context, such as table of contents, candidate number, date/time, allowed aids, grading overview, welcome text, page headers/footers, or generic exam instructions.
+- If there is no question-specific context, set context to null.
 - Lettered subquestions are only the text directly belonging to that label.
 - If an unlabelled sentence after the final subquestion asks an additional task, represent it as a separate subquestion with label "followup".
 - Example:
@@ -227,6 +244,7 @@ def post_process_questions(
     processed = result
     _ensure_warning_list(processed)
     _normalize_language(processed)
+    _normalize_question_context(processed)
     _normalize_question_text(processed)
     _normalize_interaction_metadata(processed)
     if extraction_result is not None:
@@ -257,6 +275,34 @@ def _normalize_language(result: dict[str, Any]) -> None:
         result["language"] = "mixed"
 
 
+def _normalize_question_context(result: dict[str, Any]) -> None:
+    for question in result.get("questions", []):
+        if not isinstance(question, dict):
+            continue
+        context = question.get("context")
+        if not isinstance(context, str):
+            question["context"] = None
+            continue
+        normalized = context.strip()
+        if not normalized or _looks_like_general_exam_context(normalized):
+            question["context"] = None
+        else:
+            question["context"] = normalized
+
+
+def _looks_like_general_exam_context(context: str) -> bool:
+    lines = [line.strip() for line in context.splitlines() if line.strip()]
+    if not lines:
+        return True
+    if len(lines) <= 4 and all(GENERAL_EXAM_CONTEXT_RE.search(line) for line in lines):
+        return True
+    context_words = re.findall(r"\w+", context)
+    if not context_words:
+        return True
+    general_matches = GENERAL_EXAM_CONTEXT_RE.findall(context)
+    return len(general_matches) >= 3 and len(general_matches) / max(1, len(context_words)) > 0.08
+
+
 def _normalize_question_text(result: dict[str, Any]) -> None:
     for question in result.get("questions", []):
         if not isinstance(question, dict):
@@ -264,6 +310,9 @@ def _normalize_question_text(result: dict[str, Any]) -> None:
         question_text = question.get("question_text")
         if isinstance(question_text, str):
             question["question_text"] = normalize_obvious_math_squares(question_text)
+        context = question.get("context")
+        if isinstance(context, str):
+            question["context"] = normalize_obvious_math_squares(context)
         for subquestion in question.get("subquestions", []):
             if isinstance(subquestion, dict) and isinstance(subquestion.get("text"), str):
                 subquestion["text"] = normalize_obvious_math_squares(subquestion["text"])
@@ -298,7 +347,9 @@ def _ensure_interaction_fields(
         choices = []
     if interaction_type == "true_false":
         choices = TRUE_FALSE_CHOICES
-    elif interaction_type != "multiple_choice":
+    elif interaction_type == "multiple_choice":
+        choices = _sanitize_choice_list(choices)
+    else:
         choices = []
     item["interaction_type"] = interaction_type
     item["choices"] = choices
@@ -348,26 +399,71 @@ def _recover_item_choices_from_raw(item: dict[str, Any], raw_lines: list[str]) -
     choices = item.get("choices")
     if not isinstance(choices, list) or not all(isinstance(choice, str) for choice in choices):
         return
-
-    normalized_choice_indexes: list[int] = []
-    normalized_choices = {_normalize_choice_text(choice) for choice in choices}
-    for index, line in enumerate(raw_lines):
-        if _normalize_choice_text(line) in normalized_choices:
-            normalized_choice_indexes.append(index)
-    if len(normalized_choice_indexes) < 2:
+    choices = _sanitize_choice_list(choices)
+    if not 2 <= len(choices) <= MAX_MULTIPLE_CHOICE_OPTIONS:
+        item["choices"] = choices
         return
 
-    start = max(0, min(normalized_choice_indexes) - 2)
-    end = min(len(raw_lines) - 1, max(normalized_choice_indexes) + 2)
+    choice_range = _compact_choice_range(raw_lines, choices)
+    if choice_range is None:
+        item["choices"] = choices
+        return
+
+    first_choice_index, last_choice_index = choice_range
+    if last_choice_index - first_choice_index > MAX_MULTIPLE_CHOICE_OPTIONS + 2:
+        item["choices"] = choices
+        return
+
+    start = max(0, first_choice_index - 1)
+    end = last_choice_index
     recovered = list(choices)
     seen = {_normalize_choice_text(choice) for choice in recovered}
     for line in raw_lines[start : end + 1]:
+        if len(recovered) >= MAX_MULTIPLE_CHOICE_OPTIONS:
+            break
         normalized = _normalize_choice_text(line)
         if normalized in seen or not _looks_like_choice_line(line):
             continue
         recovered.insert(_choice_insert_index(raw_lines, recovered, line), line)
         seen.add(normalized)
-    item["choices"] = recovered
+    item["choices"] = _sanitize_choice_list(recovered)
+
+
+def _compact_choice_range(raw_lines: list[str], choices: list[str]) -> tuple[int, int] | None:
+    """Find the tightest raw-text span that contains the extracted choices in order."""
+    positions_by_choice: list[list[int]] = []
+    for choice in choices:
+        normalized_choice = _normalize_choice_text(choice)
+        positions = [
+            index
+            for index, line in enumerate(raw_lines)
+            if _normalize_choice_text(line) == normalized_choice
+        ]
+        if not positions:
+            continue
+        positions_by_choice.append(positions)
+
+    if len(positions_by_choice) < 2:
+        return None
+
+    best: tuple[int, int] | None = None
+
+    def visit(position_group_index: int, previous_index: int, selected: list[int]) -> None:
+        nonlocal best
+        if position_group_index == len(positions_by_choice):
+            span = (selected[0], selected[-1])
+            if best is None or span[1] - span[0] < best[1] - best[0]:
+                best = span
+            return
+        for position in positions_by_choice[position_group_index]:
+            if position <= previous_index:
+                continue
+            if best is not None and selected and position - selected[0] >= best[1] - best[0]:
+                continue
+            visit(position_group_index + 1, position, [*selected, position])
+
+    visit(0, -1, [])
+    return best
 
 
 def _choice_insert_index(raw_lines: list[str], choices: list[str], candidate: str) -> int:
@@ -391,6 +487,8 @@ def _looks_like_choice_line(line: str) -> bool:
     stripped = line.strip()
     if not stripped:
         return False
+    if _looks_like_question_prompt(stripped):
+        return False
     if stripped.casefold() in {"velg ett alternativ", "maks poeng"}:
         return False
     if re.fullmatch(r"\d+/\d+", stripped):
@@ -402,6 +500,38 @@ def _looks_like_choice_line(line: str) -> bool:
 
 def _normalize_choice_text(text: str) -> str:
     return re.sub(r"\s+", " ", str(text or "")).strip().strip("\"'").casefold()
+
+
+def _sanitize_choice_list(choices: list[str]) -> list[str]:
+    sanitized: list[str] = []
+    seen: set[str] = set()
+    for choice in choices:
+        stripped = choice.strip()
+        normalized = _normalize_choice_text(stripped)
+        if not stripped or normalized in seen or _looks_like_question_prompt(stripped):
+            continue
+        sanitized.append(stripped)
+        seen.add(normalized)
+        if len(sanitized) >= MAX_MULTIPLE_CHOICE_OPTIONS:
+            break
+    return sanitized
+
+
+def _looks_like_question_prompt(text: str) -> bool:
+    folded = text.casefold()
+    return folded.startswith(
+        (
+            "hva er ",
+            "hvilken ",
+            "which ",
+            "what ",
+            "husk at ",
+            "hint:",
+            "remember ",
+            "note:",
+            "anta at ",
+        )
+    ) or folded.endswith("?")
 
 
 def infer_interaction_type(text: str, *, inherited_context: str = "") -> str:

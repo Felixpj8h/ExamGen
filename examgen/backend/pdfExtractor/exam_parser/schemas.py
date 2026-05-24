@@ -28,6 +28,7 @@ class ExtractedQuestion(TypedDict):
     id: str
     question_number: str
     question_text: str
+    context: str | None
     page_start: int | None
     page_end: int | None
     points: float | int | None
@@ -64,6 +65,16 @@ QUESTION_EXTRACTION_SCHEMA: dict[str, Any] = {
                     "id": {"type": "string"},
                     "question_number": {"type": "string"},
                     "question_text": {"type": "string"},
+                    "context": {
+                        "type": "string",
+                        "nullable": True,
+                        "description": (
+                            "Question-specific context needed to solve this main question, such as introductions, "
+                            "definitions, helper code, data model setup, function/type signatures, rules, examples, "
+                            "or figure references. Do not include general exam instructions, table of contents, "
+                            "candidate metadata, time/date, allowed aids, or unrelated text."
+                        ),
+                    },
                     "page_start": {"type": "integer", "nullable": True},
                     "page_end": {"type": "integer", "nullable": True},
                     "points": {"type": "number", "nullable": True},
@@ -120,6 +131,7 @@ QUESTION_EXTRACTION_SCHEMA: dict[str, Any] = {
                     "id",
                     "question_number",
                     "question_text",
+                    "context",
                     "page_start",
                     "page_end",
                     "points",

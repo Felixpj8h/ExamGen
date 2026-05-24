@@ -1,195 +1,108 @@
 {
   "exam": {
-    "title": "Eksamen i INF122 – Tidlig eksamen våren",
+    "title": "Funksjonell programmering",
     "course_code": "INF122",
-    "source_file": "Task7.pdf"
+    "source_file": "Task10.pdf"
   },
   "questions": [
     {
       "id": "q1",
       "question_number": "1",
-      "question_text": "Verdier og typer",
-      "page_start": 2,
-      "page_end": 3,
-      "points": 14,
-      "topic": "Verdier og typer",
-      "interaction_type": "free_text",
+      "question_text": "Verdier i Haskell",
+      "page_start": 3,
+      "page_end": 4,
+      "points": 12,
+      "topic": "Haskell Values",
+      "interaction_type": "multiple_choice",
       "choices": [],
       "subquestions": [
         {
           "id": "q1a",
           "label": "a",
-          "text": "Hva er verdien av uttrykket: snd (9,3) ?",
+          "text": "Hva er verdien av head (tail [1,2,3]) ?",
           "points": null,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "3",
-            "explanation": "The snd function returns the second element of a tuple.",
-            "grading_points": [
-              "Correct value identified"
-            ],
-            "source": "ai_generated"
-          }
+          "interaction_type": "multiple_choice",
+          "choices": [
+            "[1]",
+            "2",
+            "[2,3]",
+            "1",
+            "Ingen verdi, grunnet kjørefeil/error"
+          ],
+          "solution": null
         },
         {
           "id": "q1b",
           "label": "b",
-          "text": "Hva er verdien av uttrykket: tail [3,5,7] ?",
+          "text": "Hva er verdien av snd ([1,2],3)?",
           "points": null,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "[5,7]",
-            "explanation": "The tail function returns all elements of a list except the first one.",
-            "grading_points": [
-              "Correct list returned"
-            ],
-            "source": "ai_generated"
-          }
+          "interaction_type": "multiple_choice",
+          "choices": [
+            "2",
+            "3",
+            "(2,3)",
+            "[2,3]",
+            "Ingen verdi, grunnet typefeil"
+          ],
+          "solution": null
         },
         {
           "id": "q1c",
           "label": "c",
-          "text": "Hva er verdien til uttrykket length $ \"Hello\" ++ \"World\"?",
+          "text": "Hva er verdien av length [2,4,6,8] / 2?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "10",
-            "\"HelloWorld\"",
-            "5",
-            "\"HWeolrllod\"",
-            "[('H','W'),('e','o'),('l','r'),('l','l'),('o','d')]",
-            "Integer",
-            "Char"
+            "2",
+            "Ingen verdi, grunnet kjørefeil/error",
+            "[1,2,3,4]",
+            "Ingen verdi, grunnet typefeil",
+            "4"
           ],
-          "solution": {
-            "answer": "10",
-            "explanation": "The length of \"Hello\" ++ \"World\" (which is \"HelloWorld\") is 10.",
-            "grading_points": [
-              "Correct integer value"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q1d",
           "label": "d",
-          "text": "Hva er typen til uttrykket: tail \"123\"?",
+          "text": "Hva er verdien av length [1,4..13]?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "\"HWeolrllod\"",
-            "[('H','W'),('e','o'),('l','r'),('l','l'),('o','d')]",
-            "Integer",
-            "Char",
-            "[Integer]",
-            "String",
-            "[a] -> a",
-            "a -> [a]",
-            "a -> a",
-            "[a] -> [a]",
-            "f) Hva er verdien av uttrykket map reverse (words \"en to tre\")?",
-            "g) Hvilken type er en gyldig typing av uttrykket  zipWith (+) [1..] ?",
-            "\"ne ot ert\"",
-            "[\"tre\",\"to\",\"en\"]",
-            "\"tre to en\"",
-            "[\"ne\",\"ot\",\"ert\"]",
-            "[Integer] -> Integer",
-            "[Integer] -> [Integer]",
-            "Integer -> Integer"
+            "Ingen verdi, grunnet kjørefeil/error",
+            "3",
+            "Ingen verdi, grunnet typefeil",
+            "13"
           ],
-          "solution": {
-            "answer": "String",
-            "explanation": "The tail of a String (which is [Char]) is a String.",
-            "grading_points": [
-              "Correct type identified"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q1e",
           "label": "e",
-          "text": "Hva er typen til funksjonen head fra standardbiblioteket?",
+          "text": "Hva er verdien av length [1,4..5]?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "[Integer]",
-            "String",
-            "[a] -> a",
-            "a -> [a]",
-            "a -> a",
-            "[a] -> [a]"
+            "2",
+            "Ingen verdi, grunnet typefeil",
+            "Ingen verdi, grunnet kjørefeil/error"
           ],
-          "solution": {
-            "answer": "[a] -> a",
-            "explanation": "The head function takes a list of any type and returns the first element of that type.",
-            "grading_points": [
-              "Correct type signature"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q1f",
           "label": "f",
-          "text": "Hva er verdien av uttrykket map reverse (words \"en to tre\")?",
+          "text": "Hva er verdien av map sort [\"en\",\"to\",\"tre\"] (Anta at vi har importert sort fra Data.List)?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "[Integer]",
-            "g) Hvilken type er en gyldig typing av uttrykket  zipWith (+) [1..] ?",
-            "\"ne ot ert\"",
             "[\"tre\",\"to\",\"en\"]",
-            "\"tre to en\"",
-            "[\"ne\",\"ot\",\"ert\"]",
-            "[Integer] -> Integer"
+            "[\"en\",\"to\",\"tre\"]",
+            "Ingen verdi, grunnet kjørefeil/error",
+            "[\"en\",\"ot\",\"ert\"]",
+            "[\"en\",\"ert\",\"ot\"]",
+            "Ingen verdi, grunnet typefeil"
           ],
-          "solution": {
-            "answer": "[\"ne\",\"ot\",\"ert\"]",
-            "explanation": "words splits the string into [\"en\", \"to\", \"tre\"], and map reverse reverses each word.",
-            "grading_points": [
-              "Correct list of strings"
-            ],
-            "source": "ai_generated"
-          }
-        },
-        {
-          "id": "q1g",
-          "label": "g",
-          "text": "Hvilken type er en gyldig typing av uttrykket zipWith (+) [1..] ?",
-          "points": null,
-          "interaction_type": "multiple_choice",
-          "choices": [
-            "\"HWeolrllod\"",
-            "[('H','W'),('e','o'),('l','r'),('l','l'),('o','d')]",
-            "Char",
-            "[Integer]",
-            "String",
-            "[a] -> a",
-            "a -> [a]",
-            "a -> a",
-            "[a] -> [a]",
-            "f) Hva er verdien av uttrykket map reverse (words \"en to tre\")?",
-            "g) Hvilken type er en gyldig typing av uttrykket  zipWith (+) [1..] ?",
-            "\"ne ot ert\"",
-            "[\"tre\",\"to\",\"en\"]",
-            "\"tre to en\"",
-            "[\"ne\",\"ot\",\"ert\"]",
-            "[Integer] -> Integer",
-            "[Integer] -> [Integer]",
-            "Integer -> Integer",
-            "Integer"
-          ],
-          "solution": {
-            "answer": "[Integer] -> [Integer]",
-            "explanation": "zipWith (+) [1..] takes a list of integers and returns a list of integers.",
-            "grading_points": [
-              "Correct type signature"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         }
       ],
       "images": []
@@ -197,164 +110,102 @@
     {
       "id": "q2",
       "question_number": "2",
-      "question_text": "Typer, kinds og monader",
-      "page_start": 4,
-      "page_end": 5,
-      "points": 7,
-      "topic": "Typer, kinds og monader",
-      "interaction_type": "free_text",
+      "question_text": "Typer og Kinds i Haskell",
+      "page_start": 5,
+      "page_end": 6,
+      "points": 12,
+      "topic": "Types and Kinds",
+      "interaction_type": "multiple_choice",
       "choices": [],
       "subquestions": [
         {
           "id": "q2a",
           "label": "a",
-          "text": "Hva er en mulig typing av uttrykket Right (2,[\"remain\",\"silent\"])?",
+          "text": "Hva er en gyldig typing av uncurry (+)?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "d) Hvilken kind har Maybe Integer?",
-            "Either a (Integer,[String])",
-            "Either Integer [String]",
-            "Maybe (Integer,String)",
-            "Right (String, [Integer])",
-            "[x] -> [(x,x)]",
-            "[(a,a)] -> [a]"
+            "Integer -> (Integer, Integer)",
+            "(Integer -> Integer) -> Integer",
+            "(Integer , Integer) -> Integer",
+            "Integer -> (Integer -> Integer)",
+            "Uttrykket gir en typefeil."
           ],
-          "solution": {
-            "answer": "Either a (Integer,[String])",
-            "explanation": "Right contains the second type of the Either constructor.",
-            "grading_points": [
-              "Correct type"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q2b",
           "label": "b",
-          "text": "Hva er en mulig typing av uttrykket \\xs -> [(x,x) | x <- xs] ?",
+          "text": "Hvilket av alternativene er ikke en gyldig typing av 3?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "Maybe (Integer,String)",
-            "Right (String, [Integer])",
-            "[x] -> [(x,x)]",
-            "[(a,a)] -> [a]",
-            "x -> [(x,x)]",
-            "[(a,a) -> (a,a)]",
-            "(a -> b) -> [[a]] -> [[b]]",
-            "[a -> b] -> [a -> b]"
+            "Integer",
+            "Num a => a",
+            "Float",
+            "Eq a => a"
           ],
-          "solution": {
-            "answer": "x -> [(x,x)]",
-            "explanation": "The lambda takes an element x and returns a list of tuples (x,x).",
-            "grading_points": [
-              "Correct type"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q2c",
           "label": "c",
-          "text": "Hva er en mulig typing av uttrykket zipWith ($)?",
+          "text": "Hva er en gyldig typing av (:)?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "x -> [(x,x)]",
-            "[(a,a) -> (a,a)]",
-            "(a -> b) -> [[a]] -> [[b]]",
-            "[a -> b] -> [a -> b]",
-            "([a] -> [b]) -> [a -> b]",
-            "[a -> b] -> [a] -> [b]"
+            "[a -> a] -> a",
+            "[a]",
+            "a -> [a] -> [a]",
+            "[a] -> [a -> a]",
+            "[a -> a]"
           ],
-          "solution": {
-            "answer": "[a -> b] -> [a] -> [b]",
-            "explanation": "zipWith ($) applies a list of functions to a list of arguments.",
-            "grading_points": [
-              "Correct type"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q2d",
           "label": "d",
-          "text": "Hvilken kind har Maybe Integer?",
+          "text": "Hva er en gyldig typing av (.)? Husk at f . g = \\x -> f (g x).",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "*",
-            "Functor",
-            "* -> *",
-            "Maybe",
-            "Monad"
+            "(b -> c) -> (a -> b) -> a -> c",
+            "(a -> b) -> c -> b -> a -> c",
+            "(a -> b) -> (b -> c) -> a -> c",
+            "(a -> b) -> (c -> b) -> a -> c"
           ],
-          "solution": {
-            "answer": "*",
-            "explanation": "Maybe Integer is a concrete type, which has kind *.",
-            "grading_points": [
-              "Correct kind"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q2e",
           "label": "e",
-          "text": "Hvilken kind har Either (Maybe Integer)?",
+          "text": "Hva er en gyldig typing av map . (:)?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "* -> *",
-            "Either",
-            "* -> * -> *"
+            "(a -> b) -> (c -> b) -> a -> c",
+            "(a -> a) -> [a -> a]",
+            "a -> [a] -> [a]",
+            "Uttrykket gir en typefeil.",
+            "[a -> a] -> a -> [a]",
+            "a -> [[a]] -> [[a]]"
           ],
-          "solution": {
-            "answer": "* -> * -> *",
-            "explanation": "Either is a type constructor of kind * -> * -> *.",
-            "grading_points": [
-              "Correct kind"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q2f",
           "label": "f",
-          "text": "Hva er verdien til uttrykket (\"hei\" >>= (take 3 . repeat)) ?",
-          "points": null,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "\"hhh\"\"eee\"\"iii\"",
-            "explanation": "The bind operation on lists acts as a flatMap.",
-            "grading_points": [
-              "Correct value"
-            ],
-            "source": "ai_generated"
-          }
-        },
-        {
-          "id": "q2g",
-          "label": "g",
-          "text": "Hva er typen til (>>= putStrLn)?",
+          "text": "Hvilken kind har Map fra Data.Map?",
           "points": null,
           "interaction_type": "multiple_choice",
           "choices": [
-            "IO () -> String",
-            "IO String -> IO ()",
-            "String -> IO ()",
-            "IO String"
+            "a -> [[a]] -> [[a]]",
+            "(* -> *) -> *",
+            "* -> *",
+            "* -> * -> *",
+            "*"
           ],
-          "solution": {
-            "answer": "String -> IO ()",
-            "explanation": "putStrLn has type String -> IO (), and (>>=) binds it.",
-            "grading_points": [
-              "Correct type"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         }
       ],
       "images": []
@@ -362,30 +213,31 @@
     {
       "id": "q3",
       "question_number": "3",
-      "question_text": "Grunnleggende IO",
-      "page_start": 6,
-      "page_end": 6,
-      "points": 6,
+      "question_text": "IO",
+      "page_start": 7,
+      "page_end": 7,
+      "points": 14,
       "topic": "IO",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
-          "id": "q3_followup",
-          "label": "followup",
-          "text": "Skriv et Haskell program som leser inn en setning og skriver ut hvor mange ord den består av.",
+          "id": "q3a",
+          "label": "a",
+          "text": "Skriv en funksjon getSentence :: IO String som, ved hjelp av getChar, leser én og én Char helt til brukeren skriver inn '.', og deretter returnerer hele setningen (inklusive ‘.’).",
           "points": 6,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "main = do { putStr \"Skriv en setning: \"; s <- getLine; putStrLn (\"Setningen bestod av \" ++ show (length (words s)) ++ \" ord.\") }",
-            "explanation": "Reads input, splits into words, counts them, and prints the result.",
-            "grading_points": [
-              "Correct IO usage",
-              "Correct word counting logic"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
+        },
+        {
+          "id": "q3b",
+          "label": "b",
+          "text": "Skriv en main :: IO () funksjon som leser inn en setning (ved hjelp av getSentence fra forrige oppgave), og skriver ut setningen med reversert ordrekkefølge. Ta høyde for å endre store/små bokstaver med toUpper :: Char -> Char og toLower :: Char -> Char: Første ord i setningen skal ha stor forbokstav, og siste ord skal ikke ha det (se eksempel).",
+          "points": 8,
+          "interaction_type": "free_text",
+          "choices": [],
+          "solution": null
         }
       ],
       "images": []
@@ -393,109 +245,58 @@
     {
       "id": "q4",
       "question_number": "4",
-      "question_text": "Lister",
-      "page_start": 7,
-      "page_end": 8,
-      "points": 13,
-      "topic": "Lister",
+      "question_text": "Listebehandling",
+      "page_start": 8,
+      "page_end": 9,
+      "points": 25,
+      "topic": "List Processing",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
           "id": "q4a",
           "label": "a",
-          "text": "Skriv en funksjon evens :: [Integer] -> [Integer] som gir alle partallene i en liste.",
-          "points": null,
+          "text": "Bruk listekomprehensjon til å skrive en funksjon squareEvens :: [Integer] -> [Integer] som returnerer kvadratet av alle partall i en liste.",
+          "points": 5,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "evens xs = filter even xs",
-            "explanation": "Uses filter with the even predicate.",
-            "grading_points": [
-              "Correct function definition"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q4b",
           "label": "b",
-          "text": "Skriv en funksjon allEqual :: (Eq a) => [a] -> Bool som sjekker om alle elementer i en liste er like.",
-          "points": null,
+          "text": "Skriv samme funksjon som i a), men bruk filter og map istedet for listekomprehensjon.",
+          "points": 5,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "allEqual [] = True; allEqual (x:xs) = all (==x) xs",
-            "explanation": "Checks if all elements are equal to the first one.",
-            "grading_points": [
-              "Correct logic"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q4c",
           "label": "c",
-          "text": "Skriv en funksjon unique :: (Eq a) => [a] -> Bool som sjekker om alle elementer i en liste er ulike.",
-          "points": null,
+          "text": "Skriv en funksjon countNothing :: [Maybe a] -> Integer som teller antall forekomster av Nothing i en liste.",
+          "points": 5,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "unique [] = True; unique (x:xs) = not (elem x xs) && unique xs",
-            "explanation": "Recursively checks for uniqueness.",
-            "grading_points": [
-              "Correct logic"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q4d",
           "label": "d",
-          "text": "Skriv funksjonen unzip.",
-          "points": null,
+          "text": "Gi en alternativ definisjon av dedupe som bruker mønstermatching og rekursjon i stedet for concat, map og group.",
+          "points": 5,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "unzip [] = ([],[]); unzip ((x,y):ps) = let (as,bs) = unzip ps in (x:as, y:bs)",
-            "explanation": "Standard recursive implementation of unzip.",
-            "grading_points": [
-              "Correct recursion"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q4e",
           "label": "e",
-          "text": "Er det sant at zip (fst (unzip ps)) (snd (unzip ps)) = ps for en hver liste med par ps :: [(a,b)] ? Husk å begrunne svaret.",
-          "points": null,
+          "text": "La dupe = concat . map (replicate 2). Er dedupe (dupe x) = x for enhver liste x :: [Integer]? Husk å begrunne svaret ditt presist.",
+          "points": 5,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "True",
-            "explanation": "Yes, because unzip splits the pairs and zip puts them back together.",
-            "grading_points": [
-              "Correct reasoning"
-            ],
-            "source": "ai_generated"
-          }
-        },
-        {
-          "id": "q4f",
-          "label": "f",
-          "text": "Er det sant at unzip (zip as bs) = (as,bs) for alle lister as :: [a] og bs :: [b] ? Husk å begrunne svaret.",
-          "points": null,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "False if lengths differ",
-            "explanation": "zip truncates to the shortest list, so information is lost.",
-            "grading_points": [
-              "Correct reasoning regarding list length"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         }
       ],
       "images": []
@@ -503,224 +304,191 @@
     {
       "id": "q5",
       "question_number": "5",
-      "question_text": "Tic-tac-toe funksjoner",
-      "page_start": 9,
-      "page_end": 11,
-      "points": 10,
-      "topic": "Tic-tac-toe",
+      "question_text": "Map og egendefinerte datastrukturer",
+      "page_start": 10,
+      "page_end": 12,
+      "points": 20,
+      "topic": "Data.Map and Custom Data Structures",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
           "id": "q5a",
           "label": "a",
-          "text": "Bruk listekomprehensjon til å lage listen allPositions :: [Position] med alle posisjoner på brettet.",
-          "points": null,
+          "text": "Skriv en funksjon som regner ut hvor mye avslag man får dersom man får et prosentavslag på en pris, rundet av til nærmeste hele krone.",
+          "points": 6,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "allPositions = [(x,y) | x <- [0..2], y <- [0..2]]",
-            "explanation": "List comprehension generating all coordinates.",
-            "grading_points": [
-              "Correct list comprehension"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q5b",
           "label": "b",
-          "text": "Skriv en funksjon isValidMove :: Board -> Position -> Bool som sjekker om det er mulig å sette et merke på den gitte posisjonen på brettet i følge reglene.",
-          "points": null,
+          "text": "Skriv en funksjon takeItem som tar ut et element fra inventaret. Funksjonen skal kun fjerne et item fra inventaret dersom det er minst ett item der av denne typen. Dersom Amount blir 0 etter at elementet er tatt ut, skal ItemID-nøkkelen fjernes fra inventarets Map.",
+          "points": 6,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "isValidMove board pos = Map.notMember pos board",
-            "explanation": "Checks if the position is not already in the map.",
-            "grading_points": [
-              "Correct Map usage"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q5c",
           "label": "c",
-          "text": "Skriv en funksjon move :: Board -> Position -> Mark -> Maybe Board som gir en “kanskje verdi” av det nye brettet etter et merke er satt.",
-          "points": null,
+          "text": "Skriv inneholdet i discount :: Maybe BillItem, nedenfor:",
+          "points": 8,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "move board pos mark = if isValidMove board pos then Just (Map.insert pos mark board) else Nothing",
-            "explanation": "Returns updated board if valid, else Nothing.",
-            "grading_points": [
-              "Correct logic"
-            ],
-            "source": "ai_generated"
-          }
-        },
-        {
-          "id": "q5d",
-          "label": "d",
-          "text": "Skriv en funksjon hasStreak :: [Positions] -> Board -> Maybe Mark som sjekker om alle posisjonene i en liste har samme merke.",
-          "points": null,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "hasStreak streak board = case map (flip Map.lookup board) streak of [Just m1, Just m2, Just m3] | m1 == m2 && m2 == m3 -> Just m1; _ -> Nothing",
-            "explanation": "Checks if all positions in streak have the same mark.",
-            "grading_points": [
-              "Correct logic"
-            ],
-            "source": "ai_generated"
-          }
-        },
-        {
-          "id": "q5e",
-          "label": "e",
-          "text": "Skriv en funksjon won :: Board -> Maybe Mark, som avgjør om et gitt brett er vunnet av en spiller.",
-          "points": null,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "won board = foldr (<|>) Nothing (map (flip hasStreak board) streaks)",
-            "explanation": "Iterates over streaks and returns the first winning mark found.",
-            "grading_points": [
-              "Correct logic"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         }
       ],
-      "images": [
-        {
-          "id": "page_9_img_1",
-          "src": "/sample-assets/exam/page_9_img_1.png",
-          "path": "assets/exam/page_9_img_1.png",
-          "page_number": 9,
-          "bbox": [
-            55.5,
-            478.5,
-            278.25,
-            681.75
-          ],
-          "width": 446,
-          "height": 407,
-          "alt": "Image from page 9"
-        }
-      ]
+      "images": []
     },
     {
       "id": "q6",
       "question_number": "6",
-      "question_text": "Tic-tac-toe parsing",
-      "page_start": 12,
-      "page_end": 13,
-      "points": 10,
-      "topic": "Tic-tac-toe",
+      "question_text": "Induktive datastrukturer",
+      "page_start": 13,
+      "page_end": 15,
+      "points": 17,
+      "topic": "Inductive Data Structures",
       "interaction_type": "free_text",
       "choices": [],
       "subquestions": [
         {
           "id": "q6a",
           "label": "a",
-          "text": "Skriv en pMark :: Parser Mark som parser ett enkelt merke.",
-          "points": null,
+          "text": "Skriv en funksjon insertWord som tar inn en streng og et tre, og lager et nytt tre som legger strengen som et nytt mulig ord i treet.",
+          "points": 7,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "pMark = (char 'X' >> pure X) <|> (char 'O' >> pure O)",
-            "explanation": "Parses 'X' or 'O'.",
-            "grading_points": [
-              "Correct parser logic"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q6b",
           "label": "b",
-          "text": "Skriv en pCell :: Parser (Maybe Mark) som parser en celle på brettet.",
-          "points": null,
+          "text": "Forklar hvordan funksjonen du skrev i a) bevarer invarianten beskrevet ovenfor.",
+          "points": 4,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "pCell = (char '_' >> pure Nothing) <|> (Just <$> pMark)",
-            "explanation": "Parses '_' or a mark.",
-            "grading_points": [
-              "Correct parser logic"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         },
         {
           "id": "q6c",
           "label": "c",
-          "text": "Skriv pBoard :: Parser Board som parser et helt 3×3 brett.",
-          "points": null,
+          "text": "Skriv en funksjon som henter ut alle mulige ord fra et WordTree: allWords :: WordTree -> [String]",
+          "points": 6,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": {
-            "answer": "pBoard = Map.fromList . zip allPositions <$> sequence (replicate 9 pCell)",
-            "explanation": "Parses 9 cells and maps them to positions.",
-            "grading_points": [
-              "Correct parser logic"
-            ],
-            "source": "ai_generated"
-          }
+          "solution": null
         }
       ],
-      "images": []
-    },
-    {
-      "id": "q7",
-      "question_number": "7",
-      "question_text": "Filsystem som induktiv datatype",
-      "page_start": 14,
-      "page_end": 15,
-      "points": 10,
-      "topic": "Induktive datastrukturer",
-      "interaction_type": "free_text",
-      "choices": [],
-      "subquestions": [
+      "images": [
         {
-          "id": "q7a",
-          "label": "a",
-          "text": "Skriv en funksjon totalSize :: FileSystem -> Integer regner ut den totale størrelsen av alle filer i filsystemet i antall bytes.",
-          "points": null,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "totalSize (File _ s) = s; totalSize (Directory _ fs) = sum (map totalSize fs)",
-            "explanation": "Recursive sum of file sizes.",
-            "grading_points": [
-              "Correct recursion"
-            ],
-            "source": "ai_generated"
-          }
+          "id": "page_13_img_1",
+          "src": "/sample-assets/exam/page_13_img_1.png",
+          "path": "assets/exam/page_13_img_1.png",
+          "page_number": 13,
+          "bbox": [
+            70.89,
+            58.46,
+            519.08,
+            206.88
+          ],
+          "width": 898,
+          "height": 298,
+          "alt": "Image from page 13"
         },
         {
-          "id": "q7b",
-          "label": "b",
-          "text": "Skriv en funskjon findFile :: String -> FileSystem -> Path som leter igjennom filsystemet etter en fil med et gitt navn og returnerer stien frem til den.",
-          "points": null,
-          "interaction_type": "free_text",
-          "choices": [],
-          "solution": {
-            "answer": "findFile name (File n s) = if n == name then [n] else []; findFile name (Directory n fs) = case concatMap (findFile name) fs of [] -> []; path -> n : path",
-            "explanation": "Searches recursively for the file name.",
-            "grading_points": [
-              "Correct recursion"
-            ],
-            "source": "ai_generated"
-          }
+          "id": "page_14_img_1",
+          "src": "/sample-assets/exam/page_14_img_1.png",
+          "path": "assets/exam/page_14_img_1.png",
+          "page_number": 14,
+          "bbox": [
+            84.05,
+            439.39,
+            87.7,
+            443.04
+          ],
+          "width": 8,
+          "height": 9,
+          "alt": "Image from page 14"
+        },
+        {
+          "id": "page_14_img_2",
+          "src": "/sample-assets/exam/page_14_img_2.png",
+          "path": "assets/exam/page_14_img_2.png",
+          "page_number": 14,
+          "bbox": [
+            84.05,
+            459.86,
+            87.7,
+            463.51
+          ],
+          "width": 8,
+          "height": 9,
+          "alt": "Image from page 14"
+        },
+        {
+          "id": "page_14_img_3",
+          "src": "/sample-assets/exam/page_14_img_3.png",
+          "path": "assets/exam/page_14_img_3.png",
+          "page_number": 14,
+          "bbox": [
+            84.05,
+            480.33,
+            87.7,
+            483.99
+          ],
+          "width": 8,
+          "height": 8,
+          "alt": "Image from page 14"
+        },
+        {
+          "id": "page_14_img_4",
+          "src": "/sample-assets/exam/page_14_img_4.png",
+          "path": "assets/exam/page_14_img_4.png",
+          "page_number": 14,
+          "bbox": [
+            84.05,
+            551.98,
+            87.7,
+            555.64
+          ],
+          "width": 8,
+          "height": 9,
+          "alt": "Image from page 14"
+        },
+        {
+          "id": "page_14_img_5",
+          "src": "/sample-assets/exam/page_14_img_5.png",
+          "path": "assets/exam/page_14_img_5.png",
+          "page_number": 14,
+          "bbox": [
+            84.05,
+            572.45,
+            87.7,
+            576.11
+          ],
+          "width": 8,
+          "height": 9,
+          "alt": "Image from page 14"
+        },
+        {
+          "id": "page_14_img_6",
+          "src": "/sample-assets/exam/page_14_img_6.png",
+          "path": "assets/exam/page_14_img_6.png",
+          "page_number": 14,
+          "bbox": [
+            84.05,
+            592.93,
+            87.7,
+            596.58
+          ],
+          "width": 8,
+          "height": 9,
+          "alt": "Image from page 14"
         }
-      ],
-      "images": []
+      ]
     }
   ],
-  "warnings": [
-    "These are AI-generated solutions and not official solutions.",
-    "AI-generated solutions; not official answer key."
-  ]
+  "warnings": []
 }

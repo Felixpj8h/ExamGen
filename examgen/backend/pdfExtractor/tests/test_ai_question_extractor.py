@@ -245,6 +245,138 @@ def test_post_process_recovers_missing_raw_multiple_choice_options() -> None:
     ]
 
 
+def test_post_process_does_not_pull_distant_multiple_choice_blocks() -> None:
+    extraction = sample_extraction()
+    extraction["pages"][0]["raw_text"] = (
+        "Hva er verdien av a?\n"
+        "Velg ett alternativ\n"
+        "Hva er verdien av b?\n"
+        "Velg ett alternativ\n"
+        "1\n2\n3\n4\n"
+        "Hva er verdien av c?\n"
+        "13\n5\n[\"a\"]\n[\"b\"]\n"
+    )
+    result = sample_questions()
+    subquestion = result["questions"][0]["subquestions"][0]
+    subquestion["interaction_type"] = "multiple_choice"
+    subquestion["choices"] = [
+        "1",
+        "2",
+        "3",
+        "4",
+        "Hva er verdien av c?",
+        "13",
+        "5",
+        '["a"]',
+    ]
+
+    processed = post_process_questions(result, extraction_result=extraction)
+
+    assert processed["questions"][0]["subquestions"][0]["choices"] == ["1", "2", "3", "4", "13", "5"]
+
+
+def test_post_process_recovers_grouped_numeric_choices_without_next_question_options() -> None:
+    extraction = sample_extraction()
+    extraction["pages"][0]["raw_text"] = (
+        "Hva er verdien av head (tail [1,2,3]) ?\n"
+        "Velg ett alternativ:\n"
+        "Hva er verdien av snd ([1,2],3)?\n"
+        "Velg ett alternativ\n"
+        "Hva er verdien av length [2,4,6,8] / 2?\n"
+        "Velg ett alternativ\n"
+        "Hva er verdien av length [1,4..13]?\n"
+        "[1]\n"
+        "2\n"
+        "[2,3]\n"
+        "1\n"
+        "Ingen verdi, grunnet kjørefeil/error\n"
+        "3\n"
+        "(2,3)\n"
+    )
+    result = sample_questions()
+    subquestion = result["questions"][0]["subquestions"][0]
+    subquestion["text"] = "Hva er verdien av head (tail [1,2,3]) ?"
+    subquestion["interaction_type"] = "multiple_choice"
+    subquestion["choices"] = ["[1]", "[2,3]", "Ingen verdi, grunnet kjørefeil/error"]
+
+    processed = post_process_questions(result, extraction_result=extraction)
+
+    assert processed["questions"][0]["subquestions"][0]["choices"] == [
+        "[1]",
+        "2",
+        "[2,3]",
+        "1",
+        "Ingen verdi, grunnet kjørefeil/error",
+    ]
+
+
+def test_post_process_uses_compact_range_when_choices_repeat_later() -> None:
+    extraction = sample_extraction()
+    extraction["pages"][0]["raw_text"] = (
+        "Hva er verdien av head (tail [1,2,3]) ?\n"
+        "Velg ett alternativ:\n"
+        "[1]\n"
+        "2\n"
+        "[2,3]\n"
+        "1\n"
+        "Ingen verdi, grunnet kjørefeil/error\n"
+        "3\n"
+        "[2,3]\n"
+        "2\n"
+        "Ingen verdi, grunnet kjørefeil/error\n"
+    )
+    result = sample_questions()
+    subquestion = result["questions"][0]["subquestions"][0]
+    subquestion["interaction_type"] = "multiple_choice"
+    subquestion["choices"] = ["[1]", "[2,3]", "Ingen verdi, grunnet kjørefeil/error"]
+
+    processed = post_process_questions(result, extraction_result=extraction)
+
+    assert processed["questions"][0]["subquestions"][0]["choices"] == [
+        "[1]",
+        "2",
+        "[2,3]",
+        "1",
+        "Ingen verdi, grunnet kjørefeil/error",
+    ]
+
+
+def test_post_process_does_not_treat_instruction_text_as_choice() -> None:
+    extraction = sample_extraction()
+    extraction["pages"][0]["raw_text"] = (
+        "Hva er en gyldig typing av uncurry (+)?\n"
+        "Velg ett alternativ:\n"
+        "Hva er en gyldig typing av (.)?\n"
+        "Husk at f . g = \\x -> f (g x).\n"
+        "Integer -> (Integer, Integer)\n"
+        "(Integer -> Integer) -> Integer\n"
+        "(Integer , Integer) -> Integer\n"
+        "Integer -> (Integer -> Integer)\n"
+        "Uttrykket gir en typefeil.\n"
+    )
+    result = sample_questions()
+    subquestion = result["questions"][0]["subquestions"][0]
+    subquestion["interaction_type"] = "multiple_choice"
+    subquestion["choices"] = [
+        "Husk at f . g = \\x -> f (g x).",
+        "Integer -> (Integer, Integer)",
+        "(Integer -> Integer) -> Integer",
+        "(Integer , Integer) -> Integer",
+        "Integer -> (Integer -> Integer)",
+        "Uttrykket gir en typefeil.",
+    ]
+
+    processed = post_process_questions(result, extraction_result=extraction)
+
+    assert processed["questions"][0]["subquestions"][0]["choices"] == [
+        "Integer -> (Integer, Integer)",
+        "(Integer -> Integer) -> Integer",
+        "(Integer , Integer) -> Integer",
+        "Integer -> (Integer -> Integer)",
+        "Uttrykket gir en typefeil.",
+    ]
+
+
 def test_infer_interaction_type_defaults_to_free_text_when_uncertain() -> None:
     assert infer_interaction_type("Discuss the concept briefly.") == "free_text"
 
