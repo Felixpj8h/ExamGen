@@ -161,7 +161,13 @@ article h2 {
   gap: 14px;
 }
 
-.context-blocks p {
+.rich-text-blocks {
+  display: grid;
+  gap: 12px;
+}
+
+.context-blocks p,
+.rich-text-blocks p {
   margin: 0;
   color: #0f172a;
   font-size: 16px;
@@ -299,6 +305,24 @@ section section p {
   padding: 16px;
   border-radius: 8px;
   border: 1px solid;
+}
+
+.solution-answer {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.solution-answer p {
+  font-weight: 600;
+}
+
+.solution-explanation {
+  margin-top: 8px;
+}
+
+.solution-explanation p {
+  font-size: 14px;
 }
 
 .solution-panel.is-official {

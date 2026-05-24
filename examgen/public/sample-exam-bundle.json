@@ -29,7 +29,14 @@
             "ab",
             "Throws StringIndexOutOfBoundsException"
           ],
-          "solution": null
+          "solution": {
+            "answer": "bc",
+            "explanation": "substring(1) returns the string starting from index 1 to the end.",
+            "grading_points": [
+              "Correct selection of 'bc'"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q1_2",
@@ -43,7 +50,14 @@
             "4",
             "The code gives a type error"
           ],
-          "solution": null
+          "solution": {
+            "answer": "3",
+            "explanation": "Integer division 7 / 2 truncates the decimal part.",
+            "grading_points": [
+              "Correct selection of '3'"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q1_3",
@@ -57,7 +71,14 @@
             "3",
             "Throws ArrayIndexOutOfBoundsException"
           ],
-          "solution": null
+          "solution": {
+            "answer": "2",
+            "explanation": "Array indexing is 0-based; index 1 is the second element.",
+            "grading_points": [
+              "Correct selection of '2'"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q1_4",
@@ -71,7 +92,14 @@
             "Throws ArithmeticException",
             "The code gives a type error"
           ],
-          "solution": null
+          "solution": {
+            "answer": "true",
+            "explanation": "Short-circuit OR (||) returns true if the first operand is true, skipping the second.",
+            "grading_points": [
+              "Correct selection of 'true'"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q1_5",
@@ -83,7 +111,14 @@
             "hi",
             "The code gives a type error"
           ],
-          "solution": null
+          "solution": {
+            "answer": "Hi",
+            "explanation": "Strings are immutable; toLowerCase() returns a new string and does not modify the original.",
+            "grading_points": [
+              "Correct selection of 'Hi'"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q1_6",
@@ -97,7 +132,14 @@
             "[1, 2, 3, 4]",
             "Throws UnsupportedOperationException"
           ],
-          "solution": null
+          "solution": {
+            "answer": "4",
+            "explanation": "List.of creates an immutable list, but the ArrayList constructor creates a new mutable copy.",
+            "grading_points": [
+              "Correct selection of '4'"
+            ],
+            "source": "ai_generated"
+          }
         }
       ],
       "images": []
@@ -125,7 +167,14 @@
             "ArrayList xs = new ArrayList();",
             "Map m = new HashMap<>();"
           ],
-          "solution": null
+          "solution": {
+            "answer": "Map m = new HashMap<>();",
+            "explanation": "The other options have syntax errors or type mismatches.",
+            "grading_points": [
+              "Correct selection of 'Map m = new HashMap<>();'"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q2_2",
@@ -139,7 +188,14 @@
             "void length(String s)",
             "int length = String s"
           ],
-          "solution": null
+          "solution": {
+            "answer": "int length(String s)",
+            "explanation": "Correct return type and parameter type for a length method.",
+            "grading_points": [
+              "Correct selection of 'int length(String s)'"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q2_3",
@@ -153,7 +209,14 @@
             "Calling toUpperCase changes the original String in place.",
             "String cannot be compared with equals."
           ],
-          "solution": null
+          "solution": {
+            "answer": "String objects are immutable.",
+            "explanation": "Strings cannot be changed after creation.",
+            "grading_points": [
+              "Correct selection of 'String objects are immutable.'"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q2_4",
@@ -167,7 +230,14 @@
             "ArrayList xs = new ArrayList();",
             "Dog d = (Dog) new Object(); is always safe."
           ],
-          "solution": null
+          "solution": {
+            "answer": "Animal a = new Dog();",
+            "explanation": "Polymorphism allows assigning a subclass instance to a superclass reference.",
+            "grading_points": [
+              "Correct selection of 'Animal a = new Dog();'"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q2_5",
@@ -181,7 +251,14 @@
             "Optional",
             "void"
           ],
-          "solution": null
+          "solution": {
+            "answer": "Optional",
+            "explanation": "Optional is the standard way to handle potentially missing values.",
+            "grading_points": [
+              "Correct selection of 'Optional'"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q2_6",
@@ -195,7 +272,14 @@
             "The method cannot use parameters.",
             "The method is automatically private."
           ],
-          "solution": null
+          "solution": {
+            "answer": "The method belongs to the class rather than one object.",
+            "explanation": "Static methods are associated with the class type.",
+            "grading_points": [
+              "Correct selection of 'The method belongs to the class rather than one object.'"
+            ],
+            "source": "ai_generated"
+          }
         }
       ],
       "images": []
@@ -219,7 +303,17 @@
           "points": 6,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static String readSentence(Scanner sc) { StringBuilder sb = new StringBuilder(); while (sc.hasNext()) { String s = sc.next(); sb.append(s).append(\" \"); if (s.endsWith(\".\")) break; } return sb.toString().trim(); }",
+            "explanation": "Reads tokens until one ends with a period.",
+            "grading_points": [
+              "Uses Scanner",
+              "Uses loop",
+              "Handles period termination",
+              "Returns correct String"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q3b",
@@ -228,7 +322,17 @@
           "points": 8,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static void main(String[] args) { Scanner sc = new Scanner(System.in); String s = readSentence(sc); String[] words = s.replace(\".\", \"\").split(\" \"); List<String> list = Arrays.asList(words); Collections.reverse(list); ... }",
+            "explanation": "Splits, reverses, and adjusts casing.",
+            "grading_points": [
+              "Reverses word order",
+              "First word capitalized",
+              "Last word lowercase",
+              "Handles period removal"
+            ],
+            "source": "ai_generated"
+          }
         }
       ],
       "images": []
@@ -252,7 +356,16 @@
           "points": 5,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static List<Integer> squareEvens(List<Integer> xs) { List<Integer> res = new ArrayList<>(); for (int x : xs) { if (x % 2 == 0) res.add(x * x); } return res; }",
+            "explanation": "Iterates and filters even numbers.",
+            "grading_points": [
+              "Correct loop",
+              "Correct filter",
+              "Correct square calculation"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q4b",
@@ -261,7 +374,16 @@
           "points": 5,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static List<Integer> squareEvensStream(List<Integer> xs) { return xs.stream().filter(x -> x % 2 == 0).map(x -> x * x).collect(Collectors.toList()); }",
+            "explanation": "Uses stream API.",
+            "grading_points": [
+              "Uses stream()",
+              "Uses filter",
+              "Uses map"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q4c",
@@ -270,7 +392,15 @@
           "points": 5,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static <T> int countNull(List<T> xs) { int count = 0; for (T x : xs) { if (x == null) count++; } return count; }",
+            "explanation": "Counts null elements.",
+            "grading_points": [
+              "Generic method",
+              "Correct null check"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q4d",
@@ -279,7 +409,15 @@
           "points": 5,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static <T> List<T> dedupeConsecutive(List<T> xs) { List<T> res = new ArrayList<>(); T last = null; for (T x : xs) { if (res.isEmpty() || !x.equals(last)) { res.add(x); last = x; } } return res; }",
+            "explanation": "Removes consecutive duplicates.",
+            "grading_points": [
+              "Handles empty list",
+              "Correct comparison logic"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q4e",
@@ -288,7 +426,15 @@
           "points": 5,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "Yes, it is true. Because duplicateEach doubles every element, dedupeConsecutive will always collapse the pair back to the original single element.",
+            "explanation": "Logic explanation.",
+            "grading_points": [
+              "Correct conclusion",
+              "Clear explanation"
+            ],
+            "source": "ai_generated"
+          }
         }
       ],
       "images": []
@@ -312,7 +458,15 @@
           "points": 6,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static int computePercentDiscount(int percent, int price) { return (int) Math.round((percent / 100.0) * price); }",
+            "explanation": "Uses double for precision.",
+            "grading_points": [
+              "Uses double",
+              "Correct rounding"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q5b",
@@ -321,7 +475,16 @@
           "points": 6,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static void takeItem(int itemId, Map<Integer, Integer> inventory) { if (inventory.containsKey(itemId)) { int count = inventory.get(itemId); if (count > 1) inventory.put(itemId, count - 1); else inventory.remove(itemId); } }",
+            "explanation": "Updates map correctly.",
+            "grading_points": [
+              "Checks existence",
+              "Decrements count",
+              "Removes key if 0"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q5c",
@@ -330,7 +493,16 @@
           "points": 8,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static void addItem(Shop shop, int itemId, List<BillItem> bill) { ... }",
+            "explanation": "Adds purchase and applies discount logic.",
+            "grading_points": [
+              "Adds Purchase",
+              "Checks offer",
+              "Applies discount logic"
+            ],
+            "source": "ai_generated"
+          }
         }
       ],
       "images": []
@@ -354,7 +526,16 @@
           "points": 7,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static void insertWord(String word, WordTree tree) { WordTree curr = tree; for (char c : word.toCharArray()) { curr = curr.continuations.computeIfAbsent(c, k -> new WordTree(false)); } curr.endAllowed = true; }",
+            "explanation": "Traverses and creates nodes.",
+            "grading_points": [
+              "Correct traversal",
+              "Creates nodes",
+              "Sets endAllowed"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q6b",
@@ -363,7 +544,14 @@
           "points": 4,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "The Map structure ensures that each character key maps to exactly one WordTree instance, preventing multiple paths for the same character.",
+            "explanation": "Invariant explanation.",
+            "grading_points": [
+              "Mentions Map uniqueness"
+            ],
+            "source": "ai_generated"
+          }
         },
         {
           "id": "q6c",
@@ -372,11 +560,23 @@
           "points": 6,
           "interaction_type": "free_text",
           "choices": [],
-          "solution": null
+          "solution": {
+            "answer": "public static List<String> allWords(WordTree tree) { List<String> res = new ArrayList<>(); collect(tree, \"\", res); return res; } private static void collect(WordTree t, String s, List<String> res) { if (t.endAllowed) res.add(s); for (var entry : t.continuations.entrySet()) collect(entry.getValue(), s + entry.getKey(), res); }",
+            "explanation": "Recursive collection.",
+            "grading_points": [
+              "Recursive helper",
+              "Correct base case",
+              "Correct accumulation"
+            ],
+            "source": "ai_generated"
+          }
         }
       ],
       "images": []
     }
   ],
-  "warnings": []
+  "warnings": [
+    "These are AI-generated solutions and not official solutions.",
+    "AI-generated solutions; not official answer key."
+  ]
 }

@@ -129,6 +129,9 @@ Rules:
 - Map solutions back to question IDs, question numbers, subquestion labels, and page_start/page_end when possible.
 - If the solution PDF gives only short answers, preserve them as answers and use explanation null.
 - If the solution gives detailed reasoning, put the reasoning in explanation.
+- If an answer or explanation contains code, format the code as a fenced Markdown code block with the best language tag, for example ```java, ```haskell, ```python, or ```text.
+- Preserve code line breaks and indentation inside fenced code blocks as closely as possible.
+- Keep prose outside code fences and code/type declarations inside code fences.
 - If grading criteria or point breakdowns are present, put them in grading_points.
 - If points are explicitly present, extract them.
 - If a solution is missing, return null and add a warning.
@@ -166,6 +169,9 @@ Rules:
 - Use the exact question IDs and subquestion IDs from the provided questions JSON.
 - Put concise final answers in answer.
 - Put reasoning or explanation in explanation.
+- If an answer or explanation contains code, format the code as a fenced Markdown code block with the best language tag, for example ```java, ```haskell, ```python, or ```text.
+- Preserve code line breaks and indentation inside fenced code blocks as closely as possible.
+- Keep prose outside code fences and code/type declarations inside code fences.
 - Put grading_points as a short list of what a correct answer should include.
 - Use null for points unless explicit points are already present in the provided question data.
 - Add a warning that these are AI-generated solutions and not official solutions.

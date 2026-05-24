@@ -69,7 +69,7 @@ test('renders exam practice workspace from the exam bundle', async () => {
               subquestions: [],
               solution: {
                 answer: null,
-                explanation: 'Existential instantiation is used incorrectly.',
+                explanation: 'Existential instantiation is used incorrectly.\n\npublic static void takeItem(int itemId, Map<Integer, Integer> inventory) { if (inventory.containsKey(itemId)) { int count = inventory.get(itemId); if (count > 1) inventory.put(itemId, count - 1); else inventory.remove(itemId); } }',
                 grading_points: [],
                 source: 'ai_generated',
               },
@@ -97,4 +97,6 @@ test('renders exam practice workspace from the exam bundle', async () => {
   expect(screen.queryByRole('img', { name: /tiny icon from page 2/i })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: /reveal solution/i }));
   expect(screen.getByText(/existential instantiation is used incorrectly/i)).toBeInTheDocument();
+  expect(screen.getByText('java')).toBeInTheDocument();
+  expect(screen.getByText((_, element) => element?.tagName.toLowerCase() === 'code' && element.textContent.includes('public static void takeItem'))).toBeInTheDocument();
 });

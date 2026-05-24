@@ -387,6 +387,24 @@ function QuestionContext({ context }) {
   );
 }
 
+function RichTextBlocks({ text, className = '', detectCode = false }) {
+  if (typeof text !== 'string' || !text.trim()) {
+    return null;
+  }
+  const blocks = parseContextBlocks(text, { detectCode });
+  return (
+    <div className={`rich-text-blocks ${className}`}>
+      {blocks.map((block, index) =>
+        block.type === 'code' ? (
+          <CodeBlock key={`${block.type}-${index}`} language={block.language} code={block.content} />
+        ) : (
+          <p key={`${block.type}-${index}`}>{formatDisplayText(block.content)}</p>
+        ),
+      )}
+    </div>
+  );
+}
+
 function CodeBlock({ language, code }) {
   const normalizedLanguage = normalizeCodeLanguage(language);
   return (
@@ -461,10 +479,10 @@ function SolutionBlock({ solution }) {
         {isAiGenerated && <span className="rounded bg-purple-200 px-2 py-1 text-xs font-semibold text-purple-950">AI</span>}
       </div>
       {solution.answer && (
-        <p className="mt-3 whitespace-pre-wrap text-base font-semibold">{formatDisplayText(solution.answer)}</p>
+        <RichTextBlocks text={solution.answer} className="solution-answer" detectCode />
       )}
       {solution.explanation && (
-        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{formatDisplayText(solution.explanation)}</p>
+        <RichTextBlocks text={solution.explanation} className="solution-explanation" detectCode />
       )}
       {solution.grading_points?.length > 0 && (
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
@@ -591,7 +609,7 @@ function looksLikeQuestionPrompt(choice) {
   );
 }
 
-function parseContextBlocks(context) {
+function parseContextBlocks(context, options = {}) {
   const blocks = [];
   const fencePattern = /```([A-Za-z0-9_-]*)\n([\s\S]*?)```/g;
   let lastIndex = 0;
@@ -611,7 +629,7 @@ function parseContextBlocks(context) {
   if (blocks.length === 0) {
     pushTextBlocks(blocks, context);
   }
-  return blocks;
+  return options.detectCode ? applyCodeDetection(blocks) : blocks;
 }
 
 function pushTextBlocks(blocks, text) {
@@ -620,6 +638,73 @@ function pushTextBlocks(blocks, text) {
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
   paragraphs.forEach((paragraph) => blocks.push({ type: 'text', content: paragraph }));
+}
+
+function applyCodeDetection(blocks) {
+  return blocks.map((block) => {
+    if (block.type !== 'text' || !looksLikeCode(block.content)) {
+      return block;
+    }
+    return {
+      type: 'code',
+      language: inferCodeLanguage(block.content),
+      content: normalizeCodeWhitespace(formatDetectedCode(block.content)),
+    };
+  });
+}
+
+function looksLikeCode(text) {
+  const trimmed = String(text || '').trim();
+  if (!trimmed || trimmed.length < 12) {
+    return false;
+  }
+  const codeSignals = [
+    /\b(public|private|protected|static|class|interface|enum|record|void|int|boolean|String|Map|List|HashMap|new|return|var|fun|val|let|const|function)\b/,
+    /[{};]/,
+    /\w+\s*\([^)]*\)\s*\{/,
+    /<\s*\w+\s*,\s*\w+\s*>/,
+    /\b(if|else|for|while|switch)\s*\(/,
+    /=>|->|::/,
+  ];
+  const signalCount = codeSignals.filter((pattern) => pattern.test(trimmed)).length;
+  const proseWords = trimmed.split(/\s+/).filter((word) => /^[A-ZÆØÅa-zæøå]{4,}$/.test(word)).length;
+  return signalCount >= 2 && proseWords < 18;
+}
+
+function inferCodeLanguage(text) {
+  const trimmed = String(text || '');
+  if (/\b(public|private|protected|static|class|interface|enum|record|void|int|boolean|String|HashMap|implements|extends)\b/.test(trimmed)) {
+    return 'java';
+  }
+  if (/\b(fun|val|var|data class|object)\b/.test(trimmed)) {
+    return 'kotlin';
+  }
+  if (/\b(function|const|let|=>|console\.)\b/.test(trimmed)) {
+    return 'javascript';
+  }
+  if (/\b(module|where|data|deriving|::)\b/.test(trimmed)) {
+    return 'haskell';
+  }
+  return 'text';
+}
+
+function formatDetectedCode(text) {
+  const trimmed = String(text || '').trim();
+  if (trimmed.includes('\n')) {
+    return trimmed;
+  }
+  if (!/[{};]/.test(trimmed)) {
+    return trimmed;
+  }
+  return trimmed
+    .replace(/\{\s*/g, '{\n  ')
+    .replace(/;\s*/g, ';\n  ')
+    .replace(/\s*\}\s*/g, '\n}\n')
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 function normalizeCodeWhitespace(code) {
