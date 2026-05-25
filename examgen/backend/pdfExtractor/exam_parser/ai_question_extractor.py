@@ -294,6 +294,8 @@ def _normalize_question_context(result: dict[str, Any]) -> None:
         normalized = context.strip()
         if not normalized or _looks_like_general_exam_context(normalized):
             question["context"] = None
+        elif _looks_like_subquestion_listing_context(normalized):
+            question["context"] = None
         else:
             question["context"] = normalized
 
@@ -452,9 +454,27 @@ def _context_from_question_segment(segment: str, question: dict[str, Any]) -> st
         return None
     if _looks_like_general_exam_context(cleaned):
         return None
+    if _looks_like_subquestion_listing_context(cleaned):
+        return None
     if not _looks_like_question_specific_context(cleaned):
         return None
     return cleaned
+
+
+def _looks_like_subquestion_listing_context(text: str) -> bool:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        return False
+    first_line = lines[0]
+    if not re.match(r"^\(?[a-zA-Z]\)?[).]?\s+", first_line):
+        return False
+    marker_count = sum(
+        1
+        for line in lines
+        if re.match(r"^\(?[a-zA-Z]\)?[).]?\s+", line)
+    )
+    option_prompt_count = sum(1 for line in lines if "velg ett alternativ" in line.casefold())
+    return marker_count >= 2 or option_prompt_count >= 2
 
 
 def _looks_like_question_specific_context(text: str) -> bool:

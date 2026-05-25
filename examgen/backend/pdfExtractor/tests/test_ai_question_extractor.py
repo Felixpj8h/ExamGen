@@ -277,6 +277,57 @@ def test_post_process_recovers_title_only_question_context_from_extraction() -> 
     assert "FIRST sets" not in context
 
 
+def test_post_process_does_not_turn_subquestion_list_into_context() -> None:
+    extraction = sample_extraction()
+    extraction["pages"][0]["clean_text"] = (
+        "1 Verdier og typer\n"
+        "a) Hva er verdien av uttrykket: snd (9,3)?\n"
+        "b) Hva er verdien av uttrykket: tail [3,5,7]?\n"
+        "c) Hva er verdien til uttrykket length $ \"Hello\" ++ \"World\"?\n"
+        "Velg ett alternativ\n"
+        "\"HelloWorld\"\n"
+        "5\n"
+        "2 Typer, kinds og monader\n"
+        "a) Hva er en mulig typing av uttrykket Right (2,[\"remain\",\"silent\"])?"
+    )
+    result = sample_questions()
+    result["questions"] = [
+        {
+            "id": "q1",
+            "question_number": "1",
+            "question_text": "Verdier og typer",
+            "context": None,
+            "page_start": 1,
+            "page_end": 1,
+            "points": None,
+            "topic": "Haskell values",
+            "interaction_type": "free_text",
+            "choices": [],
+            "subquestions": [
+                {"id": "q1a", "label": "a", "text": "Hva er verdien av uttrykket: snd (9,3)?"},
+                {"id": "q1b", "label": "b", "text": "Hva er verdien av uttrykket: tail [3,5,7]?"},
+            ],
+        },
+        {
+            "id": "q2",
+            "question_number": "2",
+            "question_text": "Typer, kinds og monader",
+            "context": None,
+            "page_start": 1,
+            "page_end": 1,
+            "points": None,
+            "topic": "Haskell types",
+            "interaction_type": "free_text",
+            "choices": [],
+            "subquestions": [],
+        },
+    ]
+
+    processed = post_process_questions(result, extraction_result=extraction)
+
+    assert processed["questions"][0]["context"] is None
+
+
 def test_post_process_adds_true_false_interaction_metadata_to_subquestions() -> None:
     result = sample_questions()
     result["questions"][0]["question_text"] = "What are these truth values?"
