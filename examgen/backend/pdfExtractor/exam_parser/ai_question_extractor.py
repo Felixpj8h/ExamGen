@@ -879,7 +879,7 @@ def extract_questions_with_gemini(
 ) -> dict[str, Any]:
     """Convert PDF extraction JSON into structured exam questions using Gemini."""
     if model_name == DEFAULT_MODEL_NAME:
-        model_name = os.getenv("GEMINI_MODEL", model_name)
+        model_name = os.getenv("GEMINI_QUESTION_MODEL") or os.getenv("GEMINI_MODEL", model_name)
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise QuestionExtractionError("Missing GEMINI_API_KEY environment variable.")

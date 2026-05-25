@@ -6,7 +6,6 @@ import argparse
 import sys
 from typing import Sequence
 
-from exam_parser.ai_question_extractor import DEFAULT_MODEL_NAME
 from exam_parser.pdf_extractor import PDFExtractionError
 from exam_parser.pipeline import PipelineError, PipelineOptions, run_exam_pipeline
 
@@ -25,7 +24,21 @@ def build_parser() -> argparse.ArgumentParser:
         default="output",
         help="Directory to write extracted JSON artifacts. Defaults to output/.",
     )
-    parser.add_argument("--model", default=DEFAULT_MODEL_NAME, help="Gemini model name.")
+    parser.add_argument(
+        "--model",
+        default=None,
+        help="Backward-compatible Gemini model name for all AI steps.",
+    )
+    parser.add_argument(
+        "--question-model",
+        default=None,
+        help="Gemini model for question extraction. Defaults to GEMINI_QUESTION_MODEL, GEMINI_MODEL, then the app default.",
+    )
+    parser.add_argument(
+        "--solution-model",
+        default=None,
+        help="Gemini model for solution extraction/generation. Defaults to GEMINI_SOLUTION_MODEL, GEMINI_MODEL, then the app default.",
+    )
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--max-output-tokens", type=int, default=8192)
     parser.add_argument(
@@ -60,6 +73,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             out_dir=args.out_dir,
             options=PipelineOptions(
                 model_name=args.model,
+                question_model=args.question_model,
+                solution_model=args.solution_model,
                 temperature=args.temperature,
                 max_output_tokens=args.max_output_tokens,
                 generate_missing_solutions=args.generate_missing_solutions,

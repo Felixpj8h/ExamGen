@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from exam_parser.ai_question_extractor import DEFAULT_MODEL_NAME, extract_questions_with_gemini
-from exam_parser.ai_solution_extractor import SolutionExtractionError, extract_solutions_with_gemini
+from exam_parser.ai_solution_extractor import (
+    SolutionExtractionError,
+    extract_ai_solutions_per_question_with_gemini,
+    extract_solutions_with_gemini,
+)
 from exam_parser.document_classifier import classify_extracted_document
 from exam_parser.exam_bundle import build_exam_bundle
 from exam_parser.pdf_extractor import extract_pdf
@@ -25,7 +30,9 @@ class PipelineError(Exception):
 
 @dataclass(frozen=True)
 class PipelineOptions:
-    model_name: str = DEFAULT_MODEL_NAME
+    model_name: str | None = None
+    question_model: str | None = None
+    solution_model: str | None = None
     temperature: float = 0.0
     max_output_tokens: int = 8192
     generate_missing_solutions: bool = False
@@ -33,6 +40,24 @@ class PipelineOptions:
     public_bundle_path: str | Path | None = None
     asset_url_prefix: str | None = None
     indent: int = 2
+
+    def resolved_question_model(self) -> str:
+        return (
+            self.question_model
+            or self.model_name
+            or os.getenv("GEMINI_QUESTION_MODEL")
+            or os.getenv("GEMINI_MODEL")
+            or DEFAULT_MODEL_NAME
+        )
+
+    def resolved_solution_model(self) -> str:
+        return (
+            self.solution_model
+            or self.model_name
+            or os.getenv("GEMINI_SOLUTION_MODEL")
+            or os.getenv("GEMINI_MODEL")
+            or DEFAULT_MODEL_NAME
+        )
 
 
 def run_exam_pipeline(
@@ -98,7 +123,7 @@ def _run_separate_solution_pipeline(
 
     questions = extract_questions_with_gemini(
         exam_extraction,
-        model_name=options.model_name,
+        model_name=options.resolved_question_model(),
         temperature=options.temperature,
         max_output_tokens=options.max_output_tokens,
     )
@@ -117,7 +142,7 @@ def _run_separate_solution_pipeline(
     solutions = extract_solutions_with_gemini(
         solution_extraction,
         questions_result=questions,
-        model_name=options.model_name,
+        model_name=options.resolved_solution_model(),
         temperature=options.temperature,
         max_output_tokens=options.max_output_tokens,
         source_type="separate_solution_pdf",
@@ -142,7 +167,7 @@ def _run_single_pdf_pipeline(
     if document_type == "questions_only":
         questions = extract_questions_with_gemini(
             exam_extraction,
-            model_name=options.model_name,
+            model_name=options.resolved_question_model(),
             temperature=options.temperature,
             max_output_tokens=options.max_output_tokens,
         )
@@ -158,7 +183,7 @@ def _run_single_pdf_pipeline(
     if document_type == "questions_and_solutions":
         questions = extract_questions_with_gemini(
             exam_extraction,
-            model_name=options.model_name,
+            model_name=options.resolved_question_model(),
             temperature=options.temperature,
             max_output_tokens=options.max_output_tokens,
         )
@@ -167,7 +192,7 @@ def _run_single_pdf_pipeline(
             solutions = extract_solutions_with_gemini(
                 exam_extraction,
                 questions_result=questions,
-                model_name=options.model_name,
+                model_name=options.resolved_solution_model(),
                 temperature=options.temperature,
                 max_output_tokens=options.max_output_tokens,
                 source_type="same_pdf",
@@ -192,13 +217,12 @@ def _generate_ai_solutions(
     exam_extraction: dict[str, Any],
     questions: dict[str, Any],
 ) -> dict[str, Any]:
-    return extract_solutions_with_gemini(
+    return extract_ai_solutions_per_question_with_gemini(
         exam_extraction,
         questions_result=questions,
-        model_name=options.model_name,
+        model_name=options.resolved_solution_model(),
         temperature=options.temperature,
         max_output_tokens=max(options.max_output_tokens, 16384),
-        source_type="ai_generated",
     )
 
 

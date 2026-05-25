@@ -13,6 +13,7 @@ from exam_parser.ai_question_extractor import (
     _extract_response_text,
     _parse_json_response,
 )
+from exam_parser.question_items import iter_answer_items, solution_source_from_type
 
 
 SOLUTION_EXTRACTION_SCHEMA: dict[str, Any] = {
@@ -209,7 +210,7 @@ def extract_solutions_with_gemini(
     if source_type not in SOURCE_TYPES:
         raise SolutionExtractionError(f"Invalid source_type: {source_type}")
     if model_name == DEFAULT_MODEL_NAME:
-        model_name = os.getenv("GEMINI_MODEL", model_name)
+        model_name = os.getenv("GEMINI_SOLUTION_MODEL") or os.getenv("GEMINI_MODEL", model_name)
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise SolutionExtractionError("Missing GEMINI_API_KEY environment variable.")
@@ -237,6 +238,79 @@ def extract_solutions_with_gemini(
     validate_solution_extraction_result(result)
     validate_solution_alignment(result, questions_result, source_type=source_type)
     return result
+
+
+def extract_ai_solutions_per_question_with_gemini(
+    extraction_result_or_solution_section: dict[str, Any],
+    questions_result: dict[str, Any],
+    model_name: str = DEFAULT_MODEL_NAME,
+    temperature: float = 0.0,
+    max_output_tokens: int = 8192,
+) -> dict[str, Any]:
+    """Generate AI-marked practice solutions one main question at a time."""
+    partial_results: list[dict[str, Any]] = []
+    for question in questions_result.get("questions", []):
+        if not isinstance(question, dict):
+            continue
+        partial_questions = _single_question_result(questions_result, question)
+        try:
+            partial_results.append(
+                extract_solutions_with_gemini(
+                    extraction_result_or_solution_section,
+                    questions_result=partial_questions,
+                    model_name=model_name,
+                    temperature=temperature,
+                    max_output_tokens=max_output_tokens,
+                    source_type="ai_generated",
+                )
+            )
+        except SolutionExtractionError as exc:
+            question_number = question.get("question_number") or question.get("id") or "unknown"
+            raise SolutionExtractionError(
+                f"AI-generated solution failed for question {question_number}: {exc}"
+            ) from exc
+
+    merged = _merge_ai_solution_results(partial_results, questions_result)
+    validate_solution_extraction_result(merged)
+    validate_solution_alignment(merged, questions_result, source_type="ai_generated")
+    return merged
+
+
+def _single_question_result(
+    questions_result: dict[str, Any],
+    question: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "source_file": questions_result.get("source_file", ""),
+        "exam_title": questions_result.get("exam_title"),
+        "course_code": questions_result.get("course_code"),
+        "language": questions_result.get("language", ""),
+        "questions": [question],
+        "warnings": [],
+    }
+
+
+def _merge_ai_solution_results(
+    partial_results: list[dict[str, Any]],
+    questions_result: dict[str, Any],
+) -> dict[str, Any]:
+    source_file = str(questions_result.get("source_file") or "")
+    warnings = ["AI-generated solutions; not official answer key."]
+    solutions: list[dict[str, Any]] = []
+    for partial in partial_results:
+        source_file = str(partial.get("source_file") or source_file)
+        warnings.extend(partial.get("warnings", []))
+        for solution in partial.get("solutions", []):
+            if isinstance(solution, dict):
+                solutions.append(solution)
+    return {
+        "source_file": source_file,
+        "source_type": "ai_generated",
+        "exam_title": questions_result.get("exam_title"),
+        "course_code": questions_result.get("course_code"),
+        "solutions": solutions,
+        "warnings": _dedupe_solution_warnings(warnings),
+    }
 
 
 def post_process_solutions(
@@ -403,27 +477,14 @@ def validate_solution_alignment(
 
 
 def _expected_answer_item_ids(questions_result: dict[str, Any]) -> set[str]:
-    expected: set[str] = set()
-    for question in questions_result.get("questions", []):
-        if not isinstance(question, dict):
-            continue
-        subquestions = question.get("subquestions")
-        if isinstance(subquestions, list) and subquestions:
-            for subquestion in subquestions:
-                if isinstance(subquestion, dict) and subquestion.get("id"):
-                    expected.add(str(subquestion["id"]))
-        elif question.get("id"):
-            expected.add(str(question["id"]))
-    return expected
+    return {item.id for item in iter_answer_items(questions_result) if item.id}
 
 
 def _actual_answer_item_ids(result: dict[str, Any], questions_result: dict[str, Any]) -> set[str]:
     question_ids_without_subquestions = {
-        str(question.get("id"))
-        for question in questions_result.get("questions", [])
-        if isinstance(question, dict)
-        and question.get("id")
-        and not question.get("subquestions")
+        item.id
+        for item in iter_answer_items(questions_result)
+        if item.id and not item.is_subquestion
     }
     actual: set[str] = set()
     for solution in result.get("solutions", []):
@@ -561,6 +622,4 @@ def _solution_text(extraction_result_or_solution_section: dict[str, Any]) -> str
 
 
 def _subsolution_source(source_type: str) -> str:
-    if source_type == "separate_solution_pdf":
-        return "official_solution_pdf"
-    return source_type
+    return solution_source_from_type(source_type)

@@ -5,6 +5,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from exam_parser.question_items import solution_source_from_type
+
 MAX_MULTIPLE_CHOICE_OPTIONS = 6
 
 
@@ -223,10 +225,11 @@ def _fallback_solution_source(solutions_result: dict[str, Any] | None) -> str | 
     if not isinstance(solutions_result, dict):
         return None
     source_type = solutions_result.get("source_type")
-    if source_type == "separate_solution_pdf":
-        return "official_solution_pdf"
-    if source_type in {"same_pdf", "ai_generated", "manual"}:
-        return str(source_type)
+    if isinstance(source_type, str):
+        try:
+            return solution_source_from_type(source_type)
+        except ValueError:
+            return None
     return None
 
 
