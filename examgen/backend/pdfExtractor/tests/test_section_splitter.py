@@ -1,4 +1,4 @@
-from exam_parser.section_splitter import (
+from exam_parser.pdf.section_splitter import (
     INTERLEAVED_WARNING,
     NO_CLEAR_SPLIT_WARNING,
     split_questions_and_solutions,

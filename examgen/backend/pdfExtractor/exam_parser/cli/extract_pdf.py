@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from exam_parser.pdf_extractor import PDFExtractionError, extract_pdf
+from exam_parser.pdf.extractor import PDFExtractionError, extract_pdf
 
 
 def build_parser() -> argparse.ArgumentParser:

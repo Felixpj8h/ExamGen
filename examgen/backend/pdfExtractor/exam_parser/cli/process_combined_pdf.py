@@ -8,11 +8,11 @@ import sys
 from pathlib import Path
 from typing import Any, Sequence
 
-from exam_parser.ai_question_extractor import DEFAULT_MODEL_NAME, extract_questions_with_gemini
-from exam_parser.ai_solution_extractor import extract_solutions_with_gemini
-from exam_parser.document_classifier import classify_extracted_document
-from exam_parser.exam_bundle import build_exam_bundle
-from exam_parser.section_splitter import section_to_extraction_result, split_questions_and_solutions
+from exam_parser.ai.question_extractor import DEFAULT_MODEL_NAME, extract_questions_with_gemini
+from exam_parser.ai.solution_extractor import extract_solutions_with_gemini
+from exam_parser.pdf.document_classifier import classify_extracted_document
+from exam_parser.pdf.section_splitter import section_to_extraction_result, split_questions_and_solutions
+from exam_parser.post.exam_bundle import build_exam_bundle
 
 
 def build_parser() -> argparse.ArgumentParser:

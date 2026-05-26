@@ -1,6 +1,6 @@
 import pytest
 
-from exam_parser.ai_solution_extractor import (
+from exam_parser.ai.solution_extractor import (
     SolutionExtractionError,
     build_solution_extraction_prompt,
     extract_ai_solutions_per_question_with_gemini,
@@ -290,7 +290,7 @@ def test_ai_generated_solutions_are_requested_per_main_question(monkeypatch: pyt
             "warnings": ["AI-generated solutions; not official answer key."],
         }
 
-    monkeypatch.setattr("exam_parser.ai_solution_extractor.extract_solutions_with_gemini", fake_extract)
+    monkeypatch.setattr("exam_parser.ai.solution_extractor.extract_solutions_with_gemini", fake_extract)
 
     result = extract_ai_solutions_per_question_with_gemini(
         {"file_name": "exam.pdf", "pages": []},

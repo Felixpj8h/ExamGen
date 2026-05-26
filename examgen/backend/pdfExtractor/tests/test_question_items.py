@@ -1,6 +1,6 @@
 import pytest
 
-from exam_parser.question_items import iter_answer_items, solution_source_from_type
+from exam_parser.post.question_items import iter_answer_items, solution_source_from_type
 
 
 def test_iter_answer_items_yields_main_question_without_subquestions() -> None:

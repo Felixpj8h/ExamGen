@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from exam_parser.document_classifier import SOLUTION_MARKERS
+from exam_parser.pdf.document_classifier import SOLUTION_MARKERS
 
 
 NO_CLEAR_SPLIT_WARNING = "No clear question/solution split found."

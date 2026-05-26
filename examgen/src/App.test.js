@@ -41,7 +41,7 @@ const uploadedBundle = {
       question_number: '2',
       question_text: 'Explain the argument error.',
       context:
-        'Use the provided inference rule setup.\n\ntype Env = [(String, Int)] data Expr = Lit Int | Var String\n\nlookupEnv :: String -> Env -> Maybe Int lookupEnv x [] = Nothing lookupEnv x ((y,v):rest) | x == y = Just v | otherwise = lookupEnv x rest\n\neval env expr = case expr of Lit n -> __________________________\n\n```kotlin\nfun total(var amount: Int): Int\n```',
+        '## Setup\n\nUse the **provided** inference rule setup with `Env`.\n\n- Keep IDs exact\n- Preserve code\n\ntype Env = [(String, Int)] data Expr = Lit Int | Var String\n\nlookupEnv :: String -> Env -> Maybe Int lookupEnv x [] = Nothing lookupEnv x ((y,v):rest) | x == y = Just v | otherwise = lookupEnv x rest\n\neval env expr = case expr of Lit n -> __________________________\n\n```kotlin\nfun total(var amount: Int): Int\n```',
       page_start: 2,
       page_end: 2,
       topic: 'logical errors',
@@ -97,6 +97,20 @@ const uploadedBundle = {
       page_start: 4,
       page_end: 4,
       topic: 'parameter passing modes',
+      interaction_type: 'free_text',
+      choices: [],
+      subquestions: [],
+      solution: null,
+    },
+    {
+      id: 'q5',
+      question_number: '5',
+      question_text: 'Data structures and complexity',
+      context:
+        'Fill in the missing time complexities.\n\n| Operation | ArrayList | LinkedList | HashMap |\n|:--- |:--- |:--- |:--- |\n| Access element by index | 5a: __ | **5b:** __ | Not applicable |\n| Search for value/key | 5e: __ | **O(n)** | 5f: __ |',
+      page_start: 5,
+      page_end: 5,
+      topic: 'data structures',
       interaction_type: 'free_text',
       choices: [],
       subquestions: [],
@@ -174,7 +188,14 @@ test('uploads files and connects to the existing mock exam workspace', async () 
   expect(screen.getAllByRole('button', { name: 'True' }).length).toBeGreaterThan(0);
 
   fireEvent.click(screen.getByRole('button', { name: /question 2/i }));
-  expect(screen.getByText(/use the provided inference rule setup/i)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /setup/i })).toBeInTheDocument();
+  expect(screen.getByText((_, element) => (
+    element?.tagName.toLowerCase() === 'p' &&
+    element.textContent.includes('Use the provided inference rule setup with Env.')
+  ))).toBeInTheDocument();
+  expect(screen.getByText('provided').tagName.toLowerCase()).toBe('strong');
+  expect(screen.getByText('Env')).toHaveClass('inline-code');
+  expect(screen.getByText('Keep IDs exact').tagName.toLowerCase()).toBe('li');
   expect(screen.getByText('haskell')).toBeInTheDocument();
   expect(screen.getAllByText('haskell')).toHaveLength(1);
   expect(screen.getByText((_, element) => {
@@ -215,6 +236,12 @@ test('uploads files and connects to the existing mock exam workspace', async () 
       && element.textContent.includes('\n  method insert(_____ Element e, _____ Bag b);')
       && element.textContent.includes('\n  method clear(_____ Bag b);');
   })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /question 5/i }));
+  expect(screen.getByRole('table')).toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: /operation/i })).toBeInTheDocument();
+  expect(screen.getByRole('cell', { name: /access element by index/i })).toBeInTheDocument();
+  expect(screen.getByText('5b:').tagName.toLowerCase()).toBe('strong');
 });
 
 test('allows upload with only exam pdf when auto-generate solutions is enabled', async () => {

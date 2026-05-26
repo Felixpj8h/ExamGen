@@ -6,14 +6,14 @@ import json
 import os
 from typing import Any
 
-from exam_parser.ai_question_extractor import (
+from exam_parser.ai.question_extractor import (
     DEFAULT_MODEL_NAME,
     QuestionExtractionError,
     _create_gemini_client,
     _extract_response_text,
     _parse_json_response,
 )
-from exam_parser.question_items import iter_answer_items, solution_source_from_type
+from exam_parser.post.question_items import iter_answer_items, solution_source_from_type
 
 
 SOLUTION_EXTRACTION_SCHEMA: dict[str, Any] = {

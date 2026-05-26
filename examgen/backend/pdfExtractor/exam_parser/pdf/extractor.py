@@ -7,7 +7,7 @@ from typing import Any
 
 import fitz
 
-from exam_parser.text_cleaner import clean_pages, normalize_whitespace
+from exam_parser.pdf.text_cleaner import clean_pages, normalize_whitespace
 
 MIN_EXTRACTED_IMAGE_WIDTH = 80
 MIN_EXTRACTED_IMAGE_HEIGHT = 80

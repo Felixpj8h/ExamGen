@@ -10,7 +10,7 @@ from typing import Any
 from exam_parser.schemas import QUESTION_EXTRACTION_SCHEMA
 
 
-DEFAULT_MODEL_NAME = "gemini-3.1-flash-lite-preview"
+DEFAULT_MODEL_NAME = "gemini-3.1-flash-lite"
 TOO_GENERIC_TOPICS_WARNING = "Topics may be too generic."
 MAX_MULTIPLE_CHOICE_OPTIONS = 6
 

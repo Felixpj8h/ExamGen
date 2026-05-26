@@ -9,15 +9,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from exam_parser.ai_question_extractor import DEFAULT_MODEL_NAME, extract_questions_with_gemini
-from exam_parser.ai_solution_extractor import (
+from exam_parser.ai.question_extractor import DEFAULT_MODEL_NAME, extract_questions_with_gemini
+from exam_parser.ai.solution_extractor import (
     SolutionExtractionError,
     extract_ai_solutions_per_question_with_gemini,
     extract_solutions_with_gemini,
 )
-from exam_parser.document_classifier import classify_extracted_document
-from exam_parser.exam_bundle import build_exam_bundle
-from exam_parser.pdf_extractor import extract_pdf
+from exam_parser.pdf.document_classifier import classify_extracted_document
+from exam_parser.pdf.extractor import extract_pdf
+from exam_parser.post.exam_bundle import build_exam_bundle
 
 
 class PipelineError(Exception):

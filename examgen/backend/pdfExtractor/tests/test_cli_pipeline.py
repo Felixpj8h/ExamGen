@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from exam_parser.ai_solution_extractor import SolutionExtractionError
+from exam_parser.ai.solution_extractor import SolutionExtractionError
 from exam_parser.cli_pipeline import main as pipeline_main
 from exam_parser.pipeline import PipelineOptions, run_exam_pipeline
 

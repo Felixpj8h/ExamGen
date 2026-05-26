@@ -38,7 +38,7 @@ Bash:
 export GEMINI_API_KEY="your-api-key"
 ```
 
-The model can also be configured with `GEMINI_MODEL`; the default is `gemini-3.1-flash-lite-preview`.
+The model can also be configured with `GEMINI_MODEL`; the default is `gemini-3.1-flash-lite`.
 
 ## Supported Modes
 
@@ -111,37 +111,37 @@ exam_bundle_path = result["artifacts"]["exam_bundle.json"]
 ## Run AI Question Extraction
 
 ```bash
-python -m exam_parser.cli_extract_questions extracted.json --out questions.json
+python -m exam_parser.cli.extract_questions extracted.json --out questions.json
 ```
 
 Optional model settings:
 
 ```bash
-python -m exam_parser.cli_extract_questions extracted.json --out questions.json --model gemini-3.1-flash-lite-preview --temperature 0 --max-output-tokens 8192
+python -m exam_parser.cli.extract_questions extracted.json --out questions.json --model gemini-3.1-flash-lite --temperature 0 --max-output-tokens 8192
 ```
 
 ## Classify A Document
 
 ```bash
-python -m exam_parser.cli_classify_document extracted.json --out classification.json
+python -m exam_parser.cli.classify_document extracted.json --out classification.json
 ```
 
 ## Extract Solutions
 
 ```bash
-python -m exam_parser.cli_extract_solutions extracted_solutions.json --questions questions.json --out solutions.json
+python -m exam_parser.cli.extract_solutions extracted_solutions.json --questions questions.json --out solutions.json
 ```
 
 ## Build Exam Bundle
 
 ```bash
-python -m exam_parser.cli_build_bundle questions.json --solutions solutions.json --out exam_bundle.json
+python -m exam_parser.cli.build_bundle questions.json --solutions solutions.json --out exam_bundle.json
 ```
 
 ## Process Combined Question/Solution PDF
 
 ```bash
-python -m exam_parser.cli_process_combined_pdf extracted.json --out-dir output/
+python -m exam_parser.cli.process_combined_pdf extracted.json --out-dir output/
 ```
 
 ## Output Shape
@@ -282,24 +282,24 @@ Exam bundle output:
 
 ```bash
 python -m exam_parser.cli path/to/exam.pdf --out extracted.json
-python -m exam_parser.cli_extract_questions extracted.json --out questions.json
+python -m exam_parser.cli.extract_questions extracted.json --out questions.json
 ```
 
 ## Example Command Flow: Separate Solution PDF
 
 ```bash
 python -m exam_parser.cli path/to/exam.pdf --out extracted_exam.json
-python -m exam_parser.cli_extract_questions extracted_exam.json --out questions.json
+python -m exam_parser.cli.extract_questions extracted_exam.json --out questions.json
 python -m exam_parser.cli path/to/solutions.pdf --out extracted_solutions.json
-python -m exam_parser.cli_extract_solutions extracted_solutions.json --questions questions.json --out solutions.json
-python -m exam_parser.cli_build_bundle questions.json --solutions solutions.json --out exam_bundle.json
+python -m exam_parser.cli.extract_solutions extracted_solutions.json --questions questions.json --out solutions.json
+python -m exam_parser.cli.build_bundle questions.json --solutions solutions.json --out exam_bundle.json
 ```
 
 ## Example Command Flow: Same PDF
 
 ```bash
 python -m exam_parser.cli path/to/exam_with_solutions.pdf --out extracted.json
-python -m exam_parser.cli_process_combined_pdf extracted.json --out-dir output/
+python -m exam_parser.cli.process_combined_pdf extracted.json --out-dir output/
 ```
 
 ## What It Does

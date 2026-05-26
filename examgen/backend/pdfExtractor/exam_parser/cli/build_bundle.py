@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any, Sequence
 
-from exam_parser.exam_bundle import build_exam_bundle
+from exam_parser.post.exam_bundle import build_exam_bundle
 
 
 def build_parser() -> argparse.ArgumentParser:

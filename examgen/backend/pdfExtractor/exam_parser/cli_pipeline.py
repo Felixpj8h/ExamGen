@@ -6,7 +6,7 @@ import argparse
 import sys
 from typing import Sequence
 
-from exam_parser.pdf_extractor import PDFExtractionError
+from exam_parser.pdf.extractor import PDFExtractionError
 from exam_parser.pipeline import PipelineError, PipelineOptions, run_exam_pipeline
 
 

@@ -64,26 +64,26 @@ Each main question can also include `context`: task-specific setup such as defin
 Convert extracted PDF JSON into structured question JSON:
 
 ```bash
-python -m exam_parser.cli_extract_questions extracted.json --out questions.json
+python -m exam_parser.cli.extract_questions extracted.json --out questions.json
 ```
 
 Classify whether an extracted document contains questions, solutions, or both:
 
 ```bash
-python -m exam_parser.cli_classify_document extracted.json --out classification.json
+python -m exam_parser.cli.classify_document extracted.json --out classification.json
 ```
 
 Extract official solutions from a separate solution PDF extraction:
 
 ```bash
 python -m exam_parser.cli path/to/solutions.pdf --out extracted_solutions.json
-python -m exam_parser.cli_extract_solutions extracted_solutions.json --questions questions.json --out solutions.json
+python -m exam_parser.cli.extract_solutions extracted_solutions.json --questions questions.json --out solutions.json
 ```
 
 Build an exam bundle with solutions merged into subquestions:
 
 ```bash
-python -m exam_parser.cli_build_bundle questions.json --solutions solutions.json --out exam_bundle.json
+python -m exam_parser.cli.build_bundle questions.json --solutions solutions.json --out exam_bundle.json
 ```
 
 Process a combined PDF in one command:
@@ -95,7 +95,7 @@ python -m exam_parser.cli_pipeline path/to/exam_with_solutions.pdf --out-dir out
 Optional model settings:
 
 ```bash
-python -m exam_parser.cli_extract_questions extracted.json --out questions.json --model gemini-3.1-flash-lite-preview --temperature 0 --max-output-tokens 8192
+python -m exam_parser.cli.extract_questions extracted.json --out questions.json --model gemini-3.1-flash-lite --temperature 0 --max-output-tokens 8192
 ```
 
 Expected AI extraction output:

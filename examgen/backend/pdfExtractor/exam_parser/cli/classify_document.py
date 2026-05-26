@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any, Sequence
 
-from exam_parser.document_classifier import classify_extracted_document
+from exam_parser.pdf.document_classifier import classify_extracted_document
 
 
 def build_parser() -> argparse.ArgumentParser:

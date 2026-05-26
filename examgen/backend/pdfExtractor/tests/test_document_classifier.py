@@ -1,4 +1,4 @@
-from exam_parser.document_classifier import (
+from exam_parser.pdf.document_classifier import (
     INTERLEAVED_WARNING,
     classify_extracted_document,
     merge_wrapped_headings,

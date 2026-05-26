@@ -8,11 +8,11 @@ import sys
 from pathlib import Path
 from typing import Any, Sequence
 
-from exam_parser.ai_solution_extractor import (
+from exam_parser.ai.solution_extractor import (
     SolutionExtractionError,
     extract_solutions_with_gemini,
 )
-from exam_parser.ai_question_extractor import DEFAULT_MODEL_NAME
+from exam_parser.ai.question_extractor import DEFAULT_MODEL_NAME
 
 
 def build_parser() -> argparse.ArgumentParser:

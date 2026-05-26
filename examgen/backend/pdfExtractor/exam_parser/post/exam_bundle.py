@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from exam_parser.question_items import solution_source_from_type
+from exam_parser.post.question_items import solution_source_from_type
 
 MAX_MULTIPLE_CHOICE_OPTIONS = 6
 

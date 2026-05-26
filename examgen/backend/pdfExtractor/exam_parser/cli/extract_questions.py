@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any, Sequence
 
-from exam_parser.ai_question_extractor import (
+from exam_parser.ai.question_extractor import (
     DEFAULT_MODEL_NAME,
     QuestionExtractionError,
     extract_questions_with_gemini,
