@@ -1,8 +1,10 @@
-export function hasAnswer(value) {
+import type { AnswerItem, ExamQuestion } from '../types';
+
+export function hasAnswer(value: unknown): boolean {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-export function getAnswerItems(question) {
+export function getAnswerItems(question: ExamQuestion): AnswerItem[] {
   const subquestions = Array.isArray(question.subquestions) ? question.subquestions : [];
   if (subquestions.length > 0) {
     return subquestions;
@@ -21,17 +23,17 @@ export function getAnswerItems(question) {
   ];
 }
 
-export function formatLabel(label) {
+export function formatLabel(label?: string | null): string {
   if (label === 'followup') {
     return 'Follow-up';
   }
   if (label === 'answer') {
     return 'Answer';
   }
-  return label;
+  return label || '';
 }
 
-export function formatPages(question) {
+export function formatPages(question: ExamQuestion): string | number {
   if (!question.page_start) {
     return 'unknown';
   }
@@ -41,13 +43,13 @@ export function formatPages(question) {
   return `${question.page_start}-${question.page_end}`;
 }
 
-export function formatInteraction(type) {
+export function formatInteraction(type?: string | null): string {
   return String(type || 'free_text')
     .replaceAll('_', ' ')
     .replace(/^\w/, (letter) => letter.toUpperCase());
 }
 
-export function formatDisplayText(text) {
+export function formatDisplayText(text: unknown): string {
   return String(text || '')
     .replace(/([∀∃][a-z])(?=[A-Z])/g, '$1 ')
     .replace(/(∃![a-z])(?=[A-Z])/g, '$1 ')
@@ -57,7 +59,7 @@ export function formatDisplayText(text) {
     .replace(/([(])\s+/g, '$1');
 }
 
-export function getDisplayChoices(subquestion) {
+export function getDisplayChoices(subquestion: AnswerItem): string[] {
   const choices = sanitizeChoices(Array.isArray(subquestion.choices) ? subquestion.choices : []);
   const answer = subquestion.solution?.answer;
   if (
@@ -71,9 +73,13 @@ export function getDisplayChoices(subquestion) {
   return choices;
 }
 
-function sanitizeChoices(choices, options = {}) {
-  const sanitized = [];
-  const seen = new Set();
+interface SanitizeChoiceOptions {
+  keepFirst?: boolean;
+}
+
+function sanitizeChoices(choices: unknown[], options: SanitizeChoiceOptions = {}): string[] {
+  const sanitized: string[] = [];
+  const seen = new Set<string>();
   for (let index = 0; index < choices.length; index += 1) {
     const choice = String(choices[index] || '').trim();
     const normalized = normalizeChoice(choice);
@@ -92,11 +98,11 @@ function sanitizeChoices(choices, options = {}) {
   return sanitized;
 }
 
-function normalizeChoice(choice) {
+function normalizeChoice(choice: unknown): string {
   return String(choice || '').trim().replace(/^["']|["']$/g, '').toLowerCase();
 }
 
-function looksLikeQuestionPrompt(choice) {
+function looksLikeQuestionPrompt(choice: string): boolean {
   const normalized = choice.trim().toLowerCase();
   return (
     normalized.startsWith('hva er ') ||

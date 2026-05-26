@@ -6,17 +6,27 @@ import {
   getBundleFromProcessResponse,
   isValidExamBundle,
 } from '../lib/examStorage';
+import type { ProcessExamResponse } from '../types';
 
-function LandingPage({ onExamReady }) {
-  const [examFile, setExamFile] = useState(null);
-  const [solutionsFile, setSolutionsFile] = useState(null);
+interface LandingPageProps {
+  onExamReady: (response: ProcessExamResponse) => void;
+}
+
+interface UploadErrors {
+  examFile?: string;
+  solutionsFile?: string;
+}
+
+function LandingPage({ onExamReady }: LandingPageProps) {
+  const [examFile, setExamFile] = useState<File | null>(null);
+  const [solutionsFile, setSolutionsFile] = useState<File | null>(null);
   const [autoGenerateSolutions, setAutoGenerateSolutions] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<UploadErrors>({});
   const [submitError, setSubmitError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  function validate() {
-    const nextErrors = {};
+  function validate(): boolean {
+    const nextErrors: UploadErrors = {};
     if (!examFile) {
       nextErrors.examFile = 'Upload an exam PDF to continue.';
     }
@@ -27,9 +37,13 @@ function LandingPage({ onExamReady }) {
     return Object.keys(nextErrors).length === 0;
   }
 
-  async function handleStart() {
+  async function handleStart(): Promise<void> {
     setSubmitError('');
     if (!validate()) {
+      return;
+    }
+
+    if (!examFile) {
       return;
     }
 

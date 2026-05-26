@@ -3,7 +3,7 @@ import App from './App';
 
 afterEach(() => {
   jest.restoreAllMocks();
-  delete global.fetch;
+  delete (global as Partial<typeof globalThis>).fetch;
   window.localStorage.clear();
   window.history.pushState(null, '', '/');
 });
@@ -153,7 +153,7 @@ test('uploads files and connects to the existing mock exam workspace', async () 
           bundle: uploadedBundle,
         }),
     }),
-  );
+  ) as unknown as jest.MockedFunction<typeof fetch>;
 
   render(<App />);
 
@@ -173,12 +173,13 @@ test('uploads files and connects to the existing mock exam workspace', async () 
   expect(await screen.findByText(/generating your mock exam/i)).toBeInTheDocument();
 
   await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
-  const [url, options] = global.fetch.mock.calls[0];
+  const [url, options] = (global.fetch as jest.MockedFunction<typeof fetch>).mock.calls[0];
   expect(url).toBe('/api/exams/process');
-  expect(options.method).toBe('POST');
-  expect(options.body.get('exam_pdf')).toBe(examFile);
-  expect(options.body.get('solutions_pdf')).toBe(solutionsFile);
-  expect(options.body.get('auto_generate_solutions')).toBe('false');
+  const body = options?.body as FormData;
+  expect(options?.method).toBe('POST');
+  expect(body.get('exam_pdf')).toBe(examFile);
+  expect(body.get('solutions_pdf')).toBe(solutionsFile);
+  expect(body.get('auto_generate_solutions')).toBe('false');
 
   expect(await screen.findByRole('heading', { name: /loaded exam bundle/i })).toBeInTheDocument();
   expect(window.location.hash).toBe('#mock-exam');
@@ -191,7 +192,7 @@ test('uploads files and connects to the existing mock exam workspace', async () 
   expect(screen.getByRole('heading', { name: /setup/i })).toBeInTheDocument();
   expect(screen.getByText((_, element) => (
     element?.tagName.toLowerCase() === 'p' &&
-    element.textContent.includes('Use the provided inference rule setup with Env.')
+    Boolean(element.textContent?.includes('Use the provided inference rule setup with Env.'))
   ))).toBeInTheDocument();
   expect(screen.getByText('provided').tagName.toLowerCase()).toBe('strong');
   expect(screen.getByText('Env')).toHaveClass('inline-code');
@@ -202,9 +203,11 @@ test('uploads files and connects to the existing mock exam workspace', async () 
     if (element?.tagName.toLowerCase() !== 'code') {
       return false;
     }
-    return element.textContent.includes('\n  = Lit Int\n  | Var String')
-      && element.textContent.includes('lookupEnv :: String -> Env -> Maybe Int')
-      && element.textContent.includes('eval env expr = case expr of');
+    return Boolean(
+      element.textContent?.includes('\n  = Lit Int\n  | Var String') &&
+        element.textContent.includes('lookupEnv :: String -> Env -> Maybe Int') &&
+        element.textContent.includes('eval env expr = case expr of'),
+    );
   })).toBeInTheDocument();
   expect(screen.getByText('kotlin')).toBeInTheDocument();
   expect(screen.getByRole('img', { name: /image from page 2/i })).toHaveAttribute(
@@ -221,8 +224,10 @@ test('uploads files and connects to the existing mock exam workspace', async () 
   expect(screen.queryByText('haskell')).not.toBeInTheDocument();
   expect(screen.getByText((_, element) => (
     element?.tagName.toLowerCase() === 'code' &&
-    element.textContent.includes('String::from("inf222")') &&
-    element.textContent.includes('println!("{} {}", r1, r2);')
+    Boolean(
+      element.textContent?.includes('String::from("inf222")') &&
+        element.textContent.includes('println!("{} {}", r1, r2);'),
+    )
   ))).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: /question 4/i }));
@@ -231,10 +236,12 @@ test('uploads files and connects to the existing mock exam workspace', async () 
     if (element?.tagName.toLowerCase() !== 'code') {
       return false;
     }
-    return element.textContent.includes('interface BagIndex {')
-      && element.textContent.includes('\n  // Inserts element e into bag b.')
-      && element.textContent.includes('\n  method insert(_____ Element e, _____ Bag b);')
-      && element.textContent.includes('\n  method clear(_____ Bag b);');
+    return Boolean(
+      element.textContent?.includes('interface BagIndex {') &&
+        element.textContent.includes('\n  // Inserts element e into bag b.') &&
+        element.textContent.includes('\n  method insert(_____ Element e, _____ Bag b);') &&
+        element.textContent.includes('\n  method clear(_____ Bag b);'),
+    );
   })).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: /question 5/i }));
@@ -256,7 +263,7 @@ test('allows upload with only exam pdf when auto-generate solutions is enabled',
           bundle: uploadedBundle,
         }),
     }),
-  );
+  ) as unknown as jest.MockedFunction<typeof fetch>;
 
   render(<App />);
 
@@ -268,8 +275,9 @@ test('allows upload with only exam pdf when auto-generate solutions is enabled',
   fireEvent.click(screen.getByRole('button', { name: /start/i }));
 
   await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
-  const [, options] = global.fetch.mock.calls[0];
-  expect(options.body.get('exam_pdf')).toBe(examFile);
-  expect(options.body.get('solutions_pdf')).toBeNull();
-  expect(options.body.get('auto_generate_solutions')).toBe('true');
+  const [, options] = (global.fetch as jest.MockedFunction<typeof fetch>).mock.calls[0];
+  const body = options?.body as FormData;
+  expect(body.get('exam_pdf')).toBe(examFile);
+  expect(body.get('solutions_pdf')).toBeNull();
+  expect(body.get('auto_generate_solutions')).toBe('true');
 });

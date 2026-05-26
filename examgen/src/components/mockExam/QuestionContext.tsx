@@ -2,7 +2,7 @@ import { parseContextBlocks } from '../../lib/markdown';
 import CodeBlock from './CodeBlock';
 import MarkdownText from './MarkdownText';
 
-function QuestionContext({ context }) {
+function QuestionContext({ context }: { context?: string | null }) {
   if (typeof context !== 'string' || !context.trim()) {
     return null;
   }

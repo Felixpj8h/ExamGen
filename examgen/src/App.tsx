@@ -11,6 +11,7 @@ import {
   storeExamBundle,
   withExamAssetUrls,
 } from './lib/examStorage';
+import type { ExamBundle, ProcessExamResponse } from './types';
 
 function App() {
   const [activeExamBundle, setActiveExamBundle] = useState(() => loadStoredExamBundle());
@@ -37,8 +38,8 @@ function App() {
   }
 
   return (
-    <LandingPage
-      onExamReady={(response) => {
+      <LandingPage
+      onExamReady={(response: ProcessExamResponse) => {
         const examId = response.exam_id || response.examId || null;
         const bundle = withExamAssetUrls(getBundleFromProcessResponse(response), examId);
         setActiveExamId(examId);
@@ -51,7 +52,7 @@ function App() {
   );
 }
 
-function getInitialView(storedBundle) {
+function getInitialView(storedBundle: ExamBundle | null): 'landing' | 'mock-exam' {
   return window.location.hash === '#mock-exam' && isValidExamBundle(storedBundle)
     ? 'mock-exam'
     : 'landing';

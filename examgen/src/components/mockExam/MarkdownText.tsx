@@ -1,8 +1,15 @@
+import React from 'react';
 import { formatDisplayText } from '../../lib/textFormatting';
 import { parseContextBlocks } from '../../lib/markdown';
 import CodeBlock from './CodeBlock';
 
-export function RichTextBlocks({ text, className = '', detectCode = false }) {
+interface RichTextBlocksProps {
+  text?: string | null;
+  className?: string;
+  detectCode?: boolean;
+}
+
+export function RichTextBlocks({ text, className = '', detectCode = false }: RichTextBlocksProps) {
   if (typeof text !== 'string' || !text.trim()) {
     return null;
   }
@@ -20,11 +27,11 @@ export function RichTextBlocks({ text, className = '', detectCode = false }) {
   );
 }
 
-function MarkdownText({ text }) {
+function MarkdownText({ text }: { text: string }) {
   const lines = String(text || '')
     .split('\n')
     .map((line) => line.trimEnd());
-  const elements = [];
+  const elements: React.ReactNode[] = [];
   let index = 0;
 
   while (index < lines.length) {
@@ -39,16 +46,18 @@ function MarkdownText({ text }) {
       const level = Math.min(heading[1].length + 3, 6);
       const HeadingTag = `h${level}`;
       elements.push(
-        <HeadingTag key={`heading-${index}`} className="markdown-heading">
-          {renderInlineMarkdown(heading[2])}
-        </HeadingTag>,
+        React.createElement(
+          HeadingTag,
+          { key: `heading-${index}`, className: 'markdown-heading' },
+          renderInlineMarkdown(heading[2]),
+        ),
       );
       index += 1;
       continue;
     }
 
     if (/^[-*]\s+/.test(line)) {
-      const items = [];
+      const items: string[] = [];
       while (index < lines.length && /^[-*]\s+/.test(lines[index].trim())) {
         items.push(lines[index].trim().replace(/^[-*]\s+/, ''));
         index += 1;
@@ -64,7 +73,7 @@ function MarkdownText({ text }) {
     }
 
     if (/^\d+\.\s+/.test(line)) {
-      const items = [];
+      const items: string[] = [];
       while (index < lines.length && /^\d+\.\s+/.test(lines[index].trim())) {
         items.push(lines[index].trim().replace(/^\d+\.\s+/, ''));
         index += 1;
@@ -80,7 +89,7 @@ function MarkdownText({ text }) {
     }
 
     if (isMarkdownTableStart(lines, index)) {
-      const tableLines = [];
+      const tableLines: string[] = [];
       while (index < lines.length && looksLikeMarkdownTableRow(lines[index])) {
         tableLines.push(lines[index].trim());
         index += 1;
@@ -89,7 +98,7 @@ function MarkdownText({ text }) {
       continue;
     }
 
-    const paragraphLines = [];
+    const paragraphLines: string[] = [];
     while (
       index < lines.length &&
       lines[index].trim() &&
@@ -116,7 +125,7 @@ function MarkdownText({ text }) {
   return <div className="markdown-text">{elements}</div>;
 }
 
-function MarkdownTable({ lines }) {
+function MarkdownTable({ lines }: { lines: string[] }) {
   const rows = lines
     .filter((line, index) => index !== 1 || !looksLikeMarkdownTableDivider(line))
     .map(parseMarkdownTableRow)
@@ -154,24 +163,24 @@ function MarkdownTable({ lines }) {
   );
 }
 
-function isMarkdownTableStart(lines, index) {
+function isMarkdownTableStart(lines: string[], index: number): boolean {
   return (
     looksLikeMarkdownTableRow(lines[index]) &&
     looksLikeMarkdownTableDivider(lines[index + 1])
   );
 }
 
-function looksLikeMarkdownTableRow(line) {
+function looksLikeMarkdownTableRow(line?: string): boolean {
   const trimmed = String(line || '').trim();
   return trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.split('|').length >= 3;
 }
 
-function looksLikeMarkdownTableDivider(line) {
+function looksLikeMarkdownTableDivider(line?: string): boolean {
   const trimmed = String(line || '').trim();
   return looksLikeMarkdownTableRow(trimmed) && /^(\|\s*:?-{3,}:?\s*)+\|$/.test(trimmed);
 }
 
-function parseMarkdownTableRow(line) {
+function parseMarkdownTableRow(line?: string): string[] {
   return String(line || '')
     .trim()
     .replace(/^\|/, '')
@@ -180,10 +189,10 @@ function parseMarkdownTableRow(line) {
     .map((cell) => cell.trim());
 }
 
-function renderInlineMarkdown(text) {
+function renderInlineMarkdown(text: string): React.ReactNode[] {
   const formattedText = formatDisplayText(text);
   const pattern = /(`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|_[^_]+_)/g;
-  const parts = [];
+  const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match;
 

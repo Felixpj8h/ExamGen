@@ -1,6 +1,13 @@
 import { getDisplayChoices } from '../../lib/textFormatting';
+import type { AnswerItem } from '../../types';
 
-function AnswerInput({ subquestion, value, onAnswer }) {
+interface AnswerInputProps {
+  subquestion: AnswerItem;
+  value: string;
+  onAnswer: (value: string) => void;
+}
+
+function AnswerInput({ subquestion, value, onAnswer }: AnswerInputProps) {
   if (subquestion.interaction_type === 'true_false' || subquestion.interaction_type === 'multiple_choice') {
     const choices = getDisplayChoices(subquestion);
     return (

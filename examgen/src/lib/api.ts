@@ -1,10 +1,12 @@
+import type { ProcessExamResponse } from '../types';
+
 const CONFIGURED_API_BASE_URL =
   (typeof process !== 'undefined' &&
     process.env &&
     (process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_BASE_URL)) ||
   '';
 
-function getApiBaseUrl() {
+function getApiBaseUrl(): string {
   if (CONFIGURED_API_BASE_URL) {
     return CONFIGURED_API_BASE_URL;
   }
@@ -19,7 +21,7 @@ function getApiBaseUrl() {
   return '';
 }
 
-export function getApiUrl(path) {
+export function getApiUrl(path: string): string {
   const normalizedPath = String(path || '');
   if (/^https?:\/\//i.test(normalizedPath)) {
     return normalizedPath;
@@ -31,7 +33,11 @@ export async function processExamUpload({
   examFile,
   solutionsFile = null,
   autoGenerateSolutions,
-}) {
+}: {
+  examFile: File;
+  solutionsFile?: File | null;
+  autoGenerateSolutions: boolean;
+}): Promise<ProcessExamResponse> {
   const formData = new FormData();
   formData.append('exam_pdf', examFile);
   if (solutionsFile) {
@@ -51,7 +57,7 @@ export async function processExamUpload({
   return response.json();
 }
 
-async function getErrorMessage(response) {
+async function getErrorMessage(response: Response): Promise<string> {
   try {
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {

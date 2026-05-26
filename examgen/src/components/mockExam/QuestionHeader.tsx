@@ -5,8 +5,9 @@ import {
 } from '../../lib/textFormatting';
 import QuestionContext from './QuestionContext';
 import QuestionImages from './QuestionImages';
+import type { ExamQuestion } from '../../types';
 
-function QuestionHeader({ question }) {
+function QuestionHeader({ question }: { question: ExamQuestion }) {
   return (
     <>
       <div className="meta-row mb-5 flex flex-wrap items-center gap-2 text-sm text-slate-600">

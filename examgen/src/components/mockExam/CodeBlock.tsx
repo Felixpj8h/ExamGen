@@ -4,7 +4,12 @@ import {
   normalizeCodeLanguage,
 } from '../../lib/codeHighlighting';
 
-function CodeBlock({ language, code }) {
+interface CodeBlockProps {
+  language?: string;
+  code: string;
+}
+
+function CodeBlock({ language, code }: CodeBlockProps) {
   const normalizedLanguage = normalizeCodeLanguage(language);
   const displayCode = formatCodeForLanguage(code, normalizedLanguage);
   return (

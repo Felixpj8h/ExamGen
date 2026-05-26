@@ -11,8 +11,9 @@ import {
   hasAnswer,
 } from '../lib/textFormatting';
 import { withExamAssetUrls } from '../lib/examStorage';
+import type { AnswerItem, ExamBundle, SolutionSource } from '../types';
 
-const fallbackExamBundle = {
+const fallbackExamBundle: ExamBundle = {
   exam: {
     title: 'Oppgaver for group sessions uke 6',
     course_code: 'MNF130',
@@ -69,24 +70,29 @@ function MockExamPage({
   initialBundle = null,
   examId = null,
   loadLabel = 'Loaded public/sample-exam-bundle.json',
+}: {
+  initialBundle?: ExamBundle | null;
+  examId?: string | null;
+  loadLabel?: string;
 }) {
   const normalizedInitialBundle = useMemo(
     () => withExamAssetUrls(initialBundle, examId),
     [initialBundle, examId],
   );
-  const initialQuestions = Array.isArray(normalizedInitialBundle?.questions) && normalizedInitialBundle.questions.length > 0
-    ? normalizedInitialBundle.questions
+  const validInitialBundle = normalizedInitialBundle || null;
+  const initialQuestions = validInitialBundle?.questions?.length
+    ? validInitialBundle.questions
     : fallbackExamBundle.questions;
-  const [examBundle, setExamBundle] = useState(normalizedInitialBundle || fallbackExamBundle);
-  const [loadState, setLoadState] = useState(normalizedInitialBundle ? 'uploaded' : 'loading');
+  const [examBundle, setExamBundle] = useState(validInitialBundle || fallbackExamBundle);
+  const [loadState, setLoadState] = useState(validInitialBundle ? 'uploaded' : 'loading');
   const [selectedId, setSelectedId] = useState(initialQuestions[0].id);
-  const [answers, setAnswers] = useState({});
-  const [revealed, setRevealed] = useState({});
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (normalizedInitialBundle) {
-      const questions = Array.isArray(normalizedInitialBundle.questions) ? normalizedInitialBundle.questions : [];
-      setExamBundle(normalizedInitialBundle);
+    if (validInitialBundle) {
+      const questions = Array.isArray(validInitialBundle.questions) ? validInitialBundle.questions : [];
+      setExamBundle(validInitialBundle);
       setSelectedId(questions[0]?.id || fallbackExamBundle.questions[0].id);
       setAnswers({});
       setRevealed({});
@@ -126,7 +132,7 @@ function MockExamPage({
     return () => {
       isMounted = false;
     };
-  }, [normalizedInitialBundle]);
+  }, [validInitialBundle]);
 
   const questions = useMemo(
     () => (Array.isArray(examBundle.questions) ? examBundle.questions : []),
@@ -198,7 +204,21 @@ function MockExamPage({
   );
 }
 
-function SubquestionPanel({ subquestion, value, revealed, onAnswer, onReveal, fallbackSolutionSource }) {
+function SubquestionPanel({
+  subquestion,
+  value,
+  revealed,
+  onAnswer,
+  onReveal,
+  fallbackSolutionSource,
+}: {
+  subquestion: AnswerItem;
+  value: string;
+  revealed: boolean;
+  onAnswer: (value: string) => void;
+  onReveal: () => void;
+  fallbackSolutionSource: SolutionSource | null;
+}) {
   return (
     <section className="rounded-lg border border-slate-300 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">

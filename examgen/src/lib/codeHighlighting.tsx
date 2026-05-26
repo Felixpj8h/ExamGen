@@ -1,10 +1,17 @@
-export function normalizeCodeWhitespace(code) {
+import type { ReactNode } from 'react';
+
+interface SyntaxConfig {
+  pattern: RegExp;
+  types: RegExp;
+}
+
+export function normalizeCodeWhitespace(code: unknown): string {
   return String(code || '')
     .replace(/^\s*\n/, '')
     .replace(/\n\s*$/, '');
 }
 
-export function formatCodeForLanguage(code, language) {
+export function formatCodeForLanguage(code: unknown, language: string): string {
   const normalizedCode = normalizeCodeWhitespace(code);
   if (language === 'haskell') {
     return repairFlattenedHaskellIndentation(normalizedCode);
@@ -12,7 +19,7 @@ export function formatCodeForLanguage(code, language) {
   return normalizedCode;
 }
 
-export function normalizeCodeLanguage(language) {
+export function normalizeCodeLanguage(language?: string | null): string {
   const normalized = String(language || 'text').trim().toLowerCase();
   if (['hs', 'haskell'].includes(normalized)) {
     return 'haskell';
@@ -38,16 +45,16 @@ export function normalizeCodeLanguage(language) {
   return normalized || 'text';
 }
 
-export function highlightCode(code, language) {
+export function highlightCode(code: string, language: string): string | ReactNode[] {
   const syntax = getSyntaxConfig(language);
   if (!syntax) {
     return code;
   }
 
   const tokenPattern = syntax.pattern;
-  const parts = [];
+  const parts: ReactNode[] = [];
   let lastIndex = 0;
-  let match;
+  let match: RegExpExecArray | null;
 
   while ((match = tokenPattern.exec(code)) !== null) {
     if (match.index > lastIndex) {
@@ -68,7 +75,7 @@ export function highlightCode(code, language) {
   return parts;
 }
 
-export function looksLikeCode(text) {
+export function looksLikeCode(text: unknown): boolean {
   const trimmed = String(text || '').trim();
   if (!trimmed || trimmed.length < 12) {
     return false;
@@ -91,7 +98,7 @@ export function looksLikeCode(text) {
   return signalCount >= 2 && proseWords < 18;
 }
 
-export function inferCodeLanguage(text) {
+export function inferCodeLanguage(text: unknown): string {
   const trimmed = String(text || '');
   if (looksLikePseudoInterfaceCode(trimmed)) {
     return 'pseudocode';
@@ -114,7 +121,7 @@ export function inferCodeLanguage(text) {
   return 'text';
 }
 
-export function formatDetectedCode(text, language = inferCodeLanguage(text)) {
+export function formatDetectedCode(text: unknown, language = inferCodeLanguage(text)): string {
   const trimmed = String(text || '').trim();
   if (language === 'pseudocode') {
     return formatPseudoInterfaceCode(trimmed);
@@ -139,7 +146,7 @@ export function formatDetectedCode(text, language = inferCodeLanguage(text)) {
     .trim();
 }
 
-function repairFlattenedHaskellIndentation(code) {
+function repairFlattenedHaskellIndentation(code: string): string {
   const lines = String(code || '').split('\n');
   if (lines.some((line) => /^ {2,}\S/.test(line))) {
     return code;
@@ -159,12 +166,12 @@ function repairFlattenedHaskellIndentation(code) {
     .join('\n');
 }
 
-function looksLikePseudoInterfaceCode(text) {
+function looksLikePseudoInterfaceCode(text: unknown): boolean {
   const trimmed = String(text || '').trim();
   return /\binterface\s+\w+\s*\{/.test(trimmed) && /\bmethod\s+\w+\s*\(/.test(trimmed);
 }
 
-function formatPseudoInterfaceCode(code) {
+function formatPseudoInterfaceCode(code: unknown): string {
   return String(code || '')
     .replace(/\s*\{\s*/g, ' {\n')
     .replace(/\s*}\s*/g, '\n}')
@@ -178,7 +185,7 @@ function formatPseudoInterfaceCode(code) {
     .trim();
 }
 
-function formatFlattenedHaskellCode(code) {
+function formatFlattenedHaskellCode(code: unknown): string {
   return String(code || '')
     .replace(/\s+data\s+/g, '\ndata ')
     .replace(/data ([^=\n]+)\s+=\s+/g, 'data $1\n  = ')
@@ -199,7 +206,7 @@ function formatFlattenedHaskellCode(code) {
     .trim();
 }
 
-function getSyntaxConfig(language) {
+function getSyntaxConfig(language: string): SyntaxConfig | null {
   const commonOperatorPattern = String.raw`==|!=|<=|>=|&&|\|\||::|->|=>|[=+\-*/%<>!|&{}[\]().,;:]`;
   const configs = {
     haskell: {
@@ -245,10 +252,10 @@ function getSyntaxConfig(language) {
       types: /^(Array|Boolean|Date|Map|Number|Object|Promise|Set|String)$/,
     },
   };
-  return configs[language] || null;
+  return configs[language as keyof typeof configs] || null;
 }
 
-function classifyToken(token, syntax) {
+function classifyToken(token: string, syntax: SyntaxConfig): string {
   if (token.startsWith('--') || token.startsWith('//') || token.startsWith('/*')) {
     return 'comment';
   }

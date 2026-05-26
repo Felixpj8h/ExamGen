@@ -1,5 +1,15 @@
 import { useId, useRef, useState } from 'react';
 
+interface FileDropzoneProps {
+  label: string;
+  helperText: string;
+  file: File | null;
+  onFileChange: (file: File | null) => void;
+  required: boolean;
+  optionalTone?: boolean;
+  error?: string;
+}
+
 function FileDropzone({
   label,
   helperText,
@@ -8,14 +18,14 @@ function FileDropzone({
   required,
   optionalTone = false,
   error,
-}) {
+}: FileDropzoneProps) {
   const inputId = useId();
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [localError, setLocalError] = useState('');
   const visibleError = error || localError;
 
-  function selectFile(nextFile) {
+  function selectFile(nextFile?: File | null) {
     setLocalError('');
     if (!nextFile) {
       onFileChange(null);
@@ -132,7 +142,7 @@ function FileDropzone({
   );
 }
 
-function formatFileSize(bytes) {
+function formatFileSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) {
     return '';
   }

@@ -1,4 +1,6 @@
-function QuestionImages({ images }) {
+import type { ExamImage } from '../../types';
+
+function QuestionImages({ images }: { images?: ExamImage[] }) {
   const visibleImages = Array.isArray(images) ? images.filter(isVisibleQuestionImage) : [];
   if (visibleImages.length === 0) {
     return null;
@@ -16,7 +18,7 @@ function QuestionImages({ images }) {
   );
 }
 
-function isVisibleQuestionImage(image) {
+function isVisibleQuestionImage(image: ExamImage): boolean {
   if (!image?.src) {
     return false;
   }

@@ -1,3 +1,16 @@
+import type { ExamBundle, ExamQuestion } from '../../types';
+
+interface QuestionSidebarProps {
+  examBundle: ExamBundle;
+  questions: ExamQuestion[];
+  selectedId: string;
+  onSelectQuestion: (id: string) => void;
+  answeredCount: number;
+  totalAnswerCount: number;
+  loadState: string;
+  loadLabel: string;
+}
+
 function QuestionSidebar({
   examBundle,
   questions,
@@ -7,7 +20,7 @@ function QuestionSidebar({
   totalAnswerCount,
   loadState,
   loadLabel,
-}) {
+}: QuestionSidebarProps) {
   return (
     <aside className="border-b border-slate-300 bg-white lg:w-80 lg:border-b-0 lg:border-r">
       <div className="border-b border-slate-200 p-5">
