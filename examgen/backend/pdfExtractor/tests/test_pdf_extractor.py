@@ -3,7 +3,7 @@ from pathlib import Path
 
 import fitz
 
-from exam_parser.pdf_extractor import extract_pdf
+from exam_parser.pdf.extractor import extract_pdf
 
 
 ONE_PIXEL_PNG = base64.b64decode(

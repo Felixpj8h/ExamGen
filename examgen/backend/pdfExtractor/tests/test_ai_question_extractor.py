@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from exam_parser.ai_question_extractor import (
+from exam_parser.ai.question_extractor import (
     QuestionExtractionError,
     build_question_extraction_prompt,
     extract_questions_with_gemini,
@@ -12,7 +12,7 @@ from exam_parser.ai_question_extractor import (
     post_process_questions,
     validate_question_extraction_result,
 )
-from exam_parser.cli_extract_questions import main as cli_main
+from exam_parser.cli.extract_questions import main as cli_main
 
 
 def sample_extraction() -> dict:
@@ -556,11 +556,11 @@ def test_extract_questions_with_gemini_uses_mocked_client(monkeypatch: pytest.Mo
     monkeypatch.setenv("GEMINI_API_KEY", "test-key")
     monkeypatch.delenv("GEMINI_MODEL", raising=False)
     monkeypatch.setattr(
-        "exam_parser.ai_question_extractor._create_gemini_client",
+        "exam_parser.ai.question_extractor._create_gemini_client",
         lambda api_key: _FakeClient(),
     )
     monkeypatch.setattr(
-        "exam_parser.ai_question_extractor._generate_content_config",
+        "exam_parser.ai.question_extractor._generate_content_config",
         lambda temperature, max_output_tokens: "fake-config",
     )
 
@@ -577,7 +577,7 @@ def test_cli_loads_extraction_json_and_writes_mocked_output(
     input_path.write_text(json.dumps(sample_extraction()), encoding="utf-8")
 
     monkeypatch.setattr(
-        "exam_parser.cli_extract_questions.extract_questions_with_gemini",
+        "exam_parser.cli.extract_questions.extract_questions_with_gemini",
         lambda extraction_result, **kwargs: sample_questions(),
     )
 

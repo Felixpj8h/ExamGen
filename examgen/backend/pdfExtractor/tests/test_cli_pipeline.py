@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from exam_parser.ai_solution_extractor import SolutionExtractionError
+from exam_parser.ai.solution_extractor import SolutionExtractionError
 from exam_parser.cli_pipeline import main as pipeline_main
 from exam_parser.pipeline import PipelineOptions, run_exam_pipeline
 
@@ -192,7 +192,6 @@ def test_pipeline_exam_only_can_generate_ai_marked_solutions(
     )
 
     def fake_extract_solutions(extraction_result, **kwargs):
-        assert kwargs["source_type"] == "ai_generated"
         generated = sample_solutions()
         generated["source_type"] = "ai_generated"
         generated["warnings"] = ["AI-generated solutions; not official answer key."]
@@ -200,7 +199,7 @@ def test_pipeline_exam_only_can_generate_ai_marked_solutions(
         return generated
 
     monkeypatch.setattr(
-        "exam_parser.pipeline.extract_solutions_with_gemini",
+        "exam_parser.pipeline.extract_ai_solutions_per_question_with_gemini",
         fake_extract_solutions,
     )
 
@@ -213,6 +212,69 @@ def test_pipeline_exam_only_can_generate_ai_marked_solutions(
     assert solutions["source_type"] == "ai_generated"
     assert solutions["solutions"][0]["subsolutions"][0]["source"] == "ai_generated"
     assert "AI-generated solutions; not official answer key." in solutions["warnings"]
+
+
+def test_pipeline_uses_separate_question_and_solution_models(
+    tmp_path: Path, monkeypatch
+) -> None:
+    out_dir = tmp_path / "out"
+    seen: dict[str, str] = {}
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path, **kwargs: sample_extraction())
+
+    def fake_extract_questions(extraction_result, **kwargs):
+        seen["question_model"] = kwargs["model_name"]
+        return sample_questions()
+
+    def fake_generate_solutions(extraction_result, **kwargs):
+        seen["solution_model"] = kwargs["model_name"]
+        generated = sample_solutions()
+        generated["source_type"] = "ai_generated"
+        generated["warnings"] = ["AI-generated solutions; not official answer key."]
+        generated["solutions"][0]["subsolutions"][0]["source"] = "ai_generated"
+        return generated
+
+    monkeypatch.setattr("exam_parser.pipeline.extract_questions_with_gemini", fake_extract_questions)
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_ai_solutions_per_question_with_gemini",
+        fake_generate_solutions,
+    )
+
+    run_exam_pipeline(
+        "exam.pdf",
+        out_dir=out_dir,
+        options=PipelineOptions(
+            question_model="cheap-question-model",
+            solution_model="strong-solution-model",
+            generate_missing_solutions=True,
+            mirror_bundle_to_public=False,
+        ),
+    )
+
+    assert seen == {
+        "question_model": "cheap-question-model",
+        "solution_model": "strong-solution-model",
+    }
+
+
+def test_pipeline_model_options_use_env_specific_fallbacks(monkeypatch) -> None:
+    monkeypatch.setenv("GEMINI_MODEL", "legacy-model")
+    monkeypatch.setenv("GEMINI_QUESTION_MODEL", "question-env-model")
+    monkeypatch.setenv("GEMINI_SOLUTION_MODEL", "solution-env-model")
+
+    options = PipelineOptions()
+
+    assert options.resolved_question_model() == "question-env-model"
+    assert options.resolved_solution_model() == "solution-env-model"
+
+
+def test_pipeline_legacy_model_overrides_env_specific_models(monkeypatch) -> None:
+    monkeypatch.setenv("GEMINI_QUESTION_MODEL", "question-env-model")
+    monkeypatch.setenv("GEMINI_SOLUTION_MODEL", "solution-env-model")
+
+    options = PipelineOptions(model_name="cli-legacy-model")
+
+    assert options.resolved_question_model() == "cli-legacy-model"
+    assert options.resolved_solution_model() == "cli-legacy-model"
 
 
 def test_pipeline_with_separate_solution_pdf_writes_solutions_and_bundle(
@@ -317,8 +379,10 @@ def test_pipeline_combined_falls_back_to_ai_generated_when_requested(
 
     def fake_extract_solutions(extraction_result, **kwargs):
         calls.append(kwargs["source_type"])
-        if kwargs["source_type"] == "same_pdf":
-            raise SolutionExtractionError("No solutions were extracted.")
+        raise SolutionExtractionError("No solutions were extracted.")
+
+    def fake_generate_solutions(extraction_result, **kwargs):
+        calls.append("ai_generated")
         generated = sample_solutions()
         generated["source_type"] = "ai_generated"
         generated["warnings"] = ["AI-generated solutions; not official answer key."]
@@ -328,6 +392,10 @@ def test_pipeline_combined_falls_back_to_ai_generated_when_requested(
     monkeypatch.setattr(
         "exam_parser.pipeline.extract_solutions_with_gemini",
         fake_extract_solutions,
+    )
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_ai_solutions_per_question_with_gemini",
+        fake_generate_solutions,
     )
 
     exit_code = pipeline_main(

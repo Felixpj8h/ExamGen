@@ -1,8 +1,9 @@
 import pytest
 
-from exam_parser.ai_solution_extractor import (
+from exam_parser.ai.solution_extractor import (
     SolutionExtractionError,
     build_solution_extraction_prompt,
+    extract_ai_solutions_per_question_with_gemini,
     post_process_solutions,
     validate_solution_alignment,
     validate_solution_extraction_result,
@@ -215,3 +216,88 @@ def test_ai_generated_alignment_rejects_missing_question_solutions() -> None:
 
     with pytest.raises(SolutionExtractionError, match="Missing: q1_5A"):
         validate_solution_alignment(result, questions, source_type="ai_generated")
+
+
+def test_ai_generated_solutions_are_requested_per_main_question(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[list[str]] = []
+
+    questions = {
+        "source_file": "exam.pdf",
+        "exam_title": "Sample",
+        "course_code": "INF",
+        "questions": [
+            {"id": "q1", "question_number": "1", "question_text": "Explain.", "subquestions": []},
+            {
+                "id": "q2",
+                "question_number": "2",
+                "question_text": "Parts.",
+                "subquestions": [{"id": "q2a", "label": "a", "text": "Part a."}],
+            },
+        ],
+    }
+
+    def fake_extract(extraction_result, questions_result, **kwargs):
+        ids = [question["id"] for question in questions_result["questions"]]
+        calls.append(ids)
+        question = questions_result["questions"][0]
+        if question["id"] == "q1":
+            return {
+                "source_file": "exam.pdf",
+                "source_type": "ai_generated",
+                "exam_title": "Sample",
+                "course_code": "INF",
+                "solutions": [
+                    {
+                        "question_id": "q1",
+                        "question_number": "1",
+                        "solution_text": "Answer q1.",
+                        "page_start": None,
+                        "page_end": None,
+                        "subsolutions": [],
+                        "warnings": [],
+                    }
+                ],
+                "warnings": ["AI-generated solutions; not official answer key."],
+            }
+        return {
+            "source_file": "exam.pdf",
+            "source_type": "ai_generated",
+            "exam_title": "Sample",
+            "course_code": "INF",
+            "solutions": [
+                {
+                    "question_id": "q2",
+                    "question_number": "2",
+                    "solution_text": None,
+                    "page_start": None,
+                    "page_end": None,
+                    "subsolutions": [
+                        {
+                            "question_id": "q2a",
+                            "label": "a",
+                            "answer": "Answer q2a.",
+                            "explanation": None,
+                            "grading_points": [],
+                            "points": None,
+                            "page_start": None,
+                            "page_end": None,
+                            "source": "ai_generated",
+                        }
+                    ],
+                    "warnings": [],
+                }
+            ],
+            "warnings": ["AI-generated solutions; not official answer key."],
+        }
+
+    monkeypatch.setattr("exam_parser.ai.solution_extractor.extract_solutions_with_gemini", fake_extract)
+
+    result = extract_ai_solutions_per_question_with_gemini(
+        {"file_name": "exam.pdf", "pages": []},
+        questions,
+        model_name="solution-model",
+    )
+
+    assert calls == [["q1"], ["q2"]]
+    assert [solution["question_id"] for solution in result["solutions"]] == ["q1", "q2"]
+    assert result["warnings"] == ["AI-generated solutions; not official answer key."]

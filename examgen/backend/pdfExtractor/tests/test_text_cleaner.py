@@ -1,4 +1,4 @@
-from exam_parser.text_cleaner import (
+from exam_parser.pdf.text_cleaner import (
     clean_pages,
     normalize_whitespace,
     remove_page_number_lines,
