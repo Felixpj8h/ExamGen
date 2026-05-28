@@ -266,6 +266,20 @@ main > div {
   cursor: not-allowed;
 }
 
+.question-sidebar {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .question-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
+  }
+}
+
 .file-zone {
   display: grid;
   gap: 8px;
