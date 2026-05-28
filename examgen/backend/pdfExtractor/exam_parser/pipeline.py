@@ -9,6 +9,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from exam_parser.ai.generated_exam_extractor import (
+    GENERATED_EXAM_WARNING,
+    extract_generated_exam_questions_with_gemini,
+)
 from exam_parser.ai.question_extractor import DEFAULT_MODEL_NAME, extract_questions_with_gemini
 from exam_parser.ai.solution_extractor import (
     SolutionExtractionError,
@@ -36,6 +40,7 @@ class PipelineOptions:
     temperature: float = 0.0
     max_output_tokens: int = 8192
     generate_missing_solutions: bool = False
+    generate_new_exam: bool = False
     mirror_bundle_to_public: bool = True
     public_bundle_path: str | Path | None = None
     asset_url_prefix: str | None = None
@@ -85,7 +90,17 @@ def run_exam_pipeline(
     )
     _write_artifact(output_dir, "extracted_exam.json", exam_extraction, resolved_options, artifacts)
 
-    if solutions_pdf:
+    if resolved_options.generate_new_exam:
+        if not solutions_pdf:
+            raise PipelineError("Generating a new exam requires a solutions or syllabus PDF.", exit_code=2)
+        _run_generated_exam_pipeline(
+            reference_pdf=solutions_pdf,
+            out_dir=output_dir,
+            exam_extraction=exam_extraction,
+            options=resolved_options,
+            artifacts=artifacts,
+        )
+    elif solutions_pdf:
         _run_separate_solution_pipeline(
             solutions_pdf=solutions_pdf,
             out_dir=output_dir,
@@ -102,6 +117,58 @@ def run_exam_pipeline(
         )
 
     return {"out_dir": str(output_dir), "artifacts": artifacts}
+
+
+def _run_generated_exam_pipeline(
+    *,
+    reference_pdf: str | Path,
+    out_dir: Path,
+    exam_extraction: dict[str, Any],
+    options: PipelineOptions,
+    artifacts: dict[str, str],
+) -> None:
+    classification = classify_extracted_document(exam_extraction)
+    _write_artifact(out_dir, "classification.json", classification, options, artifacts)
+
+    original_questions = extract_questions_with_gemini(
+        exam_extraction,
+        model_name=options.resolved_question_model(),
+        temperature=options.temperature,
+        max_output_tokens=options.max_output_tokens,
+    )
+    _write_artifact(out_dir, "original_questions.json", original_questions, options, artifacts)
+
+    reference_extraction = extract_pdf(
+        reference_pdf,
+        image_output_dir=out_dir / "assets" / "reference",
+        image_path_prefix="assets/reference",
+        image_url_prefix=_asset_url_prefix(options, "reference"),
+    )
+    _write_artifact(out_dir, "extracted_reference.json", reference_extraction, options, artifacts)
+
+    generated_questions = extract_generated_exam_questions_with_gemini(
+        exam_extraction,
+        reference_extraction,
+        original_questions,
+        model_name=options.resolved_question_model(),
+        temperature=max(options.temperature, 0.2),
+        max_output_tokens=max(options.max_output_tokens, 16384),
+    )
+    _write_artifact(out_dir, "questions.json", generated_questions, options, artifacts)
+
+    solutions = extract_ai_solutions_per_question_with_gemini(
+        reference_extraction,
+        questions_result=generated_questions,
+        model_name=options.resolved_solution_model(),
+        temperature=options.temperature,
+        max_output_tokens=max(options.max_output_tokens, 16384),
+    )
+    _write_artifact(out_dir, "solutions.json", solutions, options, artifacts)
+
+    bundle = build_exam_bundle(generated_questions, solutions)
+    if GENERATED_EXAM_WARNING not in bundle["warnings"]:
+        bundle["warnings"].append(GENERATED_EXAM_WARNING)
+    _write_artifact(out_dir, "exam_bundle.json", bundle, options, artifacts)
 
 
 def _run_separate_solution_pipeline(

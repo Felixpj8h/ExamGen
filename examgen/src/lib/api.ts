@@ -33,10 +33,12 @@ export async function processExamUpload({
   examFile,
   solutionsFile = null,
   autoGenerateSolutions,
+  generateNewExam = false,
 }: {
   examFile: File;
   solutionsFile?: File | null;
   autoGenerateSolutions: boolean;
+  generateNewExam?: boolean;
 }): Promise<ProcessExamResponse> {
   const formData = new FormData();
   formData.append('exam_pdf', examFile);
@@ -44,6 +46,7 @@ export async function processExamUpload({
     formData.append('solutions_pdf', solutionsFile);
   }
   formData.append('auto_generate_solutions', String(autoGenerateSolutions));
+  formData.append('generate_new_exam', String(generateNewExam));
 
   const response = await fetch(getApiUrl('/api/exams/process'), {
     method: 'POST',

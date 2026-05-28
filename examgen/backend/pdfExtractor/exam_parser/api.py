@@ -30,6 +30,7 @@ app.add_middleware(
 async def process_exam_upload(
     exam_pdf: Annotated[UploadFile, File()],
     auto_generate_solutions: Annotated[str, Form()] = "false",
+    generate_new_exam: Annotated[str, Form()] = "false",
     solutions_pdf: Annotated[UploadFile | None, File()] = None,
 ) -> dict:
     """Process uploaded PDFs and return an exam bundle for the frontend."""
@@ -39,6 +40,12 @@ async def process_exam_upload(
 
     exam_id = f"exam_{uuid4().hex[:12]}"
     auto_generate = auto_generate_solutions.lower() == "true"
+    should_generate_new_exam = generate_new_exam.lower() == "true"
+    if should_generate_new_exam and solutions_pdf is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Generating a new exam requires a solutions or syllabus PDF.",
+        )
 
     try:
         with tempfile.TemporaryDirectory(prefix=f"{exam_id}_") as tmp_dir:
@@ -58,6 +65,7 @@ async def process_exam_upload(
                 out_dir=out_dir,
                 options=PipelineOptions(
                     generate_missing_solutions=auto_generate,
+                    generate_new_exam=should_generate_new_exam,
                     asset_url_prefix=f"/api/exams/{exam_id}/assets",
                     # The frontend receives the bundle directly in this response.
                     # Mirroring into public/ during dev makes CRA reload and drops the UI flow.
