@@ -620,16 +620,33 @@ def _normalize_choice_text(text: str) -> str:
 def _sanitize_choice_list(choices: list[str]) -> list[str]:
     sanitized: list[str] = []
     seen: set[str] = set()
+    labelled_options = {
+        label
+        for choice in choices
+        if (label := _choice_label(choice)) is not None
+    }
     for choice in choices:
         stripped = choice.strip()
         normalized = _normalize_choice_text(stripped)
         if not stripped or normalized in seen or _looks_like_question_prompt(stripped):
+            continue
+        if _is_standalone_choice_label(stripped, labelled_options):
             continue
         sanitized.append(stripped)
         seen.add(normalized)
         if len(sanitized) >= MAX_MULTIPLE_CHOICE_OPTIONS:
             break
     return sanitized
+
+
+def _choice_label(choice: str) -> str | None:
+    match = re.match(r"^\s*([A-Z])[\).:]\s+\S", str(choice or ""), re.IGNORECASE)
+    return match.group(1).upper() if match else None
+
+
+def _is_standalone_choice_label(choice: str, labelled_options: set[str]) -> bool:
+    stripped = str(choice or "").strip()
+    return bool(re.fullmatch(r"[A-Z]", stripped, re.IGNORECASE) and stripped.upper() in labelled_options)
 
 
 def _looks_like_question_prompt(text: str) -> bool:

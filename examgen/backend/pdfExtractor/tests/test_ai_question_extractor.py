@@ -355,6 +355,28 @@ def test_post_process_preserves_explicit_multiple_choice_metadata() -> None:
     assert processed["questions"][0]["subquestions"][0]["choices"] == ["A", "B", "C", "D"]
 
 
+def test_post_process_removes_standalone_label_when_labelled_choice_exists() -> None:
+    result = sample_questions()
+    subquestion = result["questions"][0]["subquestions"][0]
+    subquestion["interaction_type"] = "multiple_choice"
+    subquestion["choices"] = [
+        "A",
+        "A. To allow objects to be treated as instances of their parent class",
+        "B. To restrict access to private class members",
+        "C. To force all classes to have the same name",
+        "D. To eliminate the need for constructors",
+    ]
+
+    processed = post_process_questions(result)
+
+    assert processed["questions"][0]["subquestions"][0]["choices"] == [
+        "A. To allow objects to be treated as instances of their parent class",
+        "B. To restrict access to private class members",
+        "C. To force all classes to have the same name",
+        "D. To eliminate the need for constructors",
+    ]
+
+
 def test_post_process_recovers_missing_raw_multiple_choice_options() -> None:
     extraction = sample_extraction()
     extraction["pages"][0]["raw_text"] = (

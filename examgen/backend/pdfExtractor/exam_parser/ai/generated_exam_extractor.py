@@ -104,9 +104,46 @@ def extract_generated_exam_questions_with_gemini(
         raise GeneratedExamExtractionError(f"Gemini API request failed: {exc}") from exc
 
     result = post_process_questions(result)
+    normalize_generated_question_ids(result)
     _ensure_generated_warning(result)
     validate_question_extraction_result(result)
     return result
+
+
+def normalize_generated_question_ids(result: dict[str, Any]) -> None:
+    """Make generated question IDs deterministic before solution generation."""
+    for question_index, question in enumerate(result.get("questions", []), start=1):
+        if not isinstance(question, dict):
+            continue
+        question_number = str(question.get("question_number") or question_index).strip()
+        question["id"] = _canonical_answer_id(question_number)
+        for sub_index, subquestion in enumerate(question.get("subquestions", []), start=1):
+            if not isinstance(subquestion, dict):
+                continue
+            label = str(subquestion.get("label") or sub_index).strip()
+            subquestion["id"] = _canonical_answer_id(question_number, label)
+
+
+def _canonical_answer_id(question_number: str, label: str = "") -> str:
+    parts = [_id_part(question_number)]
+    label_part = _id_part(_normalize_subquestion_label(label, question_number))
+    if label_part:
+        parts.append(label_part)
+    return "q" + "_".join(part for part in parts if part)
+
+
+def _normalize_subquestion_label(label: str, question_number: str) -> str:
+    normalized = str(label or "").strip()
+    if question_number and normalized != question_number and normalized.startswith(question_number):
+        normalized = normalized[len(question_number) :]
+    return normalized.strip(" .):-")
+
+
+def _id_part(value: str) -> str:
+    import re
+
+    normalized = re.sub(r"[^0-9A-Za-z]+", "_", str(value or "").strip()).strip("_")
+    return normalized.lower()
 
 
 def _ensure_generated_warning(result: dict[str, Any]) -> None:

@@ -186,6 +186,54 @@ def test_post_process_aligns_generated_ids_to_exact_question_ids() -> None:
     assert processed["warnings"] == ["AI-generated solutions; not official answer key."]
 
 
+def test_post_process_corrects_label_when_generated_solution_id_already_matches() -> None:
+    result = {
+        "source_file": "exam.pdf",
+        "source_type": "ai_generated",
+        "exam_title": None,
+        "course_code": None,
+        "solutions": [
+            {
+                "question_id": "q1",
+                "question_number": "1",
+                "solution_text": None,
+                "page_start": None,
+                "page_end": None,
+                "subsolutions": [
+                    {
+                        "question_id": "q1_3",
+                        "label": "1.3",
+                        "answer": "A",
+                        "explanation": "Generated explanation.",
+                        "grading_points": [],
+                        "points": None,
+                        "page_start": None,
+                        "page_end": None,
+                        "source": "same_pdf",
+                    }
+                ],
+                "warnings": [],
+            }
+        ],
+        "warnings": [],
+    }
+    questions = {
+        "questions": [
+            {
+                "id": "q1",
+                "question_number": "1",
+                "subquestions": [{"id": "q1_3", "label": ".3"}],
+            }
+        ]
+    }
+
+    processed = post_process_solutions(result, source_type="ai_generated", questions_result=questions)
+
+    subsolution = processed["solutions"][0]["subsolutions"][0]
+    assert subsolution["question_id"] == "q1_3"
+    assert subsolution["label"] == ".3"
+
+
 def test_ai_generated_alignment_rejects_missing_question_solutions() -> None:
     result = {
         "source_file": "exam.pdf",
