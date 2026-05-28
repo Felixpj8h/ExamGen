@@ -214,6 +214,70 @@ def test_pipeline_exam_only_can_generate_ai_marked_solutions(
     assert "AI-generated solutions; not official answer key." in solutions["warnings"]
 
 
+def test_pipeline_can_generate_new_exam_from_reference_pdf(
+    tmp_path: Path, monkeypatch
+) -> None:
+    out_dir = tmp_path / "out"
+    calls: list[str] = []
+    generated_warning = "AI-generated exam and solutions; not official exam material."
+
+    def fake_extract_pdf(path, **kwargs):
+        if str(path).endswith("syllabus.pdf"):
+            return sample_extraction_with_text("Syllabus\nPredicates and inference rules.", "syllabus.pdf")
+        return sample_extraction("exam.pdf")
+
+    def fake_generate_questions(exam_extraction, reference_extraction, original_questions, **kwargs):
+        calls.append("generate_questions")
+        assert exam_extraction["file_name"] == "exam.pdf"
+        assert reference_extraction["file_name"] == "syllabus.pdf"
+        assert original_questions["exam_title"] == "Sample"
+        generated = sample_questions()
+        generated["source_file"] = "generated_exam"
+        generated["warnings"] = [generated_warning]
+        return generated
+
+    def fake_generate_solutions(reference_extraction, **kwargs):
+        calls.append("generate_solutions")
+        assert reference_extraction["file_name"] == "syllabus.pdf"
+        assert kwargs["questions_result"]["source_file"] == "generated_exam"
+        generated = sample_solutions()
+        generated["source_type"] = "ai_generated"
+        generated["warnings"] = ["AI-generated solutions; not official answer key."]
+        generated["solutions"][0]["subsolutions"][0]["source"] = "ai_generated"
+        return generated
+
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", fake_extract_pdf)
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_questions_with_gemini",
+        lambda extraction_result, **kwargs: sample_questions(),
+    )
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_generated_exam_questions_with_gemini",
+        fake_generate_questions,
+    )
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_ai_solutions_per_question_with_gemini",
+        fake_generate_solutions,
+    )
+
+    run_exam_pipeline(
+        "exam.pdf",
+        solutions_pdf="syllabus.pdf",
+        out_dir=out_dir,
+        options=PipelineOptions(generate_new_exam=True, mirror_bundle_to_public=False),
+    )
+
+    assert calls == ["generate_questions", "generate_solutions"]
+    assert (out_dir / "original_questions.json").exists()
+    assert (out_dir / "extracted_reference.json").exists()
+    assert (out_dir / "questions.json").exists()
+    assert (out_dir / "solutions.json").exists()
+    bundle = json.loads((out_dir / "exam_bundle.json").read_text(encoding="utf-8"))
+    assert bundle["exam"]["source_file"] == "generated_exam"
+    assert bundle["questions"][0]["subquestions"][0]["solution"]["source"] == "ai_generated"
+    assert generated_warning in bundle["warnings"]
+
+
 def test_pipeline_uses_separate_question_and_solution_models(
     tmp_path: Path, monkeypatch
 ) -> None:

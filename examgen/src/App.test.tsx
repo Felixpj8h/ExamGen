@@ -180,6 +180,7 @@ test('uploads files and connects to the existing mock exam workspace', async () 
   expect(body.get('exam_pdf')).toBe(examFile);
   expect(body.get('solutions_pdf')).toBe(solutionsFile);
   expect(body.get('auto_generate_solutions')).toBe('false');
+  expect(body.get('generate_new_exam')).toBe('false');
 
   expect(await screen.findByRole('heading', { name: /loaded exam bundle/i })).toBeInTheDocument();
   expect(window.location.hash).toBe('#mock-exam');
@@ -280,4 +281,49 @@ test('allows upload with only exam pdf when auto-generate solutions is enabled',
   expect(body.get('exam_pdf')).toBe(examFile);
   expect(body.get('solutions_pdf')).toBeNull();
   expect(body.get('auto_generate_solutions')).toBe('true');
+  expect(body.get('generate_new_exam')).toBe('false');
+});
+
+test('requires solutions or syllabus pdf and submits generated exam mode', async () => {
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () =>
+        Promise.resolve({
+          exam_id: 'exam_generated',
+          status: 'ready',
+          bundle: uploadedBundle,
+        }),
+    }),
+  ) as unknown as jest.MockedFunction<typeof fetch>;
+
+  render(<App />);
+
+  const examFile = new File(['exam'], 'exam.pdf', { type: 'application/pdf' });
+  const referenceFile = new File(['syllabus'], 'syllabus.pdf', {
+    type: 'application/pdf',
+  });
+
+  fireEvent.click(screen.getByRole('switch', { name: /generate new exam/i }));
+  expect(screen.getByLabelText(/solutions or syllabus pdf/i)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /start/i })).toBeDisabled();
+
+  fireEvent.change(screen.getByLabelText(/exam pdf/i), {
+    target: { files: [examFile] },
+  });
+  expect(screen.getByRole('button', { name: /start/i })).toBeDisabled();
+
+  fireEvent.change(screen.getByLabelText(/solutions or syllabus pdf/i), {
+    target: { files: [referenceFile] },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /start/i }));
+
+  await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+  const [, options] = (global.fetch as jest.MockedFunction<typeof fetch>).mock.calls[0];
+  const body = options?.body as FormData;
+  expect(body.get('exam_pdf')).toBe(examFile);
+  expect(body.get('solutions_pdf')).toBe(referenceFile);
+  expect(body.get('auto_generate_solutions')).toBe('true');
+  expect(body.get('generate_new_exam')).toBe('true');
 });

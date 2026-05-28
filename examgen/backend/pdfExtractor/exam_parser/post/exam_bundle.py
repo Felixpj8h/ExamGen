@@ -259,7 +259,7 @@ def _ensure_solution_answer_choice(item: dict[str, Any]) -> None:
     if not isinstance(choices, list):
         choices = []
     string_choices = _sanitize_choice_list([choice for choice in choices if isinstance(choice, str)])
-    if any(_normalize_choice(choice) == _normalize_choice(answer) for choice in string_choices):
+    if any(_choice_matches_answer(choice, answer) for choice in string_choices):
         item["choices"] = string_choices
         return
     item["choices"] = _sanitize_choice_list([answer, *string_choices], keep_first=True)
@@ -272,10 +272,17 @@ def _normalize_choice(choice: str) -> str:
 def _sanitize_choice_list(choices: list[str], *, keep_first: bool = False) -> list[str]:
     sanitized: list[str] = []
     seen: set[str] = set()
+    labelled_options = {
+        label
+        for choice in choices
+        if (label := _choice_label(choice)) is not None
+    }
     for index, choice in enumerate(choices):
         stripped = choice.strip()
         normalized = _normalize_choice(stripped)
         if not stripped or normalized in seen:
+            continue
+        if (index != 0 or not keep_first) and _is_standalone_choice_label(stripped, labelled_options):
             continue
         if index != 0 or not keep_first:
             folded = stripped.casefold()
@@ -286,6 +293,25 @@ def _sanitize_choice_list(choices: list[str], *, keep_first: bool = False) -> li
         if len(sanitized) >= MAX_MULTIPLE_CHOICE_OPTIONS:
             break
     return sanitized
+
+
+def _choice_matches_answer(choice: str, answer: str) -> bool:
+    normalized_answer = _normalize_choice(answer)
+    return _normalize_choice(choice) == normalized_answer or _choice_label(choice) == normalized_answer.upper()
+
+
+def _choice_label(choice: str) -> str | None:
+    import re
+
+    match = re.match(r"^\s*([A-Z])[\).:]\s+\S", str(choice or ""), re.IGNORECASE)
+    return match.group(1).upper() if match else None
+
+
+def _is_standalone_choice_label(choice: str, labelled_options: set[str]) -> bool:
+    import re
+
+    stripped = str(choice or "").strip()
+    return bool(re.fullmatch(r"[A-Z]", stripped, re.IGNORECASE) and stripped.upper() in labelled_options)
 
 
 def _images_for_question(
@@ -353,6 +379,9 @@ def _question_id_aliases(question_id: str, question_number: str, label: str) -> 
     if question_number and normalized_label:
         aliases.add(f"q{question_number}_{normalized_label}")
         aliases.add(f"q{question_number}.{normalized_label}")
+    canonical_id = _canonical_answer_id(question_number, label)
+    if canonical_id:
+        aliases.add(canonical_id)
     return {alias for alias in aliases if alias}
 
 
@@ -362,6 +391,9 @@ def _solution_id_aliases(solution_id: str, question_number: str, label: str) -> 
     if question_number and normalized_label:
         aliases.add(f"q{question_number}_{normalized_label}")
         aliases.add(f"q{question_number}.{normalized_label}")
+    canonical_id = _canonical_answer_id(question_number, label)
+    if canonical_id:
+        aliases.add(canonical_id)
     return {alias for alias in aliases if alias}
 
 
@@ -369,4 +401,21 @@ def _normalize_solution_label(label: str, question_number: str = "") -> str:
     normalized = str(label or "").strip()
     if question_number and normalized.startswith(f"{question_number}."):
         return normalized[len(question_number) + 1 :]
+    if question_number and normalized != question_number and normalized.startswith(question_number):
+        return normalized[len(question_number) :].strip(" .):-")
     return normalized
+
+
+def _canonical_answer_id(question_number: str, label: str = "") -> str:
+    parts = [_id_part(question_number)]
+    label_part = _id_part(_normalize_solution_label(label, question_number))
+    if label_part:
+        parts.append(label_part)
+    return "q" + "_".join(part for part in parts if part)
+
+
+def _id_part(value: str) -> str:
+    import re
+
+    normalized = re.sub(r"[^0-9A-Za-z]+", "_", str(value or "").strip()).strip("_")
+    return normalized.lower()

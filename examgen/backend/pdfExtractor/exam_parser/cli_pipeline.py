@@ -47,6 +47,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Generate AI-marked practice solutions when no official answers/løsningsforslag are found.",
     )
     parser.add_argument(
+        "--generate-new-exam",
+        action="store_true",
+        help="Generate a fresh exam and AI solutions from the exam style and --solutions reference PDF.",
+    )
+    parser.add_argument(
         "--public-bundle-path",
         help=(
             "Optional path for a frontend-readable copy of exam_bundle.json. "
@@ -78,6 +83,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 temperature=args.temperature,
                 max_output_tokens=args.max_output_tokens,
                 generate_missing_solutions=args.generate_missing_solutions,
+                generate_new_exam=args.generate_new_exam,
                 mirror_bundle_to_public=not args.no_public_bundle,
                 public_bundle_path=args.public_bundle_path,
                 indent=args.indent,

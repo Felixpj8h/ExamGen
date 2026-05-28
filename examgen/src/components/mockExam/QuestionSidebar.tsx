@@ -22,7 +22,7 @@ function QuestionSidebar({
   loadLabel,
 }: QuestionSidebarProps) {
   return (
-    <aside className="border-b border-slate-300 bg-white lg:w-80 lg:border-b-0 lg:border-r">
+    <aside className="question-sidebar border-b border-slate-300 bg-white lg:w-80 lg:border-b-0 lg:border-r">
       <div className="border-b border-slate-200 p-5">
         <p className="text-sm font-medium text-slate-500">{examBundle.exam.course_code}</p>
         <h1 className="mt-1 text-2xl font-semibold leading-tight">{examBundle.exam.title}</h1>

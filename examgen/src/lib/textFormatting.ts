@@ -66,7 +66,7 @@ export function getDisplayChoices(subquestion: AnswerItem): string[] {
     subquestion.interaction_type === 'multiple_choice' &&
     typeof answer === 'string' &&
     answer.trim() &&
-    !choices.some((choice) => normalizeChoice(choice) === normalizeChoice(answer))
+    !choices.some((choice) => choicesMatchAnswer(choice, answer))
   ) {
     return sanitizeChoices([answer, ...choices], { keepFirst: true });
   }
@@ -78,12 +78,21 @@ interface SanitizeChoiceOptions {
 }
 
 function sanitizeChoices(choices: unknown[], options: SanitizeChoiceOptions = {}): string[] {
+  const rawChoices = choices.map((choice) => String(choice || '').trim()).filter(Boolean);
+  const labelledOptions = new Set(
+    rawChoices
+      .map(getChoiceLabel)
+      .filter((label): label is string => Boolean(label)),
+  );
   const sanitized: string[] = [];
   const seen = new Set<string>();
-  for (let index = 0; index < choices.length; index += 1) {
-    const choice = String(choices[index] || '').trim();
+  for (let index = 0; index < rawChoices.length; index += 1) {
+    const choice = rawChoices[index];
     const normalized = normalizeChoice(choice);
     if (!choice || seen.has(normalized)) {
+      continue;
+    }
+    if (!(options.keepFirst && index === 0) && isStandaloneChoiceLabel(choice, labelledOptions)) {
       continue;
     }
     if (!(options.keepFirst && index === 0) && looksLikeQuestionPrompt(choice)) {
@@ -100,6 +109,20 @@ function sanitizeChoices(choices: unknown[], options: SanitizeChoiceOptions = {}
 
 function normalizeChoice(choice: unknown): string {
   return String(choice || '').trim().replace(/^["']|["']$/g, '').toLowerCase();
+}
+
+function choicesMatchAnswer(choice: string, answer: string): boolean {
+  const normalizedAnswer = normalizeChoice(answer);
+  return normalizeChoice(choice) === normalizedAnswer || getChoiceLabel(choice)?.toLowerCase() === normalizedAnswer;
+}
+
+function getChoiceLabel(choice: string): string | null {
+  const match = choice.trim().match(/^([A-Z])[\).:]\s+\S/i);
+  return match ? match[1].toUpperCase() : null;
+}
+
+function isStandaloneChoiceLabel(choice: string, labelledOptions: Set<string>): boolean {
+  return /^[A-Z]$/i.test(choice.trim()) && labelledOptions.has(choice.trim().toUpperCase());
 }
 
 function looksLikeQuestionPrompt(choice: string): boolean {

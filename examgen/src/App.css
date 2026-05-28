@@ -160,6 +160,12 @@ main > div {
   gap: 16px;
 }
 
+.toggle-divider {
+  height: 1px;
+  margin: 18px 0;
+  background: #e2e8f0;
+}
+
 .toggle-title {
   display: block;
   color: #020617;
@@ -192,6 +198,11 @@ main > div {
 .toggle-switch.is-on {
   border-color: #10b981;
   background: #10b981;
+}
+
+.toggle-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .toggle-knob {
@@ -253,6 +264,20 @@ main > div {
   color: #64748b;
   box-shadow: none;
   cursor: not-allowed;
+}
+
+.question-sidebar {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .question-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
+  }
 }
 
 .file-zone {

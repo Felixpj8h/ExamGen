@@ -363,10 +363,16 @@ def _dedupe_solution_warnings(warnings: list[Any]) -> list[str]:
 
 def _build_question_alignment_indexes(questions_result: dict[str, Any] | None) -> dict[str, Any]:
     by_id: set[str] = set()
+    by_id_label: dict[str, str] = {}
     by_number_label: dict[tuple[str, str], tuple[str, str]] = {}
     by_generated_id: dict[str, tuple[str, str]] = {}
     if not questions_result:
-        return {"by_id": by_id, "by_number_label": by_number_label, "by_generated_id": by_generated_id}
+        return {
+            "by_id": by_id,
+            "by_id_label": by_id_label,
+            "by_number_label": by_number_label,
+            "by_generated_id": by_generated_id,
+        }
 
     for question in questions_result.get("questions", []):
         if not isinstance(question, dict):
@@ -382,13 +388,22 @@ def _build_question_alignment_indexes(questions_result: dict[str, Any] | None) -
             label = str(subquestion.get("label") or "")
             if sub_id:
                 by_id.add(sub_id)
+                by_id_label[sub_id] = label
             normalized_label = _normalize_solution_label(label, question_number)
             by_number_label[(question_number, normalized_label)] = (sub_id, label)
             by_number_label[(question_number, label)] = (sub_id, label)
             if question_number and normalized_label:
                 by_generated_id[f"q{question_number}_{normalized_label}"] = (sub_id, label)
                 by_generated_id[f"q{question_number}.{normalized_label}"] = (sub_id, label)
-    return {"by_id": by_id, "by_number_label": by_number_label, "by_generated_id": by_generated_id}
+            canonical_id = _canonical_answer_id(question_number, label)
+            if canonical_id:
+                by_generated_id[canonical_id] = (sub_id, label)
+    return {
+        "by_id": by_id,
+        "by_id_label": by_id_label,
+        "by_number_label": by_number_label,
+        "by_generated_id": by_generated_id,
+    }
 
 
 def _align_subsolution_to_question(
@@ -400,6 +415,9 @@ def _align_subsolution_to_question(
         return
     sub_id = str(subsolution.get("question_id") or "")
     if sub_id in indexes["by_id"]:
+        exact_label = indexes["by_id_label"].get(sub_id)
+        if exact_label:
+            subsolution["label"] = exact_label
         return
     parent_number = str(parent_solution.get("question_number") or "")
     label = str(subsolution.get("label") or "")
@@ -424,7 +442,24 @@ def _normalize_solution_label(label: str, question_number: str = "") -> str:
     normalized = str(label or "").strip()
     if question_number and normalized.startswith(f"{question_number}."):
         return normalized[len(question_number) + 1 :]
+    if question_number and normalized != question_number and normalized.startswith(question_number):
+        return normalized[len(question_number) :].strip(" .):-")
     return normalized
+
+
+def _canonical_answer_id(question_number: str, label: str = "") -> str:
+    parts = [_id_part(question_number)]
+    label_part = _id_part(_normalize_solution_label(label, question_number))
+    if label_part:
+        parts.append(label_part)
+    return "q" + "_".join(part for part in parts if part)
+
+
+def _id_part(value: str) -> str:
+    import re
+
+    normalized = re.sub(r"[^0-9A-Za-z]+", "_", str(value or "").strip()).strip("_")
+    return normalized.lower()
 
 
 def validate_solution_extraction_result(result: dict[str, Any]) -> None:

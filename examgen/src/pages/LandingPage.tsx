@@ -21,6 +21,7 @@ function LandingPage({ onExamReady }: LandingPageProps) {
   const [examFile, setExamFile] = useState<File | null>(null);
   const [solutionsFile, setSolutionsFile] = useState<File | null>(null);
   const [autoGenerateSolutions, setAutoGenerateSolutions] = useState(false);
+  const [generateNewExam, setGenerateNewExam] = useState(false);
   const [errors, setErrors] = useState<UploadErrors>({});
   const [submitError, setSubmitError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +31,9 @@ function LandingPage({ onExamReady }: LandingPageProps) {
     if (!examFile) {
       nextErrors.examFile = 'Upload an exam PDF to continue.';
     }
-    if (!autoGenerateSolutions && !solutionsFile) {
+    if (generateNewExam && !solutionsFile) {
+      nextErrors.solutionsFile = 'Upload a solutions or syllabus PDF to generate a new exam.';
+    } else if (!autoGenerateSolutions && !solutionsFile) {
       nextErrors.solutionsFile = 'Upload a solutions PDF or enable auto-generated solutions.';
     }
     setErrors(nextErrors);
@@ -52,7 +55,8 @@ function LandingPage({ onExamReady }: LandingPageProps) {
       const response = await processExamUpload({
         examFile,
         solutionsFile,
-        autoGenerateSolutions,
+        autoGenerateSolutions: generateNewExam ? true : autoGenerateSolutions,
+        generateNewExam,
       });
       const bundle = getBundleFromProcessResponse(response);
       if (!isValidExamBundle(bundle)) {
@@ -67,7 +71,11 @@ function LandingPage({ onExamReady }: LandingPageProps) {
     }
   }
 
-  const canStart = Boolean(examFile) && (autoGenerateSolutions || Boolean(solutionsFile));
+  const canStart = Boolean(examFile) && (generateNewExam ? Boolean(solutionsFile) : autoGenerateSolutions || Boolean(solutionsFile));
+  const solutionsLabel = generateNewExam ? 'Solutions or syllabus PDF' : 'Solutions PDF';
+  const solutionsHelper = generateNewExam
+    ? 'Drag and drop a solution key, syllabus, or course notes PDF here'
+    : 'Drag and drop your solution PDF here, or click to browse';
 
   return (
     <main className="landing-page">
@@ -101,15 +109,15 @@ function LandingPage({ onExamReady }: LandingPageProps) {
                   error={errors.examFile}
                 />
                 <FileDropzone
-                  label="Solutions PDF"
-                  helperText="Drag and drop your solution PDF here, or click to browse"
+                  label={solutionsLabel}
+                  helperText={solutionsHelper}
                   file={solutionsFile}
                   onFileChange={(file) => {
                     setSolutionsFile(file);
                     setErrors((current) => ({ ...current, solutionsFile: '' }));
                   }}
-                  required={!autoGenerateSolutions}
-                  optionalTone={autoGenerateSolutions}
+                  required={generateNewExam || !autoGenerateSolutions}
+                  optionalTone={!generateNewExam && autoGenerateSolutions}
                   error={errors.solutionsFile}
                 />
               </div>
@@ -117,11 +125,36 @@ function LandingPage({ onExamReady }: LandingPageProps) {
               <div className="toggle-panel">
                 <div className="toggle-row">
                   <div>
+                    <label htmlFor="generate-new-exam" className="toggle-title">
+                      Generate new exam
+                    </label>
+                    <p className="toggle-help">
+                      Create a fresh mock exam from the uploaded exam style and the solutions or syllabus PDF.
+                    </p>
+                  </div>
+                  <button
+                    id="generate-new-exam"
+                    type="button"
+                    role="switch"
+                    aria-label="Generate new exam"
+                    aria-checked={generateNewExam}
+                    onClick={() => {
+                      setGenerateNewExam((enabled) => !enabled);
+                      setErrors((current) => ({ ...current, solutionsFile: '' }));
+                    }}
+                    className={`toggle-switch ${generateNewExam ? 'is-on' : ''}`}
+                  >
+                    <span className="toggle-knob" />
+                  </button>
+                </div>
+                <div className="toggle-divider" />
+                <div className="toggle-row">
+                  <div>
                     <label htmlFor="auto-generate-solutions" className="toggle-title">
                       Auto-generate solutions
                     </label>
                     <p className="toggle-help">
-                      Use this if you do not have a solution PDF. You can review generated solutions before grading.
+                      Use this if you do not have a solution PDF. Generated-exam mode always includes AI solutions.
                     </p>
                   </div>
                   <button
@@ -129,12 +162,13 @@ function LandingPage({ onExamReady }: LandingPageProps) {
                     type="button"
                     role="switch"
                     aria-label="Auto-generate solutions"
-                    aria-checked={autoGenerateSolutions}
+                    aria-checked={generateNewExam || autoGenerateSolutions}
+                    disabled={generateNewExam}
                     onClick={() => {
                       setAutoGenerateSolutions((enabled) => !enabled);
                       setErrors((current) => ({ ...current, solutionsFile: '' }));
                     }}
-                    className={`toggle-switch ${autoGenerateSolutions ? 'is-on' : ''}`}
+                    className={`toggle-switch ${generateNewExam || autoGenerateSolutions ? 'is-on' : ''}`}
                   >
                     <span className="toggle-knob" />
                   </button>
