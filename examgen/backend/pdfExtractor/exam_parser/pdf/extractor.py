@@ -1,4 +1,4 @@
-"""PDF text extraction logic for text-based exam documents."""
+"""PDF text extraction logic with optional OCR fallback."""
 
 from __future__ import annotations
 
@@ -8,9 +8,14 @@ from typing import Any
 import fitz
 
 from exam_parser.pdf.text_cleaner import clean_pages, normalize_whitespace
+from exam_parser.pdf.ocr import OCRError, ocr_pdf_pages_with_gemini
 
 MIN_EXTRACTED_IMAGE_WIDTH = 80
 MIN_EXTRACTED_IMAGE_HEIGHT = 80
+OCR_MODES = {"auto", "off", "always"}
+TEXT_SOURCE_PDF = "pdf_text"
+TEXT_SOURCE_OCR = "gemini_ocr"
+TEXT_SOURCE_EMPTY = "empty"
 
 
 class PDFExtractionError(Exception):
@@ -65,6 +70,29 @@ def is_probably_text_based(
         1 for text in page_texts if len(normalize_whitespace(text)) >= min_chars_per_page
     )
     return pages_with_text / len(page_texts) >= min_text_page_ratio
+
+
+def _has_enough_text(text: str, min_chars: int) -> bool:
+    return len(normalize_whitespace(text)) >= min_chars
+
+
+def _pages_needing_ocr(
+    page_texts: list[str],
+    *,
+    ocr_mode: str,
+    min_chars_per_page: int,
+) -> list[int]:
+    if ocr_mode == "off":
+        return []
+    if ocr_mode == "always":
+        return list(range(1, len(page_texts) + 1))
+    if all(_has_enough_text(text, min_chars_per_page) for text in page_texts):
+        return []
+    return [
+        index + 1
+        for index, text in enumerate(page_texts)
+        if not _has_enough_text(text, min_chars_per_page)
+    ]
 
 
 def _extract_page_image_crops(
@@ -143,11 +171,60 @@ def extract_pdf(
     image_output_dir: str | Path | None = None,
     image_path_prefix: str | None = None,
     image_url_prefix: str | None = None,
+    ocr_mode: str = "auto",
+    ocr_model_name: str | None = None,
+    ocr_min_chars_per_page: int = 30,
+    ocr_min_text_page_ratio: float = 0.5,
+    ocr_render_scale: float = 2.0,
 ) -> dict[str, Any]:
-    """Extract raw and cleaned page-level text from a text-based PDF."""
+    """Extract raw and cleaned page-level text from a PDF.
+
+    In auto OCR mode, low-text pages are transcribed with Gemini vision only
+    when normal PDF text extraction leaves them too sparse.
+    """
+    if ocr_mode not in OCR_MODES:
+        raise PDFExtractionError(f"Invalid OCR mode: {ocr_mode}")
+
     path = validate_pdf_path(pdf_path)
     raw_pages = _extract_raw_pages(path)
-    clean_texts = clean_pages(raw_pages)
+    warnings: list[str] = []
+    ocr_page_numbers = _pages_needing_ocr(
+        raw_pages,
+        ocr_mode=ocr_mode,
+        min_chars_per_page=ocr_min_chars_per_page,
+    )
+    ocr_text_by_page: dict[int, str] = {}
+    if ocr_page_numbers:
+        try:
+            ocr_text_by_page = ocr_pdf_pages_with_gemini(
+                path,
+                ocr_page_numbers,
+                model_name=ocr_model_name,
+                render_scale=ocr_render_scale,
+            )
+        except OCRError as exc:
+            raise PDFExtractionError(str(exc)) from exc
+        warnings.append(
+            "Gemini OCR was used for low-text PDF pages: "
+            + ", ".join(str(page_number) for page_number in ocr_page_numbers)
+            + "."
+        )
+
+    merged_pages: list[str] = []
+    text_sources: list[str] = []
+    for index, raw_text in enumerate(raw_pages, start=1):
+        ocr_text = ocr_text_by_page.get(index, "")
+        if ocr_text:
+            merged_pages.append(ocr_text)
+            text_sources.append(TEXT_SOURCE_OCR)
+        elif _has_enough_text(raw_text, ocr_min_chars_per_page):
+            merged_pages.append(raw_text)
+            text_sources.append(TEXT_SOURCE_PDF)
+        else:
+            merged_pages.append(raw_text)
+            text_sources.append(TEXT_SOURCE_EMPTY)
+
+    clean_texts = clean_pages(merged_pages)
     page_images = (
         _extract_page_image_crops(
             path,
@@ -164,16 +241,25 @@ def extract_pdf(
             "page_number": index + 1,
             "raw_text": raw_text,
             "clean_text": clean_text,
+            "text_source": text_sources[index],
             "images": page_images[index],
         }
         for index, (raw_text, clean_text) in enumerate(zip(raw_pages, clean_texts, strict=True))
     ]
 
+    is_text_based = is_probably_text_based(
+        merged_pages,
+        min_chars_per_page=ocr_min_chars_per_page,
+        min_text_page_ratio=ocr_min_text_page_ratio,
+    )
     return {
         "file_name": path.name,
         "page_count": len(raw_pages),
-        "is_text_based": is_probably_text_based(raw_pages),
+        "is_text_based": is_text_based,
         "pages": pages,
         "full_text": "\n\n".join(text for text in clean_texts if text),
         "images": [image for images in page_images for image in images],
+        "ocr_used": bool(ocr_text_by_page),
+        "ocr_pages": sorted(ocr_text_by_page),
+        "warnings": warnings,
     }

@@ -42,6 +42,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--max-output-tokens", type=int, default=8192)
     parser.add_argument(
+        "--ocr",
+        choices=["auto", "off", "always"],
+        default="auto",
+        help="OCR behavior for low-text pages. Defaults to auto.",
+    )
+    parser.add_argument(
+        "--ocr-model",
+        default=None,
+        help="Gemini vision model for OCR. Defaults to GEMINI_OCR_MODEL, GEMINI_MODEL, then the app default.",
+    )
+    parser.add_argument(
         "--generate-missing-solutions",
         action="store_true",
         help="Generate AI-marked practice solutions when no official answers/løsningsforslag are found.",
@@ -82,6 +93,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 solution_model=args.solution_model,
                 temperature=args.temperature,
                 max_output_tokens=args.max_output_tokens,
+                ocr_mode=args.ocr,
+                ocr_model=args.ocr_model,
                 generate_missing_solutions=args.generate_missing_solutions,
                 generate_new_exam=args.generate_new_exam,
                 mirror_bundle_to_public=not args.no_public_bundle,

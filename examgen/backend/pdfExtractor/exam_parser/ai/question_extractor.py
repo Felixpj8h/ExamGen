@@ -77,7 +77,7 @@ def _validate_extraction_input(extraction_result: dict[str, Any]) -> None:
     if not isinstance(extraction_result, dict):
         raise QuestionExtractionError("Extraction result must be a JSON object.")
     if extraction_result.get("is_text_based") is not True:
-        raise QuestionExtractionError("Input extraction must have is_text_based set to true.")
+        raise QuestionExtractionError("Input extraction must contain usable PDF/OCR text.")
     pages = extraction_result.get("pages")
     if not isinstance(pages, list):
         raise QuestionExtractionError("Input extraction must contain a pages list.")
@@ -115,7 +115,7 @@ def build_question_extraction_prompt(extraction_result: dict[str, Any]) -> str:
     source_file = str(extraction_result.get("file_name") or "")
     page_count = extraction_result.get("page_count")
 
-    return f"""You are extracting structured exam questions from text that has already been extracted from a text-based PDF.
+    return f"""You are extracting structured exam questions from text that has already been extracted from a PDF, possibly with OCR for scanned pages.
 
 Rules:
 - Do not answer the exam questions.

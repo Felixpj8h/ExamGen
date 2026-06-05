@@ -27,6 +27,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=2,
         help="JSON indentation level. Defaults to 2.",
     )
+    parser.add_argument(
+        "--ocr",
+        choices=["auto", "off", "always"],
+        default="auto",
+        help="OCR behavior for low-text pages. Defaults to auto.",
+    )
+    parser.add_argument(
+        "--ocr-model",
+        default=None,
+        help="Gemini vision model for OCR. Defaults to GEMINI_OCR_MODEL, GEMINI_MODEL, then the app default.",
+    )
     return parser
 
 
@@ -35,7 +46,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        result = extract_pdf(args.pdf_path)
+        result = extract_pdf(args.pdf_path, ocr_mode=args.ocr, ocr_model_name=args.ocr_model)
     except PDFExtractionError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

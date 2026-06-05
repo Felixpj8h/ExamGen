@@ -39,6 +39,7 @@ export GEMINI_API_KEY="your-api-key"
 ```
 
 The model can also be configured with `GEMINI_MODEL`; the default is `gemini-3.1-flash-lite`.
+OCR uses `GEMINI_OCR_MODEL` when set, then `GEMINI_MODEL`, then the app default.
 
 ## Supported Modes
 
@@ -71,6 +72,7 @@ python -m exam_parser.cli_pipeline path/to/exam.pdf --out-dir output/ --generate
 The pipeline writes intermediate files such as `extracted_exam.json`, `classification.json`, `questions.json`, `solutions.json` when available, and `exam_bundle.json`.
 AI-generated answers are marked with `source_type: "ai_generated"`, each subsolution uses `source: "ai_generated"`, and `solutions.json` includes the warning `AI-generated solutions; not official answer key.`
 Embedded raster images are extracted as rendered crops under `output/assets/` and attached to questions by `page_start`/`page_end`. When the frontend sample bundle is mirrored, those assets are also copied to `public/sample-assets/`.
+Low-text or scanned pages are OCRed automatically with Gemini vision before the AI structuring steps. Text-based PDFs use the normal PyMuPDF text path and do not spend OCR tokens. Use `--ocr off` to disable OCR or `--ocr always` to force OCR for every page.
 
 Use `--no-public-bundle` if you want to write only backend artifacts without updating the frontend sample file. Use `--public-bundle-path path/to/sample-exam-bundle.json` to choose a specific frontend copy path.
 
@@ -157,12 +159,18 @@ PDF extraction output:
     {
       "page_number": 1,
       "raw_text": "...",
-      "clean_text": "..."
+      "clean_text": "...",
+      "text_source": "pdf_text"
     }
   ],
-  "full_text": "..."
+  "full_text": "...",
+  "ocr_used": false,
+  "ocr_pages": [],
+  "warnings": []
 }
 ```
+
+`text_source` is `pdf_text`, `gemini_ocr`, or `empty`. In automatic mode, only pages with too little selectable PDF text are sent to OCR.
 
 AI question extraction output:
 
@@ -314,12 +322,12 @@ python -m exam_parser.cli.process_combined_pdf extracted.json --out-dir output/
 - Uses deterministic splitting only as a diagnostic/helper path; the main one-command pipeline uses AI over the full text for combined question/solution PDFs.
 - Uses the official Google GenAI Python SDK for the AI step.
 - Requests JSON structured output from Gemini and validates the returned shape.
-- Extracts questions and official solutions; it does not generate missing solutions, grade answers, or do OCR.
+- Extracts questions and official solutions, can generate explicitly marked practice solutions, and can OCR scanned/low-text pages before structuring.
 
 ## Limitations
 
-The PDF extraction step does not use AI or OCR. Scanned image PDFs will usually produce little or no extracted text, and the JSON will mark `is_text_based` as `false` when most pages have very little text. OCR can be added later as a separate pipeline step.
+The PDF extraction step uses normal PyMuPDF text first. Gemini OCR is only used for low-text pages in automatic mode, or for every page when `--ocr always` is set. The JSON marks `is_text_based` based on the final merged PDF/OCR text.
 
-The AI extraction step depends on the quality of the existing extracted text. It preserves extracted math as-is for now, so OCR or notation repair should be separate later pipeline steps.
+The AI extraction step depends on the quality of the merged extracted text. It preserves extracted math as-is for now, so notation repair should remain a separate later pipeline step.
 
 Solution support works best when official answers are clearly present in the extracted text. If the AI pass cannot confidently identify solution content, the pipeline returns an error instead of writing an empty or content-free `solutions.json`, unless `--generate-missing-solutions` is set. Generated solutions are for practice and are explicitly marked as AI-generated, not official answers.

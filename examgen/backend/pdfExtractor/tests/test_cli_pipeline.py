@@ -140,6 +140,44 @@ def test_pipeline_uses_configured_asset_url_prefix(tmp_path: Path, monkeypatch) 
     )
 
 
+def test_pipeline_passes_ocr_options_to_exam_and_solution_extraction(
+    tmp_path: Path, monkeypatch
+) -> None:
+    out_dir = tmp_path / "out"
+    seen: list[tuple[str, dict]] = []
+
+    def fake_extract_pdf(path, **kwargs):
+        seen.append((str(path), kwargs))
+        if str(path).endswith("solutions.pdf"):
+            return sample_extraction("solutions.pdf")
+        return sample_extraction("exam.pdf")
+
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", fake_extract_pdf)
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_questions_with_gemini",
+        lambda extraction_result, **kwargs: sample_questions(),
+    )
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_solutions_with_gemini",
+        lambda extraction_result, **kwargs: sample_solutions(),
+    )
+
+    run_exam_pipeline(
+        "exam.pdf",
+        solutions_pdf="solutions.pdf",
+        out_dir=out_dir,
+        options=PipelineOptions(
+            ocr_mode="always",
+            ocr_model="ocr-test-model",
+            mirror_bundle_to_public=False,
+        ),
+    )
+
+    assert [call[0] for call in seen] == ["exam.pdf", "solutions.pdf"]
+    assert all(call[1]["ocr_mode"] == "always" for call in seen)
+    assert all(call[1]["ocr_model_name"] == "ocr-test-model" for call in seen)
+
+
 def test_pipeline_mirrors_exam_bundle_to_frontend_public(
     tmp_path: Path, monkeypatch
 ) -> None:

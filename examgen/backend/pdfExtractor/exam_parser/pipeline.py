@@ -44,6 +44,10 @@ class PipelineOptions:
     mirror_bundle_to_public: bool = True
     public_bundle_path: str | Path | None = None
     asset_url_prefix: str | None = None
+    ocr_mode: str = "auto"
+    ocr_model: str | None = None
+    ocr_min_chars_per_page: int = 30
+    ocr_render_scale: float = 2.0
     indent: int = 2
 
     def resolved_question_model(self) -> str:
@@ -63,6 +67,9 @@ class PipelineOptions:
             or os.getenv("GEMINI_MODEL")
             or DEFAULT_MODEL_NAME
         )
+
+    def resolved_ocr_model(self) -> str | None:
+        return self.ocr_model or os.getenv("GEMINI_OCR_MODEL") or os.getenv("GEMINI_MODEL")
 
 
 def run_exam_pipeline(
@@ -87,6 +94,7 @@ def run_exam_pipeline(
         image_output_dir=output_dir / "assets" / "exam",
         image_path_prefix="assets/exam",
         image_url_prefix=_asset_url_prefix(resolved_options, "exam"),
+        **_ocr_extract_kwargs(resolved_options),
     )
     _write_artifact(output_dir, "extracted_exam.json", exam_extraction, resolved_options, artifacts)
 
@@ -143,6 +151,7 @@ def _run_generated_exam_pipeline(
         image_output_dir=out_dir / "assets" / "reference",
         image_path_prefix="assets/reference",
         image_url_prefix=_asset_url_prefix(options, "reference"),
+        **_ocr_extract_kwargs(options),
     )
     _write_artifact(out_dir, "extracted_reference.json", reference_extraction, options, artifacts)
 
@@ -201,6 +210,7 @@ def _run_separate_solution_pipeline(
         image_output_dir=out_dir / "assets" / "solutions",
         image_path_prefix="assets/solutions",
         image_url_prefix=_asset_url_prefix(options, "solutions"),
+        **_ocr_extract_kwargs(options),
     )
     _write_artifact(out_dir, "extracted_solutions.json", solution_extraction, options, artifacts)
     solution_classification = classify_extracted_document(solution_extraction)
@@ -255,9 +265,10 @@ def _run_single_pdf_pipeline(
             max_output_tokens=options.max_output_tokens,
         )
         _write_artifact(out_dir, "questions.json", questions, options, artifacts)
+        solution_input = _preferred_solution_extraction_input(exam_extraction, classification)
         try:
             solutions = extract_solutions_with_gemini(
-                exam_extraction,
+                solution_input,
                 questions_result=questions,
                 model_name=options.resolved_solution_model(),
                 temperature=options.temperature,
@@ -265,9 +276,29 @@ def _run_single_pdf_pipeline(
                 source_type="same_pdf",
             )
         except SolutionExtractionError:
-            if not options.generate_missing_solutions:
-                raise
-            solutions = _generate_ai_solutions(options, exam_extraction, questions)
+            if solution_input is not exam_extraction:
+                try:
+                    solutions = extract_solutions_with_gemini(
+                        exam_extraction,
+                        questions_result=questions,
+                        model_name=options.resolved_solution_model(),
+                        temperature=options.temperature,
+                        max_output_tokens=options.max_output_tokens,
+                        source_type="same_pdf",
+                    )
+                except SolutionExtractionError:
+                    if not options.generate_missing_solutions:
+                        raise
+                    solutions = _generate_ai_solutions(options, exam_extraction, questions)
+                else:
+                    _write_artifact(out_dir, "solutions.json", solutions, options, artifacts)
+                    bundle = build_exam_bundle(questions, solutions, extraction_result=exam_extraction)
+                    _write_artifact(out_dir, "exam_bundle.json", bundle, options, artifacts)
+                    return
+            else:
+                if not options.generate_missing_solutions:
+                    raise
+                solutions = _generate_ai_solutions(options, exam_extraction, questions)
         _write_artifact(out_dir, "solutions.json", solutions, options, artifacts)
         bundle = build_exam_bundle(questions, solutions, extraction_result=exam_extraction)
         _write_artifact(out_dir, "exam_bundle.json", bundle, options, artifacts)
@@ -293,10 +324,55 @@ def _generate_ai_solutions(
     )
 
 
+def _preferred_solution_extraction_input(
+    extraction_result: dict[str, Any],
+    classification: dict[str, Any],
+) -> dict[str, Any]:
+    """Use classified solution pages for clearly separated combined PDFs."""
+    if classification.get("confidence") != "high":
+        return extraction_result
+    warnings = classification.get("warnings")
+    if isinstance(warnings, list) and any("interleaved" in str(warning).casefold() for warning in warnings):
+        return extraction_result
+    solution_pages = classification.get("solution_pages")
+    if not isinstance(solution_pages, list) or not solution_pages:
+        return extraction_result
+
+    wanted_pages = {page for page in solution_pages if isinstance(page, int)}
+    pages = [
+        page
+        for page in extraction_result.get("pages", [])
+        if isinstance(page, dict) and page.get("page_number") in wanted_pages
+    ]
+    if not pages:
+        return extraction_result
+
+    return {
+        **extraction_result,
+        "file_name": extraction_result.get("file_name", ""),
+        "page_count": len(pages),
+        "pages": pages,
+        "full_text": "\n\n".join(
+            str(page.get("clean_text") or "").strip()
+            for page in pages
+            if str(page.get("clean_text") or "").strip()
+        ),
+    }
+
+
 def _asset_url_prefix(options: PipelineOptions, asset_group: str) -> str:
     if options.asset_url_prefix:
         return f"{options.asset_url_prefix.rstrip('/')}/{asset_group}"
     return f"/sample-assets/{asset_group}"
+
+
+def _ocr_extract_kwargs(options: PipelineOptions) -> dict[str, Any]:
+    return {
+        "ocr_mode": options.ocr_mode,
+        "ocr_model_name": options.resolved_ocr_model(),
+        "ocr_min_chars_per_page": options.ocr_min_chars_per_page,
+        "ocr_render_scale": options.ocr_render_scale,
+    }
 
 
 def _write_artifact(
