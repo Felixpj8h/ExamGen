@@ -284,7 +284,7 @@ test('allows upload with only exam pdf when auto-generate solutions is enabled',
   expect(body.get('generate_new_exam')).toBe('false');
 });
 
-test('requires solutions or syllabus pdf and submits generated exam mode', async () => {
+test('submits generated exam mode without requiring solutions or syllabus pdf', async () => {
   global.fetch = jest.fn(() =>
     Promise.resolve({
       ok: true,
@@ -301,10 +301,6 @@ test('requires solutions or syllabus pdf and submits generated exam mode', async
   render(<App />);
 
   const examFile = new File(['exam'], 'exam.pdf', { type: 'application/pdf' });
-  const referenceFile = new File(['syllabus'], 'syllabus.pdf', {
-    type: 'application/pdf',
-  });
-
   fireEvent.click(screen.getByRole('switch', { name: /generate new exam/i }));
   expect(screen.getByLabelText(/solutions or syllabus pdf/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /start/i })).toBeDisabled();
@@ -312,18 +308,13 @@ test('requires solutions or syllabus pdf and submits generated exam mode', async
   fireEvent.change(screen.getByLabelText(/exam pdf/i), {
     target: { files: [examFile] },
   });
-  expect(screen.getByRole('button', { name: /start/i })).toBeDisabled();
-
-  fireEvent.change(screen.getByLabelText(/solutions or syllabus pdf/i), {
-    target: { files: [referenceFile] },
-  });
   fireEvent.click(screen.getByRole('button', { name: /start/i }));
 
   await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
   const [, options] = (global.fetch as jest.MockedFunction<typeof fetch>).mock.calls[0];
   const body = options?.body as FormData;
   expect(body.get('exam_pdf')).toBe(examFile);
-  expect(body.get('solutions_pdf')).toBe(referenceFile);
+  expect(body.get('solutions_pdf')).toBeNull();
   expect(body.get('auto_generate_solutions')).toBe('true');
   expect(body.get('generate_new_exam')).toBe('true');
 });

@@ -41,11 +41,6 @@ async def process_exam_upload(
     exam_id = f"exam_{uuid4().hex[:12]}"
     auto_generate = auto_generate_solutions.lower() == "true"
     should_generate_new_exam = generate_new_exam.lower() == "true"
-    if should_generate_new_exam and solutions_pdf is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Generating a new exam requires a solutions or syllabus PDF.",
-        )
 
     try:
         with tempfile.TemporaryDirectory(prefix=f"{exam_id}_") as tmp_dir:
