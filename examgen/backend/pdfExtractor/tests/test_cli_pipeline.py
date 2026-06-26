@@ -316,6 +316,56 @@ def test_pipeline_can_generate_new_exam_from_reference_pdf(
     assert generated_warning in bundle["warnings"]
 
 
+def test_pipeline_can_generate_new_exam_without_reference_pdf(
+    tmp_path: Path, monkeypatch
+) -> None:
+    out_dir = tmp_path / "out"
+    calls: list[str] = []
+
+    monkeypatch.setattr("exam_parser.pipeline.extract_pdf", lambda path, **kwargs: sample_extraction("exam.pdf"))
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_questions_with_gemini",
+        lambda extraction_result, **kwargs: sample_questions(),
+    )
+
+    def fake_generate_questions(exam_extraction, reference_extraction, original_questions, **kwargs):
+        calls.append("generate_questions")
+        assert exam_extraction["file_name"] == "exam.pdf"
+        assert reference_extraction["file_name"] == "exam.pdf"
+        generated = sample_questions()
+        generated["source_file"] = "generated_exam"
+        return generated
+
+    def fake_generate_solutions(reference_extraction, **kwargs):
+        calls.append("generate_solutions")
+        assert reference_extraction["file_name"] == "exam.pdf"
+        generated = sample_solutions()
+        generated["source_type"] = "ai_generated"
+        generated["warnings"] = ["AI-generated solutions; not official answer key."]
+        generated["solutions"][0]["subsolutions"][0]["source"] = "ai_generated"
+        return generated
+
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_generated_exam_questions_with_gemini",
+        fake_generate_questions,
+    )
+    monkeypatch.setattr(
+        "exam_parser.pipeline.extract_ai_solutions_per_question_with_gemini",
+        fake_generate_solutions,
+    )
+
+    run_exam_pipeline(
+        "exam.pdf",
+        out_dir=out_dir,
+        options=PipelineOptions(generate_new_exam=True, mirror_bundle_to_public=False),
+    )
+
+    assert calls == ["generate_questions", "generate_solutions"]
+    assert (out_dir / "original_questions.json").exists()
+    assert not (out_dir / "extracted_reference.json").exists()
+    assert (out_dir / "exam_bundle.json").exists()
+
+
 def test_pipeline_uses_separate_question_and_solution_models(
     tmp_path: Path, monkeypatch
 ) -> None:

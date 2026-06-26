@@ -546,6 +546,172 @@ def test_post_process_does_not_treat_instruction_text_as_choice() -> None:
     ]
 
 
+def test_post_process_collapses_split_multiple_choice_options_to_matrix_choice() -> None:
+    result = sample_questions()
+    question = result["questions"][0]
+    question["id"] = "q7"
+    question["question_number"] = "7"
+    question["question_text"] = "Which algorithm gives this traversal order?"
+    question["topic"] = "Graph Algorithms"
+    question["subquestions"] = [
+        {
+            "id": "q7_dijkstra",
+            "label": "Dijkstra",
+            "text": "Dijkstra",
+            "points": None,
+            "interaction_type": "multiple_choice",
+            "choices": [
+                "The specific order depends on the graph structure provided in the exam. Generally, BFS uses a FIFO queue, DFS uses a LIFO stack (or recursion), Dijkstra uses a priority queue based on path weights, and Prim uses a priority queue based on edge weights.",
+                "A,B,C,D,E,F,G,H,I",
+                "A,B,C,D,E,H,F,G,I",
+                "A,B,C,E,F,D,G,H,I",
+            ],
+        },
+        {
+            "id": "q7_bfs",
+            "label": "BFS",
+            "text": "BFS",
+            "points": None,
+            "interaction_type": "multiple_choice",
+            "choices": [
+                "The specific order depends on the graph structure provided in the exam. Generally, BFS uses a FIFO queue, DFS uses a LIFO stack (or recursion), Dijkstra uses a priority queue based on path weights, and Prim uses a priority queue based on edge weights.",
+                "A,B,C,D,E,F,G,H,I",
+                "A,B,C,D,E,H,F,G,I",
+                "A,B,C,E,F,D,G,H,I",
+            ],
+        },
+        {
+            "id": "q7_dfs",
+            "label": "DFS",
+            "text": "DFS",
+            "points": None,
+            "interaction_type": "multiple_choice",
+            "choices": [
+                "The specific order depends on the graph structure provided in the exam. Generally, BFS uses a FIFO queue, DFS uses a LIFO stack (or recursion), Dijkstra uses a priority queue based on path weights, and Prim uses a priority queue based on edge weights.",
+                "A,B,C,D,E,F,G,H,I",
+                "A,B,C,D,E,H,F,G,I",
+                "A,B,C,E,F,D,G,H,I",
+            ],
+        },
+        {
+            "id": "q7_prim",
+            "label": "Prim",
+            "text": "Prim",
+            "points": None,
+            "interaction_type": "multiple_choice",
+            "choices": [
+                "The specific order depends on the graph structure provided in the exam. Generally, BFS uses a FIFO queue, DFS uses a LIFO stack (or recursion), Dijkstra uses a priority queue based on path weights, and Prim uses a priority queue based on edge weights.",
+                "A,B,C,D,E,F,G,H,I",
+                "A,B,C,D,E,H,F,G,I",
+                "A,B,C,E,F,D,G,H,I",
+            ],
+        },
+    ]
+
+    processed = post_process_questions(result)
+    subquestions = processed["questions"][0]["subquestions"]
+
+    assert len(subquestions) == 1
+    assert subquestions[0]["id"] == "q7_dijkstra"
+    assert subquestions[0]["label"] == "answer"
+    assert subquestions[0]["text"] == "Which algorithm gives this traversal order?"
+    assert subquestions[0]["interaction_type"] == "matrix_choice"
+    assert subquestions[0]["choices"] == [
+        "A,B,C,D,E,F,G,H,I",
+        "A,B,C,D,E,H,F,G,I",
+        "A,B,C,E,F,D,G,H,I",
+    ]
+    assert subquestions[0]["matrix"] == {
+        "rows": ["Dijkstra", "BFS", "DFS", "Prim"],
+        "columns": [
+            "A,B,C,D,E,F,G,H,I",
+            "A,B,C,D,E,H,F,G,I",
+            "A,B,C,E,F,D,G,H,I",
+        ],
+    }
+
+
+def test_post_process_does_not_collapse_real_lettered_multiple_choice_subquestions() -> None:
+    result = sample_questions()
+    question = result["questions"][0]
+    question["subquestions"] = [
+        {
+            "id": "q1a",
+            "label": "a",
+            "text": "a) Which data structure supports FIFO removal?",
+            "points": None,
+            "interaction_type": "multiple_choice",
+            "choices": ["Stack", "Queue", "Tree"],
+        },
+        {
+            "id": "q1b",
+            "label": "b",
+            "text": "b) Which data structure supports LIFO removal?",
+            "points": None,
+            "interaction_type": "multiple_choice",
+            "choices": ["Stack", "Queue", "Tree"],
+        },
+    ]
+
+    processed = post_process_questions(result)
+
+    assert len(processed["questions"][0]["subquestions"]) == 2
+
+
+def test_post_process_does_not_collapse_mixed_interaction_types() -> None:
+    result = sample_questions()
+    question = result["questions"][0]
+    question["subquestions"] = [
+        {
+            "id": "q1a",
+            "label": "a",
+            "text": "Dijkstra",
+            "points": None,
+            "interaction_type": "multiple_choice",
+            "choices": ["A,B,C", "A,C,B"],
+        },
+        {
+            "id": "q1b",
+            "label": "b",
+            "text": "Explain why.",
+            "points": None,
+            "interaction_type": "free_text",
+            "choices": [],
+        },
+    ]
+
+    processed = post_process_questions(result)
+
+    assert len(processed["questions"][0]["subquestions"]) == 2
+
+
+def test_post_process_does_not_collapse_meaningful_multiple_choice_prompts() -> None:
+    result = sample_questions()
+    question = result["questions"][0]
+    question["subquestions"] = [
+        {
+            "id": "q1a",
+            "label": "a",
+            "text": "Which algorithm is shortest path?",
+            "points": None,
+            "interaction_type": "multiple_choice",
+            "choices": ["Dijkstra", "BFS", "DFS"],
+        },
+        {
+            "id": "q1b",
+            "label": "b",
+            "text": "Which algorithm is breadth first?",
+            "points": None,
+            "interaction_type": "multiple_choice",
+            "choices": ["Dijkstra", "BFS", "DFS"],
+        },
+    ]
+
+    processed = post_process_questions(result)
+
+    assert len(processed["questions"][0]["subquestions"]) == 2
+
+
 def test_infer_interaction_type_defaults_to_free_text_when_uncertain() -> None:
     assert infer_interaction_type("Discuss the concept briefly.") == "free_text"
 

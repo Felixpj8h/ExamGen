@@ -39,16 +39,17 @@ def build_generated_exam_prompt(
     if not exam_text:
         raise GeneratedExamExtractionError("Exam PDF contains no text to use as a style reference.")
     if not reference_text:
-        raise GeneratedExamExtractionError("Reference PDF contains no text to use as syllabus or solution material.")
+        raise GeneratedExamExtractionError("No usable source text was found for generated exam material.")
 
     return f"""You are generating a fresh practice exam as structured JSON.
 
 Rules:
 - Generate a new exam, not a copy of the original exam.
 - Match the original exam's approximate number of main questions, subquestion structure, interaction types, topic mix, and difficulty.
-- Use the reference PDF as source material. It may be a syllabus, notes, official answers, marking guidance, or a mixed document.
-- If the reference PDF is a syllabus or notes, turn that material into solvable exam tasks.
-- If the reference PDF is a solution key, use it as a topic and correctness guide, not as text to copy.
+- Use the source material as topic and correctness context. It may be the original exam itself,
+  or an optional syllabus, notes, official answers, marking guidance, or mixed document.
+- If the source material is a syllabus or notes, turn that material into solvable exam tasks.
+- If the source material is a solution key, use it as a topic and correctness guide, not as text to copy.
 - Do not reuse exact question wording unless a term, formula, type signature, or code identifier must stay exact.
 - Preserve Norwegian/English style from the original exam when obvious.
 - Put question-specific setup, definitions, examples, code, tables, or formulas in context.
@@ -68,7 +69,7 @@ Original extracted question structure:
 Original exam text for style reference:
 {exam_text}
 
-Reference PDF text for syllabus/solution material:
+Source material text for generation:
 {reference_text}
 """
 

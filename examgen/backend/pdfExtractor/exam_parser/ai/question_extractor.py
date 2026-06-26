@@ -44,6 +44,7 @@ INTERACTION_TYPES = {
     "free_text",
     "true_false",
     "multiple_choice",
+    "matrix_choice",
     "numeric",
     "proof",
     "translation",
@@ -154,12 +155,17 @@ Rules:
 - Use specific topic labels when obvious. Avoid using only the broad course name for every question.
 - If unsure about the topic, use null instead of guessing.
 - For every question and subquestion, set interaction_type for frontend rendering.
-- interaction_type must be one of: free_text, true_false, multiple_choice, numeric, proof, translation.
+- interaction_type must be one of: free_text, true_false, multiple_choice, matrix_choice, numeric, proof, translation.
 - Use true_false for prompts asking for truth values, true/false, sant/usant, or yes/no validity where the expected answer is binary.
 - Use multiple_choice only when explicit answer choices/options are present in the text.
+- Use matrix_choice when the question is a table/grid where each row prompt must select one column option.
 - Set choices to ["True", "False"] for true_false questions.
 - Set choices to the visible option labels/text for multiple_choice questions.
+- For matrix_choice, set choices to the visible column options and include matrix.rows and matrix.columns.
 - Use choices as [] for free_text, numeric, proof, or translation.
+- Do not turn each visible answer option into its own subquestion. For example, if one prompt
+  asks which algorithm is correct and the visible options are Dijkstra, BFS, DFS, and Prim,
+  return one multiple_choice item with choices ["Dijkstra", "BFS", "DFS", "Prim"].
 - If uncertain, include a warning instead of guessing.
 - Return only JSON matching the schema.
 
@@ -254,6 +260,7 @@ def post_process_questions(
     _normalize_question_context(processed)
     _normalize_question_text(processed)
     _normalize_interaction_metadata(processed)
+    _collapse_split_multiple_choice_subquestions(processed)
     if extraction_result is not None:
         _recover_missing_question_context_from_raw(processed, extraction_result)
         _recover_multiple_choice_options_from_raw(processed, extraction_result)
@@ -357,12 +364,150 @@ def _ensure_interaction_fields(
         choices = []
     if interaction_type == "true_false":
         choices = TRUE_FALSE_CHOICES
-    elif interaction_type == "multiple_choice":
+    elif interaction_type in {"multiple_choice", "matrix_choice"}:
         choices = _sanitize_choice_list(choices)
     else:
         choices = []
     item["interaction_type"] = interaction_type
     item["choices"] = choices
+
+
+def _collapse_split_multiple_choice_subquestions(result: dict[str, Any]) -> None:
+    for question in result.get("questions", []):
+        if not isinstance(question, dict):
+            continue
+        subquestions = question.get("subquestions")
+        if not isinstance(subquestions, list) or len(subquestions) < 2:
+            continue
+        if not all(isinstance(subquestion, dict) for subquestion in subquestions):
+            continue
+        if not _looks_like_split_multiple_choice_group(subquestions):
+            continue
+
+        first = subquestions[0]
+        matrix = _build_matrix_choice(subquestions)
+        if matrix is None:
+            continue
+        collapsed = {
+            "id": str(first.get("id") or question.get("id") or ""),
+            "label": "answer",
+            "text": _collapsed_multiple_choice_prompt(question),
+            "points": _safe_collapsed_points(subquestions),
+            "interaction_type": "matrix_choice",
+            "choices": matrix["columns"],
+            "matrix": matrix,
+        }
+        question["subquestions"] = [collapsed]
+
+
+def _build_matrix_choice(subquestions: list[dict[str, Any]]) -> dict[str, list[str]] | None:
+    if not _looks_like_split_multiple_choice_group(subquestions):
+        return None
+    rows = _sanitize_choice_list([str(subquestion.get("text") or "").strip() for subquestion in subquestions])
+    columns = _common_matrix_columns(subquestions)
+    if len(rows) != len(subquestions) or len(columns) < 2:
+        return None
+    return {"rows": rows, "columns": columns}
+
+
+def _looks_like_split_multiple_choice_group(subquestions: list[dict[str, Any]]) -> bool:
+    if not 2 <= len(subquestions) <= MAX_MULTIPLE_CHOICE_OPTIONS:
+        return False
+    if any(subquestion.get("interaction_type") != "multiple_choice" for subquestion in subquestions):
+        return False
+
+    option_texts = [str(subquestion.get("text") or "").strip() for subquestion in subquestions]
+    if len(_sanitize_choice_list(option_texts)) != len(option_texts):
+        return False
+    if any(not _looks_like_short_choice_text(text) for text in option_texts):
+        return False
+
+    choice_sets = [_normalized_choice_set(subquestion.get("choices")) for subquestion in subquestions]
+    if any(len(choice_set) < 2 for choice_set in choice_sets):
+        return False
+
+    reference = choice_sets[0]
+    return all(_choice_sets_are_near_equal(reference, choice_set) for choice_set in choice_sets[1:])
+
+
+def _common_matrix_columns(subquestions: list[dict[str, Any]]) -> list[str]:
+    first_choices = subquestions[0].get("choices")
+    if not isinstance(first_choices, list):
+        return []
+    columns: list[str] = []
+    for choice in _sanitize_choice_list([choice for choice in first_choices if isinstance(choice, str)]):
+        normalized = _normalize_choice_text(choice)
+        if not normalized or not _looks_like_matrix_column_choice(choice):
+            continue
+        if all(normalized in _normalized_choice_set(subquestion.get("choices")) for subquestion in subquestions):
+            columns.append(choice)
+    return columns
+
+
+def _looks_like_matrix_column_choice(choice: str) -> bool:
+    stripped = choice.strip()
+    if not stripped or _looks_like_question_prompt(stripped):
+        return False
+    if len(stripped) > 120:
+        return False
+    if re.search(
+        r"\b(generally|depends|specific|priority queue|fifo|lifo|recursion|exam|oppgaven|generelt)\b",
+        stripped,
+        re.IGNORECASE,
+    ):
+        return False
+    comma_parts = [part.strip() for part in stripped.split(",") if part.strip()]
+    if len(comma_parts) >= 3 and all(re.fullmatch(r"[A-Z]", part, re.IGNORECASE) for part in comma_parts):
+        return True
+    return len(comma_parts) >= 3 and all(
+        re.fullmatch(r"[A-Z0-9 _-]{1,16}", part, re.IGNORECASE) for part in comma_parts
+    )
+
+
+def _looks_like_short_choice_text(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped or _looks_like_question_prompt(stripped):
+        return False
+    if re.match(r"^\(?[a-z]\)?[).]\s+", stripped, re.IGNORECASE):
+        return False
+    words = re.findall(r"[\wÃƒÂ¦ÃƒÂ¸ÃƒÂ¥Ãƒâ€ ÃƒËœÃƒâ€¦]+", stripped)
+    return 1 <= len(words) <= 4 and len(stripped) <= 40
+
+
+def _normalized_choice_set(choices: Any) -> set[str]:
+    if not isinstance(choices, list):
+        return set()
+    return {
+        normalized
+        for choice in choices
+        if isinstance(choice, str) and (normalized := _normalize_choice_text(choice))
+    }
+
+
+def _choice_sets_are_near_equal(first: set[str], second: set[str]) -> bool:
+    if first == second:
+        return True
+    intersection = first & second
+    smaller_size = min(len(first), len(second))
+    return smaller_size >= 3 and len(intersection) / smaller_size >= 0.8
+
+
+def _collapsed_multiple_choice_prompt(question: dict[str, Any]) -> str:
+    for field in ("question_text", "context"):
+        value = question.get(field)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return "Answer"
+
+
+def _safe_collapsed_points(subquestions: list[dict[str, Any]]) -> float | int | None:
+    points = [subquestion.get("points") for subquestion in subquestions]
+    numeric_points = [point for point in points if isinstance(point, (int, float))]
+    if len(numeric_points) == 1:
+        return numeric_points[0]
+    if len(numeric_points) == len(points):
+        return sum(numeric_points)
+    return None
 
 
 def _recover_multiple_choice_options_from_raw(
@@ -884,8 +1029,20 @@ def _validate_interaction_fields(item: dict[str, Any], label: str) -> None:
         raise QuestionExtractionError(f"{label} choices must be a list of strings.")
     if interaction_type == "true_false" and choices != TRUE_FALSE_CHOICES:
         raise QuestionExtractionError(f"{label} true_false choices must be ['True', 'False'].")
-    if interaction_type != "multiple_choice" and interaction_type != "true_false" and choices:
-        raise QuestionExtractionError(f"{label} choices must be empty unless multiple_choice or true_false.")
+    if interaction_type == "matrix_choice":
+        matrix = item.get("matrix")
+        if not isinstance(matrix, dict):
+            raise QuestionExtractionError(f"{label} matrix_choice must include matrix metadata.")
+        rows = matrix.get("rows")
+        columns = matrix.get("columns")
+        if not isinstance(rows, list) or not all(isinstance(row, str) for row in rows):
+            raise QuestionExtractionError(f"{label} matrix rows must be a list of strings.")
+        if not isinstance(columns, list) or not all(isinstance(column, str) for column in columns):
+            raise QuestionExtractionError(f"{label} matrix columns must be a list of strings.")
+    if interaction_type not in {"multiple_choice", "matrix_choice", "true_false"} and choices:
+        raise QuestionExtractionError(
+            f"{label} choices must be empty unless multiple_choice, matrix_choice, or true_false."
+        )
 
 
 def extract_questions_with_gemini(

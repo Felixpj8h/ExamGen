@@ -7,20 +7,166 @@ export function hasAnswer(value: unknown): boolean {
 export function getAnswerItems(question: ExamQuestion): AnswerItem[] {
   const subquestions = Array.isArray(question.subquestions) ? question.subquestions : [];
   if (subquestions.length > 0) {
+    const collapsed = collapseSplitMultipleChoiceItems(question, subquestions);
+    if (collapsed) {
+      return [collapsed];
+    }
     return subquestions;
   }
 
-  return [
-    {
-      id: question.id,
-      label: 'answer',
-      text: '',
-      points: question.points,
-      interaction_type: question.interaction_type,
-      choices: Array.isArray(question.choices) ? question.choices : [],
-      solution: question.solution || null,
-    },
-  ];
+  const answerItem: AnswerItem = {
+    id: question.id,
+    label: 'answer',
+    text: '',
+    points: question.points,
+    interaction_type: question.interaction_type,
+    choices: Array.isArray(question.choices) ? question.choices : [],
+    solution: question.solution || null,
+  };
+  if (question.matrix) {
+    answerItem.matrix = question.matrix;
+  }
+  return [answerItem];
+}
+
+function collapseSplitMultipleChoiceItems(question: ExamQuestion, subquestions: AnswerItem[]): AnswerItem | null {
+  const matrix = buildMatrixChoice(subquestions);
+  if (!matrix) {
+    return null;
+  }
+
+  const first = subquestions[0];
+  return {
+    id: first.id || question.id,
+    label: 'answer',
+    text: collapsedMultipleChoicePrompt(question),
+    points: safeCollapsedPoints(subquestions),
+    interaction_type: 'matrix_choice',
+    choices: matrix.columns,
+    matrix,
+    solution: null,
+  };
+}
+
+function buildMatrixChoice(subquestions: AnswerItem[]): { rows: string[]; columns: string[] } | null {
+  if (!looksLikeSplitMultipleChoiceGroup(subquestions)) {
+    return null;
+  }
+
+  const rows = sanitizeChoices(subquestions.map((subquestion) => subquestion.text || ''));
+  const columns = commonMatrixColumns(subquestions);
+  if (rows.length !== subquestions.length || columns.length < 2) {
+    return null;
+  }
+
+  return { rows, columns };
+}
+
+function looksLikeSplitMultipleChoiceGroup(subquestions: AnswerItem[]): boolean {
+  if (subquestions.length < 2 || subquestions.length > 6) {
+    return false;
+  }
+  if (subquestions.some((subquestion) => subquestion.interaction_type !== 'multiple_choice')) {
+    return false;
+  }
+
+  const optionTexts = subquestions.map((subquestion) => String(subquestion.text || '').trim());
+  if (sanitizeChoices(optionTexts).length !== optionTexts.length) {
+    return false;
+  }
+  if (optionTexts.some((text) => !looksLikeShortChoiceText(text))) {
+    return false;
+  }
+
+  const choiceSets = subquestions.map((subquestion) => normalizedChoiceSet(subquestion.choices));
+  if (choiceSets.some((choiceSet) => choiceSet.size < 2)) {
+    return false;
+  }
+
+  const reference = choiceSets[0];
+  return choiceSets.slice(1).every((choiceSet) => choiceSetsAreNearEqual(reference, choiceSet));
+}
+
+function commonMatrixColumns(subquestions: AnswerItem[]): string[] {
+  const firstChoices = Array.isArray(subquestions[0]?.choices) ? subquestions[0].choices || [] : [];
+  return sanitizeChoices(firstChoices)
+    .filter((choice) => isMatrixColumnChoice(choice))
+    .filter((choice) =>
+      subquestions.every((subquestion) =>
+        normalizedChoiceSet(subquestion.choices).has(normalizeChoice(choice)),
+      ),
+    );
+}
+
+function isMatrixColumnChoice(choice: string): boolean {
+  const stripped = choice.trim();
+  if (!stripped || looksLikeQuestionPrompt(stripped)) {
+    return false;
+  }
+  if (stripped.length > 120) {
+    return false;
+  }
+  if (/\b(generally|depends|specific|priority queue|fifo|lifo|recursion|exam|oppgaven|generelt)\b/i.test(stripped)) {
+    return false;
+  }
+  const commaParts = stripped.split(',').map((part) => part.trim()).filter(Boolean);
+  if (commaParts.length >= 3 && commaParts.every((part) => /^[A-Z]$/i.test(part))) {
+    return true;
+  }
+  return commaParts.length >= 3 && commaParts.every((part) => /^[A-Z0-9 _-]{1,16}$/i.test(part));
+}
+
+function looksLikeShortChoiceText(text: string): boolean {
+  const stripped = text.trim();
+  if (!stripped || looksLikeQuestionPrompt(stripped)) {
+    return false;
+  }
+  if (/^\(?[a-z]\)?[).]\s+/i.test(stripped)) {
+    return false;
+  }
+  const words = stripped.match(/[\wæøåÆØÅ]+/g) || [];
+  return words.length >= 1 && words.length <= 4 && stripped.length <= 40;
+}
+
+function normalizedChoiceSet(choices: unknown): Set<string> {
+  if (!Array.isArray(choices)) {
+    return new Set();
+  }
+  return new Set(
+    choices
+      .map((choice) => normalizeChoice(choice))
+      .filter(Boolean),
+  );
+}
+
+function choiceSetsAreNearEqual(first: Set<string>, second: Set<string>): boolean {
+  let matchingChoices = 0;
+  first.forEach((choice) => {
+    if (second.has(choice)) {
+      matchingChoices += 1;
+    }
+  });
+
+  if (first.size === second.size && matchingChoices === first.size) {
+    return true;
+  }
+  const smallerSize = Math.min(first.size, second.size);
+  return smallerSize >= 3 && matchingChoices / smallerSize >= 0.8;
+}
+
+function collapsedMultipleChoicePrompt(question: ExamQuestion): string {
+  return question.question_text?.trim() || question.context?.trim() || 'Answer';
+}
+
+function safeCollapsedPoints(items: AnswerItem[]): number | null {
+  const points = items.map((subquestion) => subquestion.points).filter((point): point is number => typeof point === 'number');
+  if (points.length === 1) {
+    return points[0];
+  }
+  if (points.length === items.length) {
+    return points.reduce((total, point) => total + point, 0);
+  }
+  return null;
 }
 
 export function formatLabel(label?: string | null): string {

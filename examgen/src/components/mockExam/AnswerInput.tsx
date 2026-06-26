@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { getDisplayChoices } from '../../lib/textFormatting';
 import type { AnswerItem } from '../../types';
 
@@ -8,6 +9,52 @@ interface AnswerInputProps {
 }
 
 function AnswerInput({ subquestion, value, onAnswer }: AnswerInputProps) {
+  if (subquestion.interaction_type === 'matrix_choice') {
+    const matrix = subquestion.matrix;
+    const matrixRows = matrix?.rows;
+    const matrixColumns = matrix?.columns;
+    const rows = Array.isArray(matrixRows) ? matrixRows : [];
+    const columns = Array.isArray(matrixColumns) ? matrixColumns : getDisplayChoices(subquestion);
+    const selections = parseMatrixAnswer(value);
+
+    return (
+      <div className="matrix-choice" role="group" aria-label="Select one option for each row">
+        <div className="matrix-choice__scroller">
+          <div className="matrix-choice__grid" style={{ gridTemplateColumns: `minmax(110px, 160px) repeat(${columns.length}, minmax(140px, 1fr))` }}>
+            <div className="matrix-choice__corner" />
+            {columns.map((column) => (
+              <div key={column} className="matrix-choice__header">
+                {column}
+              </div>
+            ))}
+            {rows.map((row) => (
+              <Fragment key={row}>
+                <div className="matrix-choice__row-label">
+                  {row}
+                </div>
+                {columns.map((column) => {
+                  const isSelected = selections[row] === column;
+                  return (
+                    <button
+                      key={`${row}-${column}`}
+                      type="button"
+                      onClick={() => onAnswer(serializeMatrixAnswer({ ...selections, [row]: column }))}
+                      className={`matrix-choice__button ${isSelected ? 'is-selected' : ''}`}
+                      aria-pressed={isSelected}
+                      aria-label={`${row}: ${column}`}
+                    >
+                      <span />
+                    </button>
+                  );
+                })}
+              </Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (subquestion.interaction_type === 'true_false' || subquestion.interaction_type === 'multiple_choice') {
     const choices = getDisplayChoices(subquestion);
     return (
@@ -47,6 +94,31 @@ function AnswerInput({ subquestion, value, onAnswer }: AnswerInputProps) {
       placeholder="Write your answer"
     />
   );
+}
+
+function parseMatrixAnswer(value: string): Record<string, string> {
+  if (!value.trim()) {
+    return {};
+  }
+  try {
+    const parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+    const selections: Record<string, string> = {};
+    Object.keys(parsed).forEach((key) => {
+      if (typeof parsed[key] === 'string') {
+        selections[key] = parsed[key];
+      }
+    });
+    return selections;
+  } catch {
+    return {};
+  }
+}
+
+function serializeMatrixAnswer(value: Record<string, string>): string {
+  return JSON.stringify(value);
 }
 
 export default AnswerInput;

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type InteractionType = 'free_text' | 'true_false' | 'multiple_choice' | 'numeric' | string;
+export type InteractionType = 'free_text' | 'true_false' | 'multiple_choice' | 'matrix_choice' | 'numeric' | string;
 
 export type SolutionSource = 'official_solution_pdf' | 'same_pdf' | 'ai_generated' | 'manual' | string;
 
@@ -28,6 +28,10 @@ export interface AnswerItem {
   points?: number | null;
   interaction_type?: InteractionType | null;
   choices?: string[];
+  matrix?: {
+    rows?: string[];
+    columns?: string[];
+  };
   solution?: ExamSolution | null;
 }
 
@@ -42,6 +46,10 @@ export interface ExamQuestion {
   context?: string | null;
   interaction_type?: InteractionType | null;
   choices?: string[];
+  matrix?: {
+    rows?: string[];
+    columns?: string[];
+  };
   images?: ExamImage[];
   subquestions?: AnswerItem[];
   solution?: ExamSolution | null;

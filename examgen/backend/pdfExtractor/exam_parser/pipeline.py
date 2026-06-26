@@ -99,8 +99,6 @@ def run_exam_pipeline(
     _write_artifact(output_dir, "extracted_exam.json", exam_extraction, resolved_options, artifacts)
 
     if resolved_options.generate_new_exam:
-        if not solutions_pdf:
-            raise PipelineError("Generating a new exam requires a solutions or syllabus PDF.", exit_code=2)
         _run_generated_exam_pipeline(
             reference_pdf=solutions_pdf,
             out_dir=output_dir,
@@ -129,7 +127,7 @@ def run_exam_pipeline(
 
 def _run_generated_exam_pipeline(
     *,
-    reference_pdf: str | Path,
+    reference_pdf: str | Path | None,
     out_dir: Path,
     exam_extraction: dict[str, Any],
     options: PipelineOptions,
@@ -146,14 +144,17 @@ def _run_generated_exam_pipeline(
     )
     _write_artifact(out_dir, "original_questions.json", original_questions, options, artifacts)
 
-    reference_extraction = extract_pdf(
-        reference_pdf,
-        image_output_dir=out_dir / "assets" / "reference",
-        image_path_prefix="assets/reference",
-        image_url_prefix=_asset_url_prefix(options, "reference"),
-        **_ocr_extract_kwargs(options),
-    )
-    _write_artifact(out_dir, "extracted_reference.json", reference_extraction, options, artifacts)
+    if reference_pdf:
+        reference_extraction = extract_pdf(
+            reference_pdf,
+            image_output_dir=out_dir / "assets" / "reference",
+            image_path_prefix="assets/reference",
+            image_url_prefix=_asset_url_prefix(options, "reference"),
+            **_ocr_extract_kwargs(options),
+        )
+        _write_artifact(out_dir, "extracted_reference.json", reference_extraction, options, artifacts)
+    else:
+        reference_extraction = exam_extraction
 
     generated_questions = extract_generated_exam_questions_with_gemini(
         exam_extraction,

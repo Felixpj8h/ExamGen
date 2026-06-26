@@ -31,9 +31,7 @@ function LandingPage({ onExamReady }: LandingPageProps) {
     if (!examFile) {
       nextErrors.examFile = 'Upload an exam PDF to continue.';
     }
-    if (generateNewExam && !solutionsFile) {
-      nextErrors.solutionsFile = 'Upload a solutions or syllabus PDF to generate a new exam.';
-    } else if (!autoGenerateSolutions && !solutionsFile) {
+    if (!generateNewExam && !autoGenerateSolutions && !solutionsFile) {
       nextErrors.solutionsFile = 'Upload a solutions PDF or enable auto-generated solutions.';
     }
     setErrors(nextErrors);
@@ -71,10 +69,10 @@ function LandingPage({ onExamReady }: LandingPageProps) {
     }
   }
 
-  const canStart = Boolean(examFile) && (generateNewExam ? Boolean(solutionsFile) : autoGenerateSolutions || Boolean(solutionsFile));
+  const canStart = Boolean(examFile) && (generateNewExam || autoGenerateSolutions || Boolean(solutionsFile));
   const solutionsLabel = generateNewExam ? 'Solutions or syllabus PDF' : 'Solutions PDF';
   const solutionsHelper = generateNewExam
-    ? 'Drag and drop a solution key, syllabus, or course notes PDF here'
+    ? 'Optional: add a solution key, syllabus, or course notes PDF for extra context'
     : 'Drag and drop your solution PDF here, or click to browse';
 
   return (
@@ -116,8 +114,8 @@ function LandingPage({ onExamReady }: LandingPageProps) {
                     setSolutionsFile(file);
                     setErrors((current) => ({ ...current, solutionsFile: '' }));
                   }}
-                  required={generateNewExam || !autoGenerateSolutions}
-                  optionalTone={!generateNewExam && autoGenerateSolutions}
+                  required={!generateNewExam && !autoGenerateSolutions}
+                  optionalTone={generateNewExam || autoGenerateSolutions}
                   error={errors.solutionsFile}
                 />
               </div>
@@ -129,7 +127,7 @@ function LandingPage({ onExamReady }: LandingPageProps) {
                       Generate new exam
                     </label>
                     <p className="toggle-help">
-                      Create a fresh mock exam from the uploaded exam style and the solutions or syllabus PDF.
+                      Create a fresh mock exam from the uploaded exam style. Add a solutions or syllabus PDF only if you want extra context.
                     </p>
                   </div>
                   <button
