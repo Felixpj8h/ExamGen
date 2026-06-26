@@ -255,7 +255,14 @@ function SubquestionPanel({
         </button>
       </div>
 
-      {revealed && <SolutionBlock solution={subquestion.solution} fallbackSource={fallbackSolutionSource} />}
+      {revealed && (
+        <SolutionBlock
+          solution={subquestion.solution}
+          fallbackSource={fallbackSolutionSource}
+          answerItem={subquestion}
+          currentAnswer={value}
+        />
+      )}
     </section>
   );
 }

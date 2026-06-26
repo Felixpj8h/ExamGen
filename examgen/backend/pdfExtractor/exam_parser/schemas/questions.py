@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 
 InteractionType = Literal[
     "free_text",
     "true_false",
     "multiple_choice",
+    "matrix_choice",
     "numeric",
     "proof",
     "translation",
@@ -22,6 +23,7 @@ class ExtractedSubquestion(TypedDict):
     points: float | int | None
     interaction_type: InteractionType
     choices: list[str]
+    matrix: NotRequired[dict[str, list[str]]]
 
 
 class ExtractedQuestion(TypedDict):
@@ -35,6 +37,7 @@ class ExtractedQuestion(TypedDict):
     topic: str | None
     interaction_type: InteractionType
     choices: list[str]
+    matrix: NotRequired[dict[str, list[str]]]
     subquestions: list[ExtractedSubquestion]
 
 
@@ -85,12 +88,20 @@ QUESTION_EXTRACTION_SCHEMA: dict[str, Any] = {
                             "free_text",
                             "true_false",
                             "multiple_choice",
+                            "matrix_choice",
                             "numeric",
                             "proof",
                             "translation",
                         ],
                     },
                     "choices": {"type": "array", "items": {"type": "string"}},
+                    "matrix": {
+                        "type": "object",
+                        "properties": {
+                            "rows": {"type": "array", "items": {"type": "string"}},
+                            "columns": {"type": "array", "items": {"type": "string"}},
+                        },
+                    },
                     "subquestions": {
                         "type": "array",
                         "items": {
@@ -109,12 +120,20 @@ QUESTION_EXTRACTION_SCHEMA: dict[str, Any] = {
                                         "free_text",
                                         "true_false",
                                         "multiple_choice",
+                                        "matrix_choice",
                                         "numeric",
                                         "proof",
                                         "translation",
                                     ],
                                 },
                                 "choices": {"type": "array", "items": {"type": "string"}},
+                                "matrix": {
+                                    "type": "object",
+                                    "properties": {
+                                        "rows": {"type": "array", "items": {"type": "string"}},
+                                        "columns": {"type": "array", "items": {"type": "string"}},
+                                    },
+                                },
                             },
                             "required": [
                                 "id",

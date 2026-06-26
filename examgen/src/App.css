@@ -778,6 +778,88 @@ section section p {
   box-shadow: 0 0 0 3px rgb(4 120 87 / 0.16);
 }
 
+.matrix-choice {
+  max-width: 100%;
+}
+
+.matrix-choice__scroller {
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.matrix-choice__grid {
+  display: grid;
+  min-width: 760px;
+  background: #cbd5e1;
+  gap: 1px;
+}
+
+.matrix-choice__corner,
+.matrix-choice__header,
+.matrix-choice__row-label,
+.matrix-choice__button {
+  background: #ffffff;
+}
+
+.matrix-choice__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 58px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.matrix-choice__row-label {
+  display: flex;
+  align-items: center;
+  min-height: 54px;
+  padding: 10px 14px;
+  font-weight: 700;
+}
+
+.matrix-choice__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  border: 0;
+  cursor: pointer;
+}
+
+.matrix-choice__button span {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 999px;
+}
+
+.matrix-choice__button:hover span {
+  border-color: #0f172a;
+}
+
+.matrix-choice__button.is-readonly {
+  cursor: default;
+}
+
+.matrix-choice__button.is-readonly:hover span {
+  border-color: #cbd5e1;
+}
+
+.matrix-choice__button.is-selected span {
+  border-color: #047857;
+  background: radial-gradient(circle, #047857 0 45%, #ffffff 48%);
+  box-shadow: 0 0 0 3px rgb(4 120 87 / 0.16);
+}
+
+.matrix-choice__button.is-readonly.is-selected:hover span {
+  border-color: #047857;
+}
+
 .reveal-button.is-active {
   background: #0f172a;
   border-color: #0f172a;
@@ -795,6 +877,10 @@ section section p {
   margin-top: 12px;
   font-size: 16px;
   font-weight: 600;
+}
+
+.solution-matrix {
+  margin-top: 12px;
 }
 
 .solution-answer p {
