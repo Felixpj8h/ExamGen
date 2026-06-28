@@ -397,6 +397,81 @@ def test_question_level_ai_solution_keeps_ai_source() -> None:
     assert bundle["questions"][0]["solution"]["source"] == "ai_generated"
 
 
+def test_option_level_ai_subsolutions_attach_to_parent_multiple_choice() -> None:
+    question_result = {
+        "source_file": "exam.pdf",
+        "exam_title": "Generated",
+        "course_code": "INF",
+        "language": "norwegian",
+        "questions": [
+            {
+                "id": "q2",
+                "question_number": "2",
+                "question_text": "Hvilke operasjoner er bedre på doubly linked list?",
+                "context": "Velg alle korrekte alternativer.",
+                "page_start": None,
+                "page_end": None,
+                "points": 2,
+                "topic": "Linked lists",
+                "interaction_type": "multiple_choice",
+                "choices": [
+                    "Sletting av siste element",
+                    "Tilgang til første element",
+                    "Sletting av et element gitt en referanse til noden",
+                    "Søk etter et element",
+                    "Innsetting av et element i midten",
+                ],
+                "subquestions": [],
+            }
+        ],
+        "warnings": [],
+    }
+    solution_result = {
+        "source_file": "exam.pdf",
+        "source_type": "ai_generated",
+        "exam_title": "Generated",
+        "course_code": "INF",
+        "solutions": [
+            {
+                "question_id": "q2",
+                "question_number": "2",
+                "solution_text": None,
+                "subsolutions": [
+                    {
+                        "question_id": "q2",
+                        "label": "Sletting av siste element",
+                        "answer": "Riktig",
+                        "explanation": "En doubly linked list kan slette halen effektivt når halen er kjent.",
+                        "grading_points": [],
+                        "points": None,
+                        "source": "ai_generated",
+                    },
+                    {
+                        "question_id": "q2",
+                        "label": "Søk etter et element",
+                        "answer": "Feil",
+                        "explanation": "Søk er fortsatt lineært.",
+                        "grading_points": [],
+                        "points": None,
+                        "source": "ai_generated",
+                    },
+                ],
+                "warnings": [],
+            }
+        ],
+        "warnings": ["AI-generated solutions; not official answer key."],
+    }
+
+    bundle = build_exam_bundle(question_result, solution_result)
+
+    question = bundle["questions"][0]
+    assert question["solution"]["answer"] == "Sletting av siste element"
+    assert question["solution"]["source"] == "ai_generated"
+    assert "Søk etter et element: Feil" in question["solution"]["explanation"]
+    assert not any("No solution found for question 2" in warning for warning in bundle["warnings"])
+    assert not any("Unmatched solution for q2" in warning for warning in bundle["warnings"])
+
+
 def test_matched_parent_solution_suppresses_artificial_subsolution_warnings() -> None:
     question_result = {
         "source_file": "exam.pdf",

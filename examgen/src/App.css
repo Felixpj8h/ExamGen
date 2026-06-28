@@ -549,6 +549,102 @@ article h2 {
   font-size: 13px;
 }
 
+.question-diagrams {
+  display: grid;
+  gap: 16px;
+  max-width: 980px;
+  margin-top: 20px;
+}
+
+.graph-diagram {
+  margin: 0;
+  padding: 14px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+}
+
+.graph-diagram figcaption {
+  margin: 0 0 10px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: none;
+}
+
+.graph-diagram__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 260px;
+}
+
+.graph-diagram__edge path {
+  fill: none;
+  stroke: #64748b;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.tree-diagram__edge path {
+  fill: none;
+}
+
+.graph-diagram__edge.is-highlighted path {
+  stroke: #047857;
+  stroke-width: 3.5;
+}
+
+.graph-diagram__arrow {
+  fill: #64748b;
+}
+
+.graph-diagram__arrow.is-highlighted {
+  fill: #047857;
+}
+
+.graph-diagram__edge-label-bg {
+  fill: #ffffff;
+  stroke: #cbd5e1;
+}
+
+.graph-diagram__edge-label {
+  fill: #0f172a;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.graph-diagram__node circle {
+  fill: #f8fafc;
+  stroke: #0f172a;
+  stroke-width: 2.5;
+}
+
+.graph-diagram__node text {
+  fill: #0f172a;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.graph-diagram__node.is-highlighted circle {
+  fill: #ecfdf5;
+  stroke: #047857;
+  stroke-width: 3;
+}
+
+.graph-diagram__node.is-start circle {
+  fill: #dcfce7;
+}
+
+.graph-diagram__start-label {
+  fill: #047857;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .question-context {
   margin-top: 20px;
   padding: 16px;

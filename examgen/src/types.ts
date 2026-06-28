@@ -21,6 +21,47 @@ export interface ExamImage {
   height?: number | null;
 }
 
+export interface GraphDiagramNode {
+  id: string;
+  label?: string | null;
+}
+
+export interface GraphDiagramEdge {
+  id?: string | null;
+  source: string;
+  target: string;
+  label?: string | null;
+  weight?: string | number | null;
+  directed?: boolean | null;
+}
+
+export interface GraphDiagram {
+  id: string;
+  type: 'graph';
+  title?: string | null;
+  nodes: GraphDiagramNode[];
+  edges: GraphDiagramEdge[];
+  start_node?: string | null;
+  highlighted_nodes?: string[];
+  highlighted_edges?: string[];
+}
+
+export interface TreeDiagramNode {
+  id: string;
+  label?: string | null;
+  children?: TreeDiagramNode[];
+}
+
+export interface TreeDiagram {
+  id: string;
+  type: 'tree';
+  title?: string | null;
+  root: TreeDiagramNode;
+  highlighted_nodes?: string[];
+}
+
+export type ExamDiagram = GraphDiagram | TreeDiagram;
+
 export interface AnswerItem {
   id: string;
   label?: string | null;
@@ -50,6 +91,7 @@ export interface ExamQuestion {
     rows?: string[];
     columns?: string[];
   };
+  diagrams?: ExamDiagram[];
   images?: ExamImage[];
   subquestions?: AnswerItem[];
   solution?: ExamSolution | null;

@@ -64,11 +64,19 @@ def build_exam_bundle(
                 question_id=question_key,
                 question_number=number_key,
             )
+            if solution is None:
+                solution, solution_key = _find_question_level_solution_from_subsolutions(
+                    solution_indexes,
+                    question=question,
+                    question_id=question_key,
+                    question_number=number_key,
+                    fallback_source=fallback_solution_source,
+                )
             if solution is not None:
                 question["solution"] = {
-                    "answer": None,
+                    "answer": solution.get("answer"),
                     "explanation": solution.get("solution_text"),
-                    "grading_points": [],
+                    "grading_points": solution.get("grading_points", []),
                     "source": _solution_source(solution, fallback_solution_source),
                 }
                 _ensure_solution_answer_choice(question)
@@ -105,6 +113,7 @@ def build_exam_bundle(
 
 
 def _build_solution_indexes(solutions_result: dict[str, Any] | None) -> dict[str, Any]:
+    solutions: list[dict[str, Any]] = []
     by_id: dict[str, dict[str, Any]] = {}
     by_id_alias: dict[str, dict[str, Any]] = {}
     by_number_label: dict[tuple[str, str], dict[str, Any]] = {}
@@ -115,6 +124,7 @@ def _build_solution_indexes(solutions_result: dict[str, Any] | None) -> dict[str
     subsolution_parent_keys: dict[tuple[str, str], tuple[str, str]] = {}
     if not solutions_result:
         return {
+            "solutions": solutions,
             "by_id": by_id,
             "by_id_alias": by_id_alias,
             "by_number_label": by_number_label,
@@ -128,6 +138,7 @@ def _build_solution_indexes(solutions_result: dict[str, Any] | None) -> dict[str
     for solution in solutions_result.get("solutions", []):
         if not isinstance(solution, dict):
             continue
+        solutions.append(solution)
         question_id = str(solution.get("question_id") or "")
         question_number = str(solution.get("question_number") or "")
         parent_key = (question_id or question_number, "")
@@ -149,6 +160,7 @@ def _build_solution_indexes(solutions_result: dict[str, Any] | None) -> dict[str
             subsolution_keys.add(sub_key)
             subsolution_parent_keys[sub_key] = parent_key
     return {
+        "solutions": solutions,
         "by_id": by_id,
         "by_id_alias": by_id_alias,
         "by_number_label": by_number_label,
@@ -201,6 +213,61 @@ def _find_question_level_solution(
     return None, ("", "")
 
 
+def _find_question_level_solution_from_subsolutions(
+    indexes: dict[str, Any],
+    *,
+    question: dict[str, Any],
+    question_id: str,
+    question_number: str,
+    fallback_source: str | None,
+) -> tuple[dict[str, Any] | None, tuple[str, str]]:
+    solution = _parent_solution_with_subsolutions(indexes, question_id, question_number)
+    if solution is None:
+        return None, ("", "")
+
+    subsolutions = [
+        subsolution
+        for subsolution in solution.get("subsolutions", [])
+        if isinstance(subsolution, dict) and _subsolution_has_content(subsolution)
+    ]
+    if not subsolutions:
+        return None, ("", "")
+
+    answer = _question_level_answer_from_subsolutions(question, subsolutions)
+    explanation = _question_level_explanation_from_subsolutions(subsolutions)
+    grading_points = _combined_grading_points(subsolutions)
+    synthesized = {
+        "question_id": solution.get("question_id"),
+        "question_number": solution.get("question_number"),
+        "answer": answer,
+        "solution_text": explanation,
+        "grading_points": grading_points,
+        "source": _solution_source(solution, fallback_source),
+        "subsolutions": subsolutions,
+    }
+    return synthesized, (str(solution.get("question_id") or question_id or question_number), "")
+
+
+def _parent_solution_with_subsolutions(
+    indexes: dict[str, Any],
+    question_id: str,
+    question_number: str,
+) -> dict[str, Any] | None:
+    for candidate in indexes.get("solutions", []):
+        if not isinstance(candidate, dict):
+            continue
+        candidate_id = str(candidate.get("question_id") or "")
+        candidate_number = str(candidate.get("question_number") or "")
+        if candidate_id not in {question_id, ""} and candidate_id != question_number:
+            continue
+        if candidate_number not in {question_number, ""} and candidate_number != question_id:
+            continue
+        subsolutions = candidate.get("subsolutions")
+        if isinstance(subsolutions, list) and any(isinstance(item, dict) for item in subsolutions):
+            return candidate
+    return None
+
+
 def _unique_warnings(warnings: list[Any]) -> list[str]:
     seen: set[str] = set()
     unique: list[str] = []
@@ -219,6 +286,139 @@ def _unique_warnings(warnings: list[Any]) -> list[str]:
 def _has_parent_solution_content(solution: dict[str, Any]) -> bool:
     solution_text = solution.get("solution_text")
     return isinstance(solution_text, str) and bool(solution_text.strip())
+
+
+def _subsolution_has_content(subsolution: dict[str, Any]) -> bool:
+    for field in ("answer", "explanation"):
+        value = subsolution.get(field)
+        if isinstance(value, str) and value.strip():
+            return True
+    grading_points = subsolution.get("grading_points")
+    return isinstance(grading_points, list) and any(
+        isinstance(point, str) and point.strip() for point in grading_points
+    )
+
+
+def _question_level_answer_from_subsolutions(
+    question: dict[str, Any],
+    subsolutions: list[dict[str, Any]],
+) -> str | None:
+    if question.get("interaction_type") == "multiple_choice":
+        correct_labels = [
+            label
+            for subsolution in subsolutions
+            if (label := _choice_label_from_subsolution(question, subsolution))
+            and _subsolution_indicates_correct(subsolution)
+        ]
+        if correct_labels:
+            return ", ".join(correct_labels)
+
+    answers = [
+        answer.strip()
+        for subsolution in subsolutions
+        if isinstance((answer := subsolution.get("answer")), str) and answer.strip()
+    ]
+    if answers:
+        return "; ".join(_unique_strings(answers))
+
+    labels = [
+        label.strip()
+        for subsolution in subsolutions
+        if isinstance((label := subsolution.get("label")), str) and label.strip()
+    ]
+    return "; ".join(_unique_strings(labels)) if labels else None
+
+
+def _question_level_explanation_from_subsolutions(subsolutions: list[dict[str, Any]]) -> str:
+    parts: list[str] = []
+    for subsolution in subsolutions:
+        label = str(subsolution.get("label") or "").strip()
+        answer = str(subsolution.get("answer") or "").strip()
+        explanation = str(subsolution.get("explanation") or "").strip()
+        line_parts = []
+        if label:
+            line_parts.append(label)
+        if answer:
+            line_parts.append(answer)
+        if explanation:
+            line_parts.append(explanation)
+        if line_parts:
+            parts.append(": ".join(line_parts))
+    return "\n".join(_unique_strings(parts))
+
+
+def _combined_grading_points(subsolutions: list[dict[str, Any]]) -> list[str]:
+    points: list[str] = []
+    for subsolution in subsolutions:
+        grading_points = subsolution.get("grading_points")
+        if not isinstance(grading_points, list):
+            continue
+        for point in grading_points:
+            if isinstance(point, str) and point.strip():
+                points.append(point.strip())
+    return _unique_strings(points)
+
+
+def _choice_label_from_subsolution(question: dict[str, Any], subsolution: dict[str, Any]) -> str | None:
+    label = str(subsolution.get("label") or "").strip()
+    choices = question.get("choices")
+    if not label or not isinstance(choices, list):
+        return label or None
+    for choice in choices:
+        if not isinstance(choice, str):
+            continue
+        if _normalize_choice(choice) == _normalize_choice(label):
+            return choice.strip()
+    return label
+
+
+def _subsolution_indicates_correct(subsolution: dict[str, Any]) -> bool:
+    searchable_parts: list[str] = []
+    for field in ("answer", "explanation"):
+        value = subsolution.get(field)
+        if isinstance(value, str):
+            searchable_parts.append(value)
+    grading_points = subsolution.get("grading_points")
+    if isinstance(grading_points, list):
+        searchable_parts.extend(point for point in grading_points if isinstance(point, str))
+    searchable = " ".join(searchable_parts).casefold()
+    if not searchable:
+        return False
+    incorrect_markers = (
+        "incorrect",
+        "not correct",
+        "wrong",
+        "false",
+        "nei",
+        "ikke riktig",
+        "feil",
+        "usann",
+    )
+    correct_markers = (
+        "correct",
+        "right",
+        "true",
+        "yes",
+        "ja",
+        "riktig",
+        "sann",
+        "korrekt",
+    )
+    return any(marker in searchable for marker in correct_markers) and not any(
+        marker in searchable for marker in incorrect_markers
+    )
+
+
+def _unique_strings(values: list[str]) -> list[str]:
+    unique: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        normalized = value.strip()
+        if not normalized or normalized in seen:
+            continue
+        unique.append(normalized)
+        seen.add(normalized)
+    return unique
 
 
 def _fallback_solution_source(solutions_result: dict[str, Any] | None) -> str | None:

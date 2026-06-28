@@ -54,6 +54,16 @@ Rules:
 - Preserve Norwegian/English style from the original exam when obvious.
 - Put question-specific setup, definitions, examples, code, tables, or formulas in context.
 - Format code inside context as fenced Markdown code blocks with the best language tag.
+- When a visual would help the student solve the task, add a structured diagrams entry on the main question.
+- Use graph diagrams for node-link graph tasks, especially BFS/DFS traversal, shortest path,
+  minimum spanning tree, reachability, adjacency, or graph-representation questions.
+- Use tree diagrams for tree data structure, binary tree, expression tree, recursion-over-tree,
+  traversal, leaf-counting, height/depth, flattening, or inductive tree tasks.
+- A graph diagram must use type "graph" and include stable node ids, node labels, edges with source/target,
+  optional edge label/weight, optional directed flag, and optional start_node/highlighted_nodes/highlighted_edges.
+- A tree diagram must use type "tree" and include a root node with stable nested children. Nodes may include labels.
+- Do not include raster images, generated image URLs, base64 image data, SVG markup, Mermaid syntax, or x/y coordinates.
+- The frontend will lay out graph and tree diagrams automatically from structured data.
 - Set page_start and page_end to null because generated questions do not come from original pages.
 - Use stable generated IDs: q1, q2, q3 for main questions and q1a, q1b for subquestions.
 - For every question and subquestion, set interaction_type and choices according to the schema.
@@ -106,6 +116,8 @@ def extract_generated_exam_questions_with_gemini(
 
     result = post_process_questions(result)
     normalize_generated_question_ids(result)
+    normalize_generated_matrix_choices(result)
+    normalize_generated_diagrams(result)
     _ensure_generated_warning(result)
     validate_question_extraction_result(result)
     return result
@@ -123,6 +135,345 @@ def normalize_generated_question_ids(result: dict[str, Any]) -> None:
                 continue
             label = str(subquestion.get("label") or sub_index).strip()
             subquestion["id"] = _canonical_answer_id(question_number, label)
+
+
+def normalize_generated_matrix_choices(result: dict[str, Any]) -> None:
+    """Repair or downgrade generated matrix choices missing valid matrix metadata."""
+    for question in result.get("questions", []):
+        if not isinstance(question, dict):
+            continue
+        _normalize_matrix_choice_item(question)
+        for subquestion in question.get("subquestions", []):
+            if isinstance(subquestion, dict):
+                _normalize_matrix_choice_item(subquestion)
+
+
+def _normalize_matrix_choice_item(item: dict[str, Any]) -> None:
+    if item.get("interaction_type") != "matrix_choice":
+        return
+
+    matrix = _clean_matrix(item.get("matrix"))
+    if matrix is not None:
+        item["matrix"] = matrix
+        item["choices"] = matrix["columns"]
+        return
+
+    choices = _clean_string_list(item.get("choices"))
+    if len(choices) >= 2:
+        item["interaction_type"] = "multiple_choice"
+        item["choices"] = choices
+    else:
+        item["interaction_type"] = "free_text"
+        item["choices"] = []
+    item.pop("matrix", None)
+
+
+def _clean_matrix(matrix: Any) -> dict[str, list[str]] | None:
+    if not isinstance(matrix, dict):
+        return None
+    rows = _clean_string_list(matrix.get("rows"))
+    columns = _clean_string_list(matrix.get("columns"))
+    if len(rows) < 1 or len(columns) < 2:
+        return None
+    return {
+        "rows": rows,
+        "columns": columns,
+    }
+
+
+def _clean_string_list(values: Any) -> list[str]:
+    if not isinstance(values, list):
+        return []
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        normalized = _clean_string(value)
+        if not normalized or normalized in seen:
+            continue
+        cleaned.append(normalized)
+        seen.add(normalized)
+    return cleaned
+
+
+def normalize_generated_diagrams(result: dict[str, Any]) -> None:
+    """Clean generated structured diagrams without rejecting the whole exam."""
+    for question_index, question in enumerate(result.get("questions", []), start=1):
+        if not isinstance(question, dict):
+            continue
+        diagrams = question.get("diagrams")
+        if not isinstance(diagrams, list):
+            diagrams = []
+        cleaned = [
+            diagram
+            for diagram in (
+                _clean_diagram(diagram, question_index, diagram_index)
+                for diagram_index, diagram in enumerate(diagrams, start=1)
+            )
+            if diagram is not None
+        ]
+        if not cleaned and _looks_like_tree_visual_task(question):
+            cleaned = [_default_tree_diagram(question, question_index)]
+        if cleaned:
+            question["diagrams"] = cleaned
+        else:
+            question.pop("diagrams", None)
+
+
+def _looks_like_tree_visual_task(question: dict[str, Any]) -> bool:
+    searchable_parts = [
+        question.get("question_text"),
+        question.get("context"),
+        question.get("topic"),
+    ]
+    for subquestion in question.get("subquestions", []):
+        if isinstance(subquestion, dict):
+            searchable_parts.append(subquestion.get("text"))
+    searchable = "\n".join(part for part in searchable_parts if isinstance(part, str)).casefold()
+    if not searchable:
+        return False
+    tree_markers = (
+        "data tree",
+        "binary tree",
+        "binært",
+        "binærtre",
+        "treet",
+        "tree a",
+        "leaf",
+        "node (tree",
+    )
+    task_markers = (
+        "recursion",
+        "rekursjon",
+        "treesize",
+        "treeheight",
+        "countleaves",
+        "flatten",
+        "height",
+        "depth",
+        "leaves",
+        "traversal",
+        "beregner høyden",
+        "teller antall",
+    )
+    return any(marker in searchable for marker in tree_markers) and any(
+        marker in searchable for marker in task_markers
+    )
+
+
+def _default_tree_diagram(question: dict[str, Any], question_index: int) -> dict[str, Any]:
+    question_id = _clean_string(question.get("id")) or f"q{question_index}"
+    return {
+        "id": f"{question_id}_tree",
+        "type": "tree",
+        "title": "Example tree",
+        "root": {
+            "id": "root",
+            "label": "Node",
+            "children": [
+                {
+                    "id": "left",
+                    "label": "Leaf a",
+                },
+                {
+                    "id": "right",
+                    "label": "Node",
+                    "children": [
+                        {
+                            "id": "right_left",
+                            "label": "Leaf b",
+                        },
+                        {
+                            "id": "right_right",
+                            "label": "Leaf c",
+                        },
+                    ],
+                },
+            ],
+        },
+    }
+
+
+def _clean_diagram(diagram: Any, question_index: int, diagram_index: int) -> dict[str, Any] | None:
+    if not isinstance(diagram, dict):
+        return None
+    if diagram.get("type") == "tree":
+        return _clean_tree_diagram(diagram, question_index, diagram_index)
+    return _clean_graph_diagram(diagram, question_index, diagram_index)
+
+
+def _clean_graph_diagram(
+    diagram: Any,
+    question_index: int,
+    diagram_index: int,
+) -> dict[str, Any] | None:
+    if not isinstance(diagram, dict) or diagram.get("type") != "graph":
+        return None
+
+    nodes = _clean_graph_nodes(diagram.get("nodes"))
+    if len(nodes) < 2:
+        return None
+    node_ids = {node["id"] for node in nodes}
+
+    edges = _clean_graph_edges(diagram.get("edges"), node_ids)
+    if not edges:
+        return None
+
+    diagram_id = _clean_string(diagram.get("id")) or f"q{question_index}_diagram_{diagram_index}"
+    cleaned: dict[str, Any] = {
+        "id": diagram_id,
+        "type": "graph",
+        "nodes": nodes,
+        "edges": edges,
+    }
+    title = _clean_string(diagram.get("title"))
+    if title:
+        cleaned["title"] = title
+
+    start_node = _clean_string(diagram.get("start_node"))
+    if start_node in node_ids:
+        cleaned["start_node"] = start_node
+
+    highlighted_nodes = _clean_reference_list(diagram.get("highlighted_nodes"), node_ids)
+    if highlighted_nodes:
+        cleaned["highlighted_nodes"] = highlighted_nodes
+
+    edge_ids = {edge["id"] for edge in edges if isinstance(edge.get("id"), str)}
+    highlighted_edges = _clean_reference_list(diagram.get("highlighted_edges"), edge_ids)
+    if highlighted_edges:
+        cleaned["highlighted_edges"] = highlighted_edges
+
+    return cleaned
+
+
+def _clean_tree_diagram(
+    diagram: Any,
+    question_index: int,
+    diagram_index: int,
+) -> dict[str, Any] | None:
+    if not isinstance(diagram, dict) or diagram.get("type") != "tree":
+        return None
+    seen_ids: set[str] = set()
+    root = _clean_tree_node(diagram.get("root"), seen_ids)
+    if root is None:
+        return None
+    diagram_id = _clean_string(diagram.get("id")) or f"q{question_index}_tree_{diagram_index}"
+    cleaned: dict[str, Any] = {
+        "id": diagram_id,
+        "type": "tree",
+        "root": root,
+    }
+    title = _clean_string(diagram.get("title"))
+    if title:
+        cleaned["title"] = title
+    highlighted_nodes = _clean_reference_list(diagram.get("highlighted_nodes"), seen_ids)
+    if highlighted_nodes:
+        cleaned["highlighted_nodes"] = highlighted_nodes
+    return cleaned
+
+
+def _clean_tree_node(node: Any, seen_ids: set[str]) -> dict[str, Any] | None:
+    if not isinstance(node, dict):
+        return None
+    node_id = _clean_string(node.get("id"))
+    if not node_id or node_id in seen_ids:
+        return None
+    seen_ids.add(node_id)
+    cleaned: dict[str, Any] = {"id": node_id}
+    label = _clean_string(node.get("label"))
+    if label:
+        cleaned["label"] = label
+    raw_children = node.get("children", [])
+    if not isinstance(raw_children, list):
+        raw_children = []
+    children = [
+        child
+        for child in (_clean_tree_node(child, seen_ids) for child in raw_children)
+        if child is not None
+    ]
+    if children:
+        cleaned["children"] = children
+    return cleaned
+
+
+def _clean_graph_nodes(nodes: Any) -> list[dict[str, str]]:
+    if not isinstance(nodes, list):
+        return []
+    cleaned: list[dict[str, str]] = []
+    seen_ids: set[str] = set()
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        node_id = _clean_string(node.get("id"))
+        if not node_id or node_id in seen_ids:
+            continue
+        seen_ids.add(node_id)
+        cleaned_node = {"id": node_id}
+        label = _clean_string(node.get("label"))
+        if label:
+            cleaned_node["label"] = label
+        cleaned.append(cleaned_node)
+    return cleaned
+
+
+def _clean_graph_edges(edges: Any, node_ids: set[str]) -> list[dict[str, Any]]:
+    if not isinstance(edges, list):
+        return []
+    cleaned: list[dict[str, Any]] = []
+    seen_edges: set[tuple[str, str, str, str, bool]] = set()
+    seen_edge_ids: set[str] = set()
+    for edge in edges:
+        if not isinstance(edge, dict):
+            continue
+        source = _clean_string(edge.get("source"))
+        target = _clean_string(edge.get("target"))
+        if source not in node_ids or target not in node_ids:
+            continue
+        label = _clean_string(edge.get("label"))
+        weight = _clean_string(edge.get("weight"))
+        directed = edge.get("directed") is True
+        edge_key = (source, target, label or "", weight or "", directed)
+        if edge_key in seen_edges:
+            continue
+        seen_edges.add(edge_key)
+
+        cleaned_edge: dict[str, Any] = {
+            "source": source,
+            "target": target,
+        }
+        edge_id = _clean_string(edge.get("id"))
+        if edge_id and edge_id not in seen_edge_ids:
+            cleaned_edge["id"] = edge_id
+            seen_edge_ids.add(edge_id)
+        if label:
+            cleaned_edge["label"] = label
+        if weight:
+            cleaned_edge["weight"] = weight
+        if directed:
+            cleaned_edge["directed"] = True
+        cleaned.append(cleaned_edge)
+    return cleaned
+
+
+def _clean_reference_list(values: Any, valid_values: set[str]) -> list[str]:
+    if not isinstance(values, list) or not valid_values:
+        return []
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        normalized = _clean_string(value)
+        if not normalized or normalized in seen or normalized not in valid_values:
+            continue
+        cleaned.append(normalized)
+        seen.add(normalized)
+    return cleaned
+
+
+def _clean_string(value: Any) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, (int, float)):
+        return str(value)
+    return ""
 
 
 def _canonical_answer_id(question_number: str, label: str = "") -> str:

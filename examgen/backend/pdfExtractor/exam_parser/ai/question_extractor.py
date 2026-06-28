@@ -261,6 +261,7 @@ def post_process_questions(
     _normalize_question_text(processed)
     _normalize_interaction_metadata(processed)
     _collapse_split_multiple_choice_subquestions(processed)
+    _normalize_matrix_choice_metadata(processed)
     if extraction_result is not None:
         _recover_missing_question_context_from_raw(processed, extraction_result)
         _recover_multiple_choice_options_from_raw(processed, extraction_result)
@@ -408,6 +409,49 @@ def _build_matrix_choice(subquestions: list[dict[str, Any]]) -> dict[str, list[s
     if len(rows) != len(subquestions) or len(columns) < 2:
         return None
     return {"rows": rows, "columns": columns}
+
+
+def _normalize_matrix_choice_metadata(result: dict[str, Any]) -> None:
+    for question in result.get("questions", []):
+        if not isinstance(question, dict):
+            continue
+        _normalize_matrix_choice_item(question)
+        for subquestion in question.get("subquestions", []):
+            if isinstance(subquestion, dict):
+                _normalize_matrix_choice_item(subquestion)
+
+
+def _normalize_matrix_choice_item(item: dict[str, Any]) -> None:
+    if item.get("interaction_type") != "matrix_choice":
+        return
+
+    matrix = _clean_matrix_metadata(item.get("matrix"))
+    if matrix is not None:
+        item["matrix"] = matrix
+        item["choices"] = matrix["columns"]
+        return
+
+    choices = _sanitize_choice_list([choice for choice in item.get("choices", []) if isinstance(choice, str)])
+    if len(choices) >= 2:
+        item["interaction_type"] = "multiple_choice"
+        item["choices"] = choices
+    else:
+        item["interaction_type"] = "free_text"
+        item["choices"] = []
+    item.pop("matrix", None)
+
+
+def _clean_matrix_metadata(matrix: Any) -> dict[str, list[str]] | None:
+    if not isinstance(matrix, dict):
+        return None
+    rows = _sanitize_choice_list([row for row in matrix.get("rows", []) if isinstance(row, str)])
+    columns = _sanitize_choice_list([column for column in matrix.get("columns", []) if isinstance(column, str)])
+    if len(rows) < 1 or len(columns) < 2:
+        return None
+    return {
+        "rows": rows,
+        "columns": columns,
+    }
 
 
 def _looks_like_split_multiple_choice_group(subquestions: list[dict[str, Any]]) -> bool:
@@ -987,6 +1031,7 @@ def _validate_question(question: Any, index: int) -> None:
     if topic is not None and not isinstance(topic, str):
         raise QuestionExtractionError(f"Question {index} topic must be a string or null.")
     _validate_interaction_fields(question, f"Question {index}")
+    _validate_question_diagrams(question, f"Question {index}")
 
     subquestions = question.get("subquestions")
     if not isinstance(subquestions, list):
@@ -1043,6 +1088,136 @@ def _validate_interaction_fields(item: dict[str, Any], label: str) -> None:
         raise QuestionExtractionError(
             f"{label} choices must be empty unless multiple_choice, matrix_choice, or true_false."
         )
+
+
+def _validate_question_diagrams(question: dict[str, Any], label: str) -> None:
+    diagrams = question.get("diagrams")
+    if diagrams is None:
+        return
+    if not isinstance(diagrams, list):
+        raise QuestionExtractionError(f"{label} diagrams must be a list.")
+    for diagram_index, diagram in enumerate(diagrams, start=1):
+        diagram_label = f"{label} diagram {diagram_index}"
+        if isinstance(diagram, dict) and diagram.get("type") == "tree":
+            _validate_tree_diagram(diagram, diagram_label)
+        else:
+            _validate_graph_diagram(diagram, diagram_label)
+
+
+def _validate_graph_diagram(diagram: Any, label: str) -> None:
+    if not isinstance(diagram, dict):
+        raise QuestionExtractionError(f"{label} must be an object.")
+    if not isinstance(diagram.get("id"), str) or not diagram["id"].strip():
+        raise QuestionExtractionError(f"{label} has invalid id.")
+    if diagram.get("type") != "graph":
+        raise QuestionExtractionError(f"{label} has invalid type.")
+    title = diagram.get("title")
+    if title is not None and not isinstance(title, str):
+        raise QuestionExtractionError(f"{label} title must be a string or null.")
+
+    nodes = diagram.get("nodes")
+    if not isinstance(nodes, list) or len(nodes) < 2:
+        raise QuestionExtractionError(f"{label} must include at least two nodes.")
+    node_ids: set[str] = set()
+    for node_index, node in enumerate(nodes, start=1):
+        if not isinstance(node, dict):
+            raise QuestionExtractionError(f"{label} node {node_index} must be an object.")
+        node_id = node.get("id")
+        if not isinstance(node_id, str) or not node_id.strip():
+            raise QuestionExtractionError(f"{label} node {node_index} has invalid id.")
+        if node_id in node_ids:
+            raise QuestionExtractionError(f"{label} node ids must be unique.")
+        node_ids.add(node_id)
+        node_label = node.get("label")
+        if node_label is not None and not isinstance(node_label, str):
+            raise QuestionExtractionError(f"{label} node {node_index} label must be a string or null.")
+
+    edges = diagram.get("edges")
+    if not isinstance(edges, list) or len(edges) < 1:
+        raise QuestionExtractionError(f"{label} must include at least one edge.")
+    edge_ids: set[str] = set()
+    for edge_index, edge in enumerate(edges, start=1):
+        if not isinstance(edge, dict):
+            raise QuestionExtractionError(f"{label} edge {edge_index} must be an object.")
+        source = edge.get("source")
+        target = edge.get("target")
+        if not isinstance(source, str) or source not in node_ids:
+            raise QuestionExtractionError(f"{label} edge {edge_index} has invalid source.")
+        if not isinstance(target, str) or target not in node_ids:
+            raise QuestionExtractionError(f"{label} edge {edge_index} has invalid target.")
+        edge_id = edge.get("id")
+        if edge_id is not None:
+            if not isinstance(edge_id, str) or not edge_id.strip():
+                raise QuestionExtractionError(f"{label} edge {edge_index} id must be a string or null.")
+            if edge_id in edge_ids:
+                raise QuestionExtractionError(f"{label} edge ids must be unique.")
+            edge_ids.add(edge_id)
+        for field in ("label", "weight"):
+            value = edge.get(field)
+            if value is not None and not isinstance(value, (str, int, float)):
+                raise QuestionExtractionError(f"{label} edge {edge_index} {field} has invalid type.")
+        directed = edge.get("directed")
+        if directed is not None and not isinstance(directed, bool):
+            raise QuestionExtractionError(f"{label} edge {edge_index} directed must be a boolean or null.")
+
+    start_node = diagram.get("start_node")
+    if start_node is not None and (not isinstance(start_node, str) or start_node not in node_ids):
+        raise QuestionExtractionError(f"{label} start_node must reference a node.")
+    _validate_reference_list(diagram, "highlighted_nodes", node_ids, f"{label} highlighted_nodes")
+    _validate_reference_list(diagram, "highlighted_edges", edge_ids, f"{label} highlighted_edges")
+
+
+def _validate_tree_diagram(diagram: Any, label: str) -> None:
+    if not isinstance(diagram, dict):
+        raise QuestionExtractionError(f"{label} must be an object.")
+    if not isinstance(diagram.get("id"), str) or not diagram["id"].strip():
+        raise QuestionExtractionError(f"{label} has invalid id.")
+    if diagram.get("type") != "tree":
+        raise QuestionExtractionError(f"{label} has invalid type.")
+    title = diagram.get("title")
+    if title is not None and not isinstance(title, str):
+        raise QuestionExtractionError(f"{label} title must be a string or null.")
+    node_ids = _validate_tree_node(diagram.get("root"), f"{label} root")
+    _validate_reference_list(diagram, "highlighted_nodes", node_ids, f"{label} highlighted_nodes")
+
+
+def _validate_tree_node(node: Any, label: str) -> set[str]:
+    if not isinstance(node, dict):
+        raise QuestionExtractionError(f"{label} must be an object.")
+    node_id = node.get("id")
+    if not isinstance(node_id, str) or not node_id.strip():
+        raise QuestionExtractionError(f"{label} has invalid id.")
+    node_label = node.get("label")
+    if node_label is not None and not isinstance(node_label, str):
+        raise QuestionExtractionError(f"{label} label must be a string or null.")
+    node_ids = {node_id}
+    children = node.get("children", [])
+    if children is None:
+        return node_ids
+    if not isinstance(children, list):
+        raise QuestionExtractionError(f"{label} children must be a list.")
+    for index, child in enumerate(children, start=1):
+        child_ids = _validate_tree_node(child, f"{label} child {index}")
+        if node_ids.intersection(child_ids):
+            raise QuestionExtractionError(f"{label} node ids must be unique.")
+        node_ids.update(child_ids)
+    return node_ids
+
+
+def _validate_reference_list(
+    diagram: dict[str, Any],
+    field: str,
+    valid_values: set[str],
+    label: str,
+) -> None:
+    values = diagram.get(field)
+    if values is None:
+        return
+    if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+        raise QuestionExtractionError(f"{label} must be a list of strings.")
+    invalid_values = [value for value in values if value not in valid_values]
+    if invalid_values:
+        raise QuestionExtractionError(f"{label} contains unknown references.")
 
 
 def extract_questions_with_gemini(

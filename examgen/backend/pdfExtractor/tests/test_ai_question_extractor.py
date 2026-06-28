@@ -91,6 +91,44 @@ def test_validation_accepts_correct_result() -> None:
     validate_question_extraction_result(sample_questions())
 
 
+def test_post_process_downgrades_matrix_choice_without_matrix_metadata() -> None:
+    result = sample_questions()
+    question = result["questions"][0]
+    question["question_number"] = "7"
+    question["interaction_type"] = "matrix_choice"
+    question["choices"] = ["A,B,C,D,E", "A,B,D,E,C"]
+
+    processed = post_process_questions(result)
+
+    processed_question = processed["questions"][0]
+    assert processed_question["interaction_type"] == "multiple_choice"
+    assert processed_question["choices"] == ["A,B,C,D,E", "A,B,D,E,C"]
+    assert "matrix" not in processed_question
+    validate_question_extraction_result(processed)
+
+
+def test_post_process_keeps_valid_matrix_choice_metadata() -> None:
+    result = sample_questions()
+    question = result["questions"][0]
+    question["interaction_type"] = "matrix_choice"
+    question["choices"] = ["old"]
+    question["matrix"] = {
+        "rows": ["BFS", "DFS"],
+        "columns": ["A,B,C,D,E", "A,B,D,E,C"],
+    }
+
+    processed = post_process_questions(result)
+
+    processed_question = processed["questions"][0]
+    assert processed_question["interaction_type"] == "matrix_choice"
+    assert processed_question["choices"] == ["A,B,C,D,E", "A,B,D,E,C"]
+    assert processed_question["matrix"] == {
+        "rows": ["BFS", "DFS"],
+        "columns": ["A,B,C,D,E", "A,B,D,E,C"],
+    }
+    validate_question_extraction_result(processed)
+
+
 def test_validation_rejects_missing_questions() -> None:
     malformed = sample_questions()
     malformed.pop("questions")

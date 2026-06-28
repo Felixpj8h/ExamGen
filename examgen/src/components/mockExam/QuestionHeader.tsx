@@ -4,6 +4,7 @@ import {
   formatPages,
 } from '../../lib/textFormatting';
 import QuestionContext from './QuestionContext';
+import QuestionDiagrams from './QuestionDiagrams';
 import QuestionImages from './QuestionImages';
 import type { ExamQuestion } from '../../types';
 
@@ -24,6 +25,7 @@ function QuestionHeader({ question }: { question: ExamQuestion }) {
           {formatDisplayText(question.question_text)}
         </h2>
         <QuestionContext context={question.context} />
+        <QuestionDiagrams diagrams={question.diagrams} />
         <QuestionImages images={question.images} />
       </article>
     </>

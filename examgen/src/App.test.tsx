@@ -116,6 +116,76 @@ const uploadedBundle = {
       subquestions: [],
       solution: null,
     },
+    {
+      id: 'q6',
+      question_number: '6',
+      question_text: 'Run BFS and DFS on the graph.',
+      context: 'Start from A and visit neighbours alphabetically.',
+      page_start: null,
+      page_end: null,
+      topic: 'graph algorithms',
+      interaction_type: 'matrix_choice',
+      choices: ['A,B,C,D', 'A,C,B,D'],
+      diagrams: [
+        {
+          id: 'q6_graph',
+          type: 'graph',
+          title: 'Traversal graph',
+          nodes: [
+            { id: 'A', label: 'A' },
+            { id: 'B', label: 'B' },
+            { id: 'C', label: 'C' },
+            { id: 'D', label: 'D' },
+          ],
+          edges: [
+            { id: 'ab', source: 'A', target: 'B', weight: '2' },
+            { id: 'ac', source: 'A', target: 'C' },
+            { id: 'bd', source: 'B', target: 'D', directed: true },
+          ],
+          start_node: 'A',
+          highlighted_nodes: ['A'],
+          highlighted_edges: ['ab'],
+        },
+      ],
+      subquestions: [],
+      solution: null,
+    },
+    {
+      id: 'q7',
+      question_number: '7',
+      question_text: 'Write recursive functions over this tree.',
+      context: 'data Tree a = Leaf a | Node (Tree a) (Tree a)',
+      page_start: null,
+      page_end: null,
+      topic: 'trees and recursion',
+      interaction_type: 'free_text',
+      choices: [],
+      diagrams: [
+        {
+          id: 'q7_tree',
+          type: 'tree',
+          title: 'Example tree',
+          root: {
+            id: 'root',
+            label: 'Node',
+            children: [
+              { id: 'left', label: 'Leaf a' },
+              {
+                id: 'right',
+                label: 'Node',
+                children: [
+                  { id: 'right_left', label: 'Leaf b' },
+                  { id: 'right_right', label: 'Leaf c' },
+                ],
+              },
+            ],
+          },
+          highlighted_nodes: ['left'],
+        },
+      ],
+      subquestions: [],
+      solution: null,
+    },
   ],
   warnings: ['Loaded warning'],
 };
@@ -155,7 +225,7 @@ test('uploads files and connects to the existing mock exam workspace', async () 
     }),
   ) as unknown as jest.MockedFunction<typeof fetch>;
 
-  render(<App />);
+  const { container } = render(<App />);
 
   const examFile = new File(['exam'], 'exam.pdf', { type: 'application/pdf' });
   const solutionsFile = new File(['solutions'], 'solutions.pdf', {
@@ -250,6 +320,25 @@ test('uploads files and connects to the existing mock exam workspace', async () 
   expect(screen.getByRole('columnheader', { name: /operation/i })).toBeInTheDocument();
   expect(screen.getByRole('cell', { name: /access element by index/i })).toBeInTheDocument();
   expect(screen.getByText('5b:').tagName.toLowerCase()).toBe('strong');
+
+  fireEvent.click(screen.getByRole('button', { name: /question 6/i }));
+  expect(screen.getByRole('img', { name: /traversal graph/i })).toBeInTheDocument();
+  expect(screen.getAllByText('A').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('B').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('C').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('D').length).toBeGreaterThan(0);
+  expect(screen.getByText('2')).toBeInTheDocument();
+  expect(container.querySelector('img')).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /question 7/i }));
+  const treeSvg = screen.getByRole('img', { name: /example tree/i });
+  expect(treeSvg).toBeInTheDocument();
+  expect(screen.getAllByText('Node').length).toBeGreaterThan(0);
+  expect(screen.getByText('Leaf a')).toBeInTheDocument();
+  expect(screen.getByText('Leaf b')).toBeInTheDocument();
+  expect(screen.getByText('Leaf c')).toBeInTheDocument();
+  expect(treeSvg.querySelectorAll('.tree-diagram__edge path')).toHaveLength(4);
+  expect(container.querySelector('img')).not.toBeInTheDocument();
 });
 
 test('allows upload with only exam pdf when auto-generate solutions is enabled', async () => {
