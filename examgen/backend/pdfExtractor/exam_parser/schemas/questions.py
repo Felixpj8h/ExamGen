@@ -65,6 +65,21 @@ class ExtractedTreeDiagram(TypedDict):
     highlighted_nodes: NotRequired[list[str]]
 
 
+class ExtractedChartPoint(TypedDict):
+    label: str
+    value: float | int
+
+
+class ExtractedChartDiagram(TypedDict):
+    id: str
+    type: Literal["chart"]
+    title: NotRequired[str | None]
+    chart_type: Literal["bar", "line"]
+    x_label: NotRequired[str | None]
+    y_label: NotRequired[str | None]
+    data: list[ExtractedChartPoint]
+
+
 class ExtractedQuestion(TypedDict):
     id: str
     question_number: str
@@ -77,7 +92,7 @@ class ExtractedQuestion(TypedDict):
     interaction_type: InteractionType
     choices: list[str]
     matrix: NotRequired[dict[str, list[str]]]
-    diagrams: NotRequired[list[ExtractedGraphDiagram | ExtractedTreeDiagram]]
+    diagrams: NotRequired[list[ExtractedGraphDiagram | ExtractedTreeDiagram | ExtractedChartDiagram]]
     subquestions: list[ExtractedSubquestion]
 
 
@@ -178,6 +193,31 @@ TREE_DIAGRAM_SCHEMA: dict[str, Any] = {
 }
 
 
+CHART_DIAGRAM_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "id": {"type": "string"},
+        "type": {"type": "string", "enum": ["chart"]},
+        "title": {"type": "string", "nullable": True},
+        "chart_type": {"type": "string", "enum": ["bar", "line"]},
+        "x_label": {"type": "string", "nullable": True},
+        "y_label": {"type": "string", "nullable": True},
+        "data": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "label": {"type": "string"},
+                    "value": {"type": "number"},
+                },
+                "required": ["label", "value"],
+            },
+        },
+    },
+    "required": ["id", "type", "chart_type", "data"],
+}
+
+
 QUESTION_EXTRACTION_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -233,11 +273,13 @@ QUESTION_EXTRACTION_SCHEMA: dict[str, Any] = {
                             "anyOf": [
                                 GRAPH_DIAGRAM_SCHEMA,
                                 TREE_DIAGRAM_SCHEMA,
+                                CHART_DIAGRAM_SCHEMA,
                             ],
                         },
                         "description": (
                             "Optional structured diagrams for generated practice questions. "
-                            "Use graph diagrams for node-link graph tasks and tree diagrams for tree/recursion tasks."
+                            "Use graph diagrams for node-link graph tasks, tree diagrams for tree/recursion tasks, "
+                            "and chart diagrams for small numeric datasets."
                         ),
                     },
                     "subquestions": {

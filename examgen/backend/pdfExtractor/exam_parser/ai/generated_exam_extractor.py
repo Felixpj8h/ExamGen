@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Any
 
 from exam_parser.ai.question_extractor import (
@@ -57,13 +58,19 @@ Rules:
 - When a visual would help the student solve the task, add a structured diagrams entry on the main question.
 - Use graph diagrams for node-link graph tasks, especially BFS/DFS traversal, shortest path,
   minimum spanning tree, reachability, adjacency, or graph-representation questions.
+- For weighted graph tasks, include every visible edge weight as an edge weight value.
+- Only set edge directed to true when the task explicitly says the graph is directed/rettet.
+  Otherwise leave directed absent or false so weighted shortest-path and MST graphs render as undirected.
 - Use tree diagrams for tree data structure, binary tree, expression tree, recursion-over-tree,
   traversal, leaf-counting, height/depth, flattening, or inductive tree tasks.
+- Use chart diagrams for small numeric datasets where a bar chart or line chart helps, such as
+  growth rates, runtime comparisons, frequency counts, measurements, or time-series trends.
 - A graph diagram must use type "graph" and include stable node ids, node labels, edges with source/target,
   optional edge label/weight, optional directed flag, and optional start_node/highlighted_nodes/highlighted_edges.
 - A tree diagram must use type "tree" and include a root node with stable nested children. Nodes may include labels.
+- A chart diagram must use type "chart", chart_type "bar" or "line", and data points with label and numeric value.
 - Do not include raster images, generated image URLs, base64 image data, SVG markup, Mermaid syntax, or x/y coordinates.
-- The frontend will lay out graph and tree diagrams automatically from structured data.
+- The frontend will lay out graph, tree, and chart diagrams automatically from structured data.
 - Set page_start and page_end to null because generated questions do not come from original pages.
 - Use stable generated IDs: q1, q2, q3 for main questions and q1a, q1b for subquestions.
 - For every question and subquestion, set interaction_type and choices according to the schema.
@@ -211,6 +218,10 @@ def normalize_generated_diagrams(result: dict[str, Any]) -> None:
             )
             if diagram is not None
         ]
+        if not cleaned:
+            graph_diagram = _default_graph_diagram_from_text(question, question_index)
+            if graph_diagram is not None:
+                cleaned = [graph_diagram]
         if not cleaned and _looks_like_tree_visual_task(question):
             cleaned = [_default_tree_diagram(question, question_index)]
         if cleaned:
@@ -220,15 +231,7 @@ def normalize_generated_diagrams(result: dict[str, Any]) -> None:
 
 
 def _looks_like_tree_visual_task(question: dict[str, Any]) -> bool:
-    searchable_parts = [
-        question.get("question_text"),
-        question.get("context"),
-        question.get("topic"),
-    ]
-    for subquestion in question.get("subquestions", []):
-        if isinstance(subquestion, dict):
-            searchable_parts.append(subquestion.get("text"))
-    searchable = "\n".join(part for part in searchable_parts if isinstance(part, str)).casefold()
+    searchable = _question_searchable_text(question).casefold()
     if not searchable:
         return False
     tree_markers = (
@@ -258,6 +261,133 @@ def _looks_like_tree_visual_task(question: dict[str, Any]) -> bool:
     return any(marker in searchable for marker in tree_markers) and any(
         marker in searchable for marker in task_markers
     )
+
+
+def _default_graph_diagram_from_text(question: dict[str, Any], question_index: int) -> dict[str, Any] | None:
+    searchable = _question_searchable_text(question)
+    if not searchable:
+        return None
+    if not _looks_like_graph_visual_task(searchable):
+        return None
+
+    parsed = _parse_weighted_graph_text(searchable)
+    if parsed is None:
+        return None
+    nodes, edges = parsed
+    if len(nodes) < 2 or not edges:
+        return None
+
+    question_id = _clean_string(question.get("id")) or f"q{question_index}"
+    start_node = _first_referenced_start_node(searchable, {node["id"] for node in nodes})
+    diagram: dict[str, Any] = {
+        "id": f"{question_id}_graph",
+        "type": "graph",
+        "title": "Weighted graph",
+        "nodes": nodes,
+        "edges": edges,
+    }
+    if start_node:
+        diagram["start_node"] = start_node
+        diagram["highlighted_nodes"] = [start_node]
+    return diagram
+
+
+def _question_searchable_text(question: dict[str, Any]) -> str:
+    searchable_parts = [
+        question.get("question_text"),
+        question.get("context"),
+        question.get("topic"),
+    ]
+    for subquestion in question.get("subquestions", []):
+        if isinstance(subquestion, dict):
+            searchable_parts.append(subquestion.get("text"))
+    return "\n".join(part for part in searchable_parts if isinstance(part, str))
+
+
+def _looks_like_graph_visual_task(searchable: str) -> bool:
+    normalized = searchable.casefold()
+    graph_markers = ("graf", "graph", "noder", "nodes", "kanter", "edges")
+    task_markers = (
+        "dijkstra",
+        "korteste vei",
+        "shortest path",
+        "vektet",
+        "weighted",
+        "bfs",
+        "dfs",
+        "minimum spanning",
+        "mst",
+    )
+    return any(marker in normalized for marker in graph_markers) and any(
+        marker in normalized for marker in task_markers
+    )
+
+
+def _parse_weighted_graph_text(text: str) -> tuple[list[dict[str, str]], list[dict[str, Any]]] | None:
+    node_ids = _parse_declared_graph_nodes(text)
+    edges: list[dict[str, Any]] = []
+    seen_edges: set[tuple[str, str, str]] = set()
+    for match in re.finditer(r"\(\s*([A-Za-z][\w-]*)\s*,\s*([A-Za-z][\w-]*)\s*,\s*(-?\d+(?:[.,]\d+)?)\s*\)", text):
+        source, target, raw_weight = match.groups()
+        source = source.strip()
+        target = target.strip()
+        weight = raw_weight.replace(",", ".")
+        node_ids.update([source, target])
+        edge_key = (source, target, weight)
+        reverse_key = (target, source, weight)
+        if edge_key in seen_edges or reverse_key in seen_edges:
+            continue
+        seen_edges.add(edge_key)
+        edges.append(
+            {
+                "id": f"{_id_part(source)}_{_id_part(target)}_{_id_part(weight)}",
+                "source": source,
+                "target": target,
+                "weight": weight,
+            }
+        )
+    if len(node_ids) < 2 or not edges:
+        return None
+    nodes = [{"id": node_id, "label": node_id} for node_id in sorted(node_ids, key=_natural_node_sort_key)]
+    valid_node_ids = {node["id"] for node in nodes}
+    cleaned_edges = [edge for edge in edges if edge["source"] in valid_node_ids and edge["target"] in valid_node_ids]
+    if not cleaned_edges:
+        return None
+    return nodes, cleaned_edges
+
+
+def _parse_declared_graph_nodes(text: str) -> set[str]:
+    match = re.search(r"(?:noder|nodes)\s*[:=]?\s*\{([^}]+)\}", text, flags=re.IGNORECASE)
+    if not match:
+        return set()
+    return {
+        node.strip()
+        for node in re.split(r"[,;\s]+", match.group(1))
+        if re.fullmatch(r"[A-Za-z][\w-]*", node.strip())
+    }
+
+
+def _first_referenced_start_node(text: str, node_ids: set[str]) -> str | None:
+    patterns = (
+        r"(?:fra|from|start(?:ing)?(?: at| node)?|startnode|start node)\s+(?:node\s+|noden\s+)?([A-Za-z][\w-]*)",
+        r"([A-Za-z][\w-]*)\s+til\s+[A-Za-z][\w-]*",
+        r"([A-Za-z][\w-]*)\s+to\s+[A-Za-z][\w-]*",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if match:
+            candidate = match.group(1)
+            if candidate in node_ids:
+                return candidate
+    return None
+
+
+def _natural_node_sort_key(value: str) -> tuple[str, int | str]:
+    match = re.fullmatch(r"([A-Za-z]+)(\d+)?", value)
+    if not match:
+        return (value.casefold(), value)
+    prefix, suffix = match.groups()
+    return (prefix.casefold(), int(suffix) if suffix is not None else "")
 
 
 def _default_tree_diagram(question: dict[str, Any], question_index: int) -> dict[str, Any]:
@@ -298,6 +428,8 @@ def _clean_diagram(diagram: Any, question_index: int, diagram_index: int) -> dic
         return None
     if diagram.get("type") == "tree":
         return _clean_tree_diagram(diagram, question_index, diagram_index)
+    if diagram.get("type") == "chart":
+        return _clean_chart_diagram(diagram, question_index, diagram_index)
     return _clean_graph_diagram(diagram, question_index, diagram_index)
 
 
@@ -392,6 +524,50 @@ def _clean_tree_node(node: Any, seen_ids: set[str]) -> dict[str, Any] | None:
     ]
     if children:
         cleaned["children"] = children
+    return cleaned
+
+
+def _clean_chart_diagram(
+    diagram: Any,
+    question_index: int,
+    diagram_index: int,
+) -> dict[str, Any] | None:
+    if not isinstance(diagram, dict) or diagram.get("type") != "chart":
+        return None
+    chart_type = _clean_string(diagram.get("chart_type")).casefold()
+    if chart_type not in {"bar", "line"}:
+        return None
+    data = _clean_chart_points(diagram.get("data"))
+    if not data:
+        return None
+    diagram_id = _clean_string(diagram.get("id")) or f"q{question_index}_chart_{diagram_index}"
+    cleaned: dict[str, Any] = {
+        "id": diagram_id,
+        "type": "chart",
+        "chart_type": chart_type,
+        "data": data,
+    }
+    for field in ("title", "x_label", "y_label"):
+        value = _clean_string(diagram.get(field))
+        if value:
+            cleaned[field] = value
+    return cleaned
+
+
+def _clean_chart_points(points: Any) -> list[dict[str, Any]]:
+    if not isinstance(points, list):
+        return []
+    cleaned: list[dict[str, Any]] = []
+    seen_labels: set[str] = set()
+    for point in points:
+        if not isinstance(point, dict):
+            continue
+        label = _clean_string(point.get("label"))
+        value = point.get("value")
+        if not label or label in seen_labels or not isinstance(value, (int, float)):
+            continue
+        cleaned.append({"label": label, "value": value})
+        seen_labels.add(label)
     return cleaned
 
 

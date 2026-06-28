@@ -39,11 +39,46 @@ function patchPostcssLoaders(rule) {
   });
 }
 
+function patchSourceMapLoaders(rule) {
+  if (!rule || typeof rule !== 'object') {
+    return;
+  }
+
+  const rules = Array.isArray(rule.oneOf) ? rule.oneOf : rule.rules;
+  if (Array.isArray(rules)) {
+    rules.forEach(patchSourceMapLoaders);
+  }
+
+  if (String(rule.loader || '').includes('source-map-loader')) {
+    rule.exclude = [
+      ...(Array.isArray(rule.exclude) ? rule.exclude : rule.exclude ? [rule.exclude] : []),
+      /node_modules[\\/]d3-/,
+      /node_modules[\\/]internmap/,
+    ];
+  }
+
+  const use = Array.isArray(rule.use) ? rule.use : [];
+  use.forEach((loaderEntry) => {
+    if (!loaderEntry || typeof loaderEntry !== 'object') {
+      return;
+    }
+    if (!String(loaderEntry.loader || '').includes('source-map-loader')) {
+      return;
+    }
+
+    loaderEntry.exclude = [
+      ...(Array.isArray(loaderEntry.exclude) ? loaderEntry.exclude : loaderEntry.exclude ? [loaderEntry.exclude] : []),
+      /node_modules[\\/]d3-/,
+      /node_modules[\\/]internmap/,
+    ];
+  });
+}
+
 module.exports = {
   jest: {
     configure: (jestConfig) => {
       jestConfig.transformIgnorePatterns = [
-        '[\\\\/]node_modules[\\\\/](?!d3-hierarchy[\\\\/]).+\\.(js|jsx|mjs|cjs|ts|tsx)$',
+        '[\\\\/]node_modules[\\\\/](?!(d3-[^\\\\/]+|internmap)[\\\\/]).+\\.(js|jsx|mjs|cjs|ts|tsx)$',
         '^.+\\.module\\.(css|sass|scss)$',
       ];
       return jestConfig;
@@ -52,6 +87,7 @@ module.exports = {
   webpack: {
     configure: (webpackConfig) => {
       webpackConfig.module.rules.forEach(patchPostcssLoaders);
+      webpackConfig.module.rules.forEach(patchSourceMapLoaders);
       return webpackConfig;
     },
   },

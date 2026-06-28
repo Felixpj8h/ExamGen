@@ -185,6 +185,47 @@ def test_generated_question_schema_accepts_valid_tree_diagram() -> None:
     validate_question_extraction_result(result)
 
 
+def test_generated_question_schema_accepts_valid_chart_diagram() -> None:
+    result = {
+        "source_file": "generated_exam",
+        "exam_title": "Generated",
+        "course_code": "INF",
+        "language": "english",
+        "questions": [
+            {
+                "id": "q1",
+                "question_number": "1",
+                "question_text": "Compare growth rates.",
+                "context": "Use the chart.",
+                "page_start": None,
+                "page_end": None,
+                "points": None,
+                "topic": "Runtime",
+                "interaction_type": "free_text",
+                "choices": [],
+                "diagrams": [
+                    {
+                        "id": "q1_chart",
+                        "type": "chart",
+                        "title": "Runtime growth",
+                        "chart_type": "line",
+                        "x_label": "n",
+                        "y_label": "ms",
+                        "data": [
+                            {"label": "10", "value": 1},
+                            {"label": "20", "value": 4},
+                        ],
+                    }
+                ],
+                "subquestions": [],
+            }
+        ],
+        "warnings": [],
+    }
+
+    validate_question_extraction_result(result)
+
+
 def test_normalize_generated_diagrams_drops_malformed_graph_parts() -> None:
     result = {
         "questions": [
@@ -242,6 +283,97 @@ def test_normalize_generated_diagrams_drops_malformed_graph_parts() -> None:
             "title": "Graph",
             "highlighted_nodes": ["A"],
             "highlighted_edges": ["ab"],
+        }
+    ]
+
+
+def test_normalize_generated_diagrams_keeps_clean_chart_points() -> None:
+    result = {
+        "questions": [
+            {
+                "id": "q1",
+                "question_number": "1",
+                "diagrams": [
+                    {
+                        "id": " chart ",
+                        "type": "chart",
+                        "title": " Growth ",
+                        "chart_type": "bar",
+                        "x_label": " Input ",
+                        "y_label": " Time ",
+                        "data": [
+                            {"label": "n=10", "value": 1},
+                            {"label": "n=10", "value": 2},
+                            {"label": "n=20", "value": 4.5},
+                            {"label": "", "value": 8},
+                            {"label": "bad", "value": "fast"},
+                        ],
+                    }
+                ],
+            }
+        ]
+    }
+
+    normalize_generated_diagrams(result)
+
+    assert result["questions"][0]["diagrams"] == [
+        {
+            "id": "chart",
+            "type": "chart",
+            "chart_type": "bar",
+            "data": [
+                {"label": "n=10", "value": 1},
+                {"label": "n=20", "value": 4.5},
+            ],
+            "title": "Growth",
+            "x_label": "Input",
+            "y_label": "Time",
+        }
+    ]
+
+
+def test_normalize_generated_diagrams_adds_weighted_graph_from_text_edges() -> None:
+    result = {
+        "questions": [
+            {
+                "id": "q3",
+                "question_number": "3",
+                "question_text": "Vektet graf",
+                "context": "Grafen har noder {A, B, C, D} og kanter: (A,B,1), (A,C,4), (B,C,2), (B,D,5), (C,D,1).",
+                "topic": "Korteste vei",
+                "subquestions": [
+                    {
+                        "id": "q3a",
+                        "label": "a",
+                        "text": "Hva er korteste vei fra A til D ved bruk av Dijkstras algoritme?",
+                    }
+                ],
+            }
+        ]
+    }
+
+    normalize_generated_diagrams(result)
+
+    assert result["questions"][0]["diagrams"] == [
+        {
+            "id": "q3_graph",
+            "type": "graph",
+            "title": "Weighted graph",
+            "nodes": [
+                {"id": "A", "label": "A"},
+                {"id": "B", "label": "B"},
+                {"id": "C", "label": "C"},
+                {"id": "D", "label": "D"},
+            ],
+            "edges": [
+                {"id": "a_b_1", "source": "A", "target": "B", "weight": "1"},
+                {"id": "a_c_4", "source": "A", "target": "C", "weight": "4"},
+                {"id": "b_c_2", "source": "B", "target": "C", "weight": "2"},
+                {"id": "b_d_5", "source": "B", "target": "D", "weight": "5"},
+                {"id": "c_d_1", "source": "C", "target": "D", "weight": "1"},
+            ],
+            "start_node": "A",
+            "highlighted_nodes": ["A"],
         }
     ]
 
@@ -379,6 +511,8 @@ def test_generated_exam_prompt_requests_structured_graphs_not_images() -> None:
     assert "type \"graph\"" in prompt
     assert "BFS/DFS" in prompt
     assert "tree diagrams" in prompt
+    assert "chart diagrams" in prompt
+    assert "chart_type \"bar\" or \"line\"" in prompt
     assert "tree data structure" in prompt
     assert "Do not include raster images" in prompt
     assert "SVG markup" in prompt

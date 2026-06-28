@@ -12,6 +12,11 @@ from exam_parser.pdf.ocr import OCRError, ocr_pdf_pages_with_gemini
 
 MIN_EXTRACTED_IMAGE_WIDTH = 80
 MIN_EXTRACTED_IMAGE_HEIGHT = 80
+MIN_VECTOR_DRAWING_WIDTH = 80
+MIN_VECTOR_DRAWING_HEIGHT = 80
+MIN_VECTOR_DRAWING_ITEMS = 3
+VECTOR_DRAWING_CLUSTER_GAP = 45
+VECTOR_DRAWING_CROP_PADDING = 12
 OCR_MODES = {"auto", "off", "always"}
 TEXT_SOURCE_PDF = "pdf_text"
 TEXT_SOURCE_OCR = "gemini_ocr"
@@ -102,7 +107,7 @@ def _extract_page_image_crops(
     image_path_prefix: str | None = None,
     image_url_prefix: str | None = None,
 ) -> list[list[dict[str, Any]]]:
-    """Extract rendered crops for embedded raster images, grouped by page."""
+    """Extract rendered crops for embedded raster images and vector figures, grouped by page."""
     image_output_dir.mkdir(parents=True, exist_ok=True)
     try:
         with fitz.open(path) as document:
@@ -111,6 +116,7 @@ def _extract_page_image_crops(
                 page = document.load_page(page_index)
                 images: list[dict[str, Any]] = []
                 seen_rects: set[tuple[int, tuple[float, float, float, float]]] = set()
+                embedded_image_rects: list[fitz.Rect] = []
                 image_index = 1
                 for image_info in page.get_images(full=True):
                     xref = int(image_info[0])
@@ -132,6 +138,7 @@ def _extract_page_image_crops(
                             pixmap = None
                             continue
                         pixmap.save(output_path)
+                        embedded_image_rects.append(fitz.Rect(rect))
                         images.append(
                             {
                                 "id": image_id,
@@ -145,6 +152,33 @@ def _extract_page_image_crops(
                             }
                         )
                         image_index += 1
+                for rect in _vector_figure_rects(page, embedded_image_rects):
+                    image_id = f"page_{page_index + 1}_img_{image_index}"
+                    file_name = f"{image_id}.png"
+                    output_path = image_output_dir / file_name
+                    pixmap = page.get_pixmap(
+                        matrix=fitz.Matrix(2, 2),
+                        clip=rect,
+                        alpha=False,
+                    )
+                    if _is_too_small_image(pixmap):
+                        pixmap = None
+                        continue
+                    pixmap.save(output_path)
+                    images.append(
+                        {
+                            "id": image_id,
+                            "file_name": file_name,
+                            "path": _join_asset_path(image_path_prefix, file_name),
+                            "src": _join_asset_path(image_url_prefix, file_name),
+                            "page_number": page_index + 1,
+                            "bbox": _round_bbox(rect),
+                            "width": pixmap.width,
+                            "height": pixmap.height,
+                            "source": "vector_drawing",
+                        }
+                    )
+                    image_index += 1
                 page_images.append(images)
             return page_images
     except Exception as exc:
@@ -157,6 +191,84 @@ def _round_bbox(rect: fitz.Rect) -> list[float]:
 
 def _is_too_small_image(pixmap: fitz.Pixmap) -> bool:
     return pixmap.width < MIN_EXTRACTED_IMAGE_WIDTH or pixmap.height < MIN_EXTRACTED_IMAGE_HEIGHT
+
+
+def _vector_figure_rects(page: fitz.Page, embedded_image_rects: list[fitz.Rect]) -> list[fitz.Rect]:
+    drawing_rects = _candidate_vector_drawing_rects(page, embedded_image_rects)
+    clusters = _cluster_rects(drawing_rects)
+    return [
+        _padded_page_rect(rect, page.rect)
+        for rect in clusters
+        if rect.width >= MIN_VECTOR_DRAWING_WIDTH and rect.height >= MIN_VECTOR_DRAWING_HEIGHT
+    ]
+
+
+def _candidate_vector_drawing_rects(page: fitz.Page, embedded_image_rects: list[fitz.Rect]) -> list[fitz.Rect]:
+    page_area = max(1.0, page.rect.width * page.rect.height)
+    candidates: list[fitz.Rect] = []
+    for drawing in page.get_drawings():
+        rect_value = drawing.get("rect")
+        if rect_value is None:
+            continue
+        rect = fitz.Rect(rect_value)
+        if rect.is_empty or rect.width <= 0 or rect.height <= 0:
+            continue
+        if rect.width * rect.height > page_area * 0.55:
+            continue
+        if any(_rect_overlap_ratio(rect, image_rect) > 0.8 for image_rect in embedded_image_rects):
+            continue
+        candidates.append(rect)
+    return candidates
+
+
+def _cluster_rects(rects: list[fitz.Rect]) -> list[fitz.Rect]:
+    clusters: list[dict[str, Any]] = []
+    for rect in rects:
+        search_rect = _pad_rect(rect, VECTOR_DRAWING_CLUSTER_GAP)
+        matching_indexes = [
+            index
+            for index, cluster in enumerate(clusters)
+            if cluster["search_rect"].intersects(search_rect)
+        ]
+        if not matching_indexes:
+            clusters.append({"rect": fitz.Rect(rect), "search_rect": search_rect, "count": 1})
+            continue
+        first = matching_indexes[0]
+        clusters[first]["rect"].include_rect(rect)
+        clusters[first]["search_rect"].include_rect(search_rect)
+        clusters[first]["count"] += 1
+        for index in reversed(matching_indexes[1:]):
+            clusters[first]["rect"].include_rect(clusters[index]["rect"])
+            clusters[first]["search_rect"].include_rect(clusters[index]["search_rect"])
+            clusters[first]["count"] += clusters[index]["count"]
+            clusters.pop(index)
+    return [
+        cluster["rect"]
+        for cluster in clusters
+        if cluster["count"] >= MIN_VECTOR_DRAWING_ITEMS
+    ]
+
+
+def _rect_overlap_ratio(rect: fitz.Rect, other: fitz.Rect) -> float:
+    intersection = rect & other
+    if intersection.is_empty:
+        return 0.0
+    area = max(1.0, rect.width * rect.height)
+    return (intersection.width * intersection.height) / area
+
+
+def _padded_page_rect(rect: fitz.Rect, page_rect: fitz.Rect) -> fitz.Rect:
+    padded = _pad_rect(rect, VECTOR_DRAWING_CROP_PADDING)
+    return padded & page_rect
+
+
+def _pad_rect(rect: fitz.Rect, padding: float) -> fitz.Rect:
+    return fitz.Rect(
+        rect.x0 - padding,
+        rect.y0 - padding,
+        rect.x1 + padding,
+        rect.y1 + padding,
+    )
 
 
 def _join_asset_path(prefix: str | None, file_name: str) -> str:

@@ -186,6 +186,59 @@ const uploadedBundle = {
       subquestions: [],
       solution: null,
     },
+    {
+      id: 'q8',
+      question_number: '8',
+      question_text: 'Compare the running times in the chart.',
+      context: 'Use the measured input sizes below.',
+      page_start: null,
+      page_end: null,
+      topic: 'runtime growth',
+      interaction_type: 'free_text',
+      choices: [],
+      diagrams: [
+        {
+          id: 'q8_chart',
+          type: 'chart',
+          title: 'Runtime growth',
+          chart_type: 'line',
+          x_label: 'n',
+          y_label: 'ms',
+          data: [
+            { label: '10', value: 1 },
+            { label: '20', value: 4 },
+            { label: '30', value: 9 },
+          ],
+        },
+      ],
+      subquestions: [],
+      solution: null,
+    },
+    {
+      id: 'q9',
+      question_number: '9',
+      question_text: 'UML-like class diagram',
+      context:
+        'abstract Vehicle\n  id: String\n  speed: double\n+ move(): void\n+ getSpeed(): double\nCar\n  seats: int\n+ move(): void\nBike\n  gears: int\n+ move(): void',
+      page_start: 9,
+      page_end: 9,
+      topic: 'class diagrams',
+      interaction_type: 'free_text',
+      choices: [],
+      images: [
+        {
+          id: 'page_9_img_1',
+          src: '/api/exams/exam_123/assets/exam/page_9_img_1.png',
+          page_number: 9,
+          width: 640,
+          height: 420,
+          source: 'vector_drawing',
+          alt: 'Image from page 9',
+        },
+      ],
+      subquestions: [],
+      solution: null,
+    },
   ],
   warnings: ['Loaded warning'],
 };
@@ -339,6 +392,22 @@ test('uploads files and connects to the existing mock exam workspace', async () 
   expect(screen.getByText('Leaf c')).toBeInTheDocument();
   expect(treeSvg.querySelectorAll('.tree-diagram__edge path')).toHaveLength(4);
   expect(container.querySelector('img')).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /question 8/i }));
+  const chartSvg = screen.getByRole('img', { name: /runtime growth/i });
+  expect(chartSvg).toBeInTheDocument();
+  expect(screen.getByText('n')).toBeInTheDocument();
+  expect(screen.getByText('ms')).toBeInTheDocument();
+  expect(chartSvg.querySelector('.chart-diagram__line path')).toBeInTheDocument();
+  expect(container.querySelector('img')).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /question 9/i }));
+  expect(screen.getByRole('img', { name: /image from page 9/i })).toHaveAttribute(
+    'src',
+    '/api/exams/exam_123/assets/exam/page_9_img_1.png',
+  );
+  expect(screen.queryByText('abstract Vehicle')).not.toBeInTheDocument();
+  expect(screen.queryByText('+ getSpeed(): double')).not.toBeInTheDocument();
 });
 
 test('allows upload with only exam pdf when auto-generate solutions is enabled', async () => {

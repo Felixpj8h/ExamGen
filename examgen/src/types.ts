@@ -19,6 +19,7 @@ export interface ExamImage {
   page_number?: number | null;
   width?: number | null;
   height?: number | null;
+  source?: string | null;
 }
 
 export interface GraphDiagramNode {
@@ -60,7 +61,22 @@ export interface TreeDiagram {
   highlighted_nodes?: string[];
 }
 
-export type ExamDiagram = GraphDiagram | TreeDiagram;
+export interface ChartDiagramPoint {
+  label: string;
+  value: number;
+}
+
+export interface ChartDiagram {
+  id: string;
+  type: 'chart';
+  title?: string | null;
+  chart_type: 'bar' | 'line';
+  x_label?: string | null;
+  y_label?: string | null;
+  data: ChartDiagramPoint[];
+}
+
+export type ExamDiagram = GraphDiagram | TreeDiagram | ChartDiagram;
 
 export interface AnswerItem {
   id: string;

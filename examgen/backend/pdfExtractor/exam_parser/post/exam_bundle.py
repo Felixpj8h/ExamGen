@@ -550,6 +550,7 @@ def _images_for_question(
                     "bbox": image.get("bbox"),
                     "width": image.get("width"),
                     "height": image.get("height"),
+                    "source": image.get("source"),
                     "alt": f"Image from page {image.get('page_number')}",
                 }
             )

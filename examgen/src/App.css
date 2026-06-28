@@ -645,6 +645,35 @@ article h2 {
   text-transform: uppercase;
 }
 
+.chart-diagram__axis line {
+  stroke: #cbd5e1;
+  stroke-width: 1;
+}
+
+.chart-diagram__axis text,
+.chart-diagram__labels text {
+  fill: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chart-diagram__bars rect {
+  fill: #0f766e;
+}
+
+.chart-diagram__line path {
+  fill: none;
+  stroke: #0f766e;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.chart-diagram__line circle {
+  fill: #ffffff;
+  stroke: #0f766e;
+  stroke-width: 2.5;
+}
+
 .question-context {
   margin-top: 20px;
   padding: 16px;

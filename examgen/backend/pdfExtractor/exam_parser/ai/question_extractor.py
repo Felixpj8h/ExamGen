@@ -1100,6 +1100,8 @@ def _validate_question_diagrams(question: dict[str, Any], label: str) -> None:
         diagram_label = f"{label} diagram {diagram_index}"
         if isinstance(diagram, dict) and diagram.get("type") == "tree":
             _validate_tree_diagram(diagram, diagram_label)
+        elif isinstance(diagram, dict) and diagram.get("type") == "chart":
+            _validate_chart_diagram(diagram, diagram_label)
         else:
             _validate_graph_diagram(diagram, diagram_label)
 
@@ -1202,6 +1204,37 @@ def _validate_tree_node(node: Any, label: str) -> set[str]:
             raise QuestionExtractionError(f"{label} node ids must be unique.")
         node_ids.update(child_ids)
     return node_ids
+
+
+def _validate_chart_diagram(diagram: Any, label: str) -> None:
+    if not isinstance(diagram, dict):
+        raise QuestionExtractionError(f"{label} must be an object.")
+    if not isinstance(diagram.get("id"), str) or not diagram["id"].strip():
+        raise QuestionExtractionError(f"{label} has invalid id.")
+    if diagram.get("type") != "chart":
+        raise QuestionExtractionError(f"{label} has invalid type.")
+    if diagram.get("chart_type") not in {"bar", "line"}:
+        raise QuestionExtractionError(f"{label} chart_type must be bar or line.")
+    for field in ("title", "x_label", "y_label"):
+        value = diagram.get(field)
+        if value is not None and not isinstance(value, str):
+            raise QuestionExtractionError(f"{label} {field} must be a string or null.")
+    data = diagram.get("data")
+    if not isinstance(data, list) or len(data) < 1:
+        raise QuestionExtractionError(f"{label} must include at least one data point.")
+    labels: set[str] = set()
+    for point_index, point in enumerate(data, start=1):
+        if not isinstance(point, dict):
+            raise QuestionExtractionError(f"{label} data point {point_index} must be an object.")
+        point_label = point.get("label")
+        if not isinstance(point_label, str) or not point_label.strip():
+            raise QuestionExtractionError(f"{label} data point {point_index} has invalid label.")
+        if point_label in labels:
+            raise QuestionExtractionError(f"{label} data labels must be unique.")
+        labels.add(point_label)
+        value = point.get("value")
+        if not isinstance(value, (int, float)):
+            raise QuestionExtractionError(f"{label} data point {point_index} value must be numeric.")
 
 
 def _validate_reference_list(
